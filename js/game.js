@@ -79,6 +79,7 @@ function placeNumber(row, col, num) {
     pushHistory('mistake', row, col, prevVal, num, prevNotes, []);
     if (!state.started) { state.started = true; startTimer(); }
     render({ shakeCell: [row, col] }); saveGame(); playSound('error');
+    haptic([30, 50, 30]);
     if (state.settings.mistakeLimit && state.mistakes >= 3) gameOver();
     return;
   }
@@ -86,6 +87,7 @@ function placeNumber(row, col, num) {
   pushHistory('place', row, col, prevVal, num, prevNotes, []);
   if (!state.started) { state.started = true; startTimer(); }
   render({ popCell: [row, col] }); saveGame(); playSound('place');
+  haptic(8);
   if (state.settings.autoClearNotes) autoClearNotes(row, col, num);
   checkWin();
 }
@@ -201,7 +203,7 @@ function checkWin() {
   state.won = true;
   state.timerRunning = false;
   if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
-  render(); saveGame(); playSound('win');
+  render(); playSound('win');
   showWinDialog();
 }
 
@@ -209,7 +211,8 @@ function gameOver() {
   state.gameOver = true;
   state.timerRunning = false;
   if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
-  render(); saveGame();
+  render();
+  clearGame();
 }
 
 function startTimer() {

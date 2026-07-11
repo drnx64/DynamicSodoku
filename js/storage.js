@@ -67,12 +67,62 @@ function loadHashes() {
   return [];
 }
 
+const ACHIEVEMENTS = [
+  { id: 'firstWin',      name: 'First Win',        desc: 'Complete your first puzzle',                    icon: 'ico-trophy' },
+  { id: 'speedDemon',    name: 'Speed Demon',      desc: 'Solve Hard in under 5 minutes',                 icon: 'ico-bolt' },
+  { id: 'flawless',      name: 'Flawless',         desc: 'Complete a puzzle with 0 mistakes',              icon: 'ico-star' },
+  { id: 'noHints',       name: 'Pure Logic',       desc: 'Solve a puzzle without using hints',             icon: 'ico-lightbulb' },
+  { id: 'marathon',      name: 'Marathon',         desc: 'Solve 100 puzzles',                             icon: 'ico-target' },
+  { id: 'streakMaster',  name: 'Streak Master',    desc: 'Reach a 7-day streak',                          icon: 'ico-fire' },
+  { id: 'impossibleWin', name: 'Brave Soul',       desc: 'Complete an Impossible puzzle',                  icon: 'ico-diamond' },
+];
+
+function checkAchievements(difficulty, mistakes, hintsUsed) {
+  const earned = stats.achievements || [];
+  const newOnes = [];
+  if (!earned.includes('firstWin') && stats.totalGames >= 1) newOnes.push('firstWin');
+  if (!earned.includes('marathon') && stats.totalGames >= 100) newOnes.push('marathon');
+  if (!earned.includes('speedDemon') && difficulty === 'hard' && state.timer < 300) newOnes.push('speedDemon');
+  if (!earned.includes('flawless') && mistakes === 0) newOnes.push('flawless');
+  if (!earned.includes('noHints') && hintsUsed === 0) newOnes.push('noHints');
+  if (!earned.includes('streakMaster') && (streak.count || 0) >= 7) newOnes.push('streakMaster');
+  if (!earned.includes('impossibleWin') && difficulty === 'impossible') newOnes.push('impossibleWin');
+  for (const id of newOnes) {
+    if (!earned.includes(id)) earned.push(id);
+  }
+  if (newOnes.length > 0) {
+    stats.achievements = earned;
+    saveStats();
+    showAchievementToast(newOnes);
+  }
+}
+
+function showAchievementToast(ids) {
+  const container = document.getElementById('achievementToastContainer') || (() => {
+    const el = document.createElement('div');
+    el.id = 'achievementToastContainer';
+    el.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:300;display:flex;flex-direction:column;gap:8px;pointer-events:none;';
+    document.body.appendChild(el);
+    return el;
+  })();
+  ids.forEach((id, idx) => {
+    const a = ACHIEVEMENTS.find(x => x.id === id);
+    if (!a) return;
+    const toast = document.createElement('div');
+    toast.style.cssText = 'background:linear-gradient(135deg,var(--xp-gold),#f97316);color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,0.2);animation:slideUp 0.3s ease;display:flex;align-items:center;gap:8px;';
+    toast.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24"><use href="#' + a.icon + '"/></svg> Achievement: ' + a.name + '!';
+    setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 3000 + idx * 500);
+    container.appendChild(toast);
+  });
+}
+
 // Stats
 let stats = {
   totalGames: 0, totalXp: 0, totalTime: 0,
   gamesByDifficulty: { easy: 0, medium: 0, hard: 0, impossible: 0 },
   bestTimes: { easy: Infinity, medium: Infinity, hard: Infinity, impossible: Infinity },
   bestStreak: 0,
+  achievements: [],
 };
 
 function loadStats() {

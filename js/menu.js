@@ -1,8 +1,36 @@
+function rankSvgUrl(rankName) {
+  const t = rankName.toLowerCase();
+  if (t.includes('wood')) return 'assets/rank-wood.svg';
+  if (t.includes('bronze')) return 'assets/rank-bronze.svg';
+  if (t.includes('silver')) return 'assets/rank-silver.svg';
+  if (t.includes('gold')) return 'assets/rank-gold.svg';
+  if (t.includes('platinum')) return 'assets/rank-platinum.svg';
+  if (t.includes('emerald')) return 'assets/rank-emerald.svg';
+  if (t.includes('diamond')) return 'assets/rank-diamond.svg';
+  if (t.includes('master')) return 'assets/rank-master.svg';
+  if (t.includes('grandmaster')) return 'assets/rank-grandmaster.svg';
+  if (t.includes('elite')) return 'assets/rank-elite.svg';
+  return '';
+}
+
+function rankSvgImg(rankName, size) {
+  const src = rankSvgUrl(rankName);
+  if (!src) return '';
+  return '<img src="' + src + '" width="' + size + '" height="' + size + '" class="rank-svg-icon" alt="' + rankName + '">';
+}
+
 function updateMenuUI() {
   const totalXp = stats.totalXp || 0;
   const rank = getRank(totalXp);
   const nextRank = getNextRank(totalXp);
 
+  const levelBadge = document.getElementById('levelBadge');
+  const existing = levelBadge.querySelector('.rank-svg-icon');
+  if (existing) existing.remove();
+  const imgHtml = rankSvgImg(rank.name, 18);
+  if (imgHtml) {
+    levelBadge.insertAdjacentHTML('afterbegin', imgHtml);
+  }
   document.getElementById('levelName').textContent = rank.name;
   document.getElementById('xpCurrent').textContent = totalXp + ' XP';
 
@@ -20,7 +48,7 @@ function updateMenuUI() {
   document.getElementById('streakCount').textContent = s;
   badge.classList.toggle('zero', s === 0);
 
-  document.getElementById('totalGames').textContent = (stats.totalGames || 0) + ' puzzles solved';
+  document.getElementById('totalGamesCount').textContent = stats.totalGames || 0;
 
   const dailyDone = isDailyDoneToday();
   const dailyCard = document.getElementById('dailyCard');
@@ -57,28 +85,14 @@ function setupDialogs() {
   });
 }
 
-function tierIcon(name) {
-  const t = name.toLowerCase();
-  if (t.includes('wood')) return 'W';
-  if (t.includes('bronze')) return 'B';
-  if (t.includes('silver')) return 'S';
-  if (t.includes('gold')) return 'G';
-  if (t.includes('platinum')) return 'P';
-  if (t.includes('emerald')) return 'E';
-  if (t.includes('diamond')) return 'D';
-  if (t.includes('master')) return 'M';
-  if (t.includes('grandmaster')) return 'GM';
-  if (t.includes('elite')) return 'EG';
-  return '?';
-}
-
 function showRankJourney() {
   const totalXp = stats.totalXp || 0;
   const rank = getRank(totalXp);
   const nextRank = getNextRank(totalXp);
   const rankIdx = RANKS.indexOf(rank);
 
-  document.getElementById('rankCurrentIcon').textContent = tierIcon(rank.name);
+  const iconEl = document.getElementById('rankCurrentIcon');
+  iconEl.innerHTML = rankSvgImg(rank.name, 28);
   document.getElementById('rankCurrentName').textContent = rank.name;
   document.getElementById('rankCurrentXp').textContent = totalXp + ' XP';
 
@@ -101,7 +115,9 @@ function showRankJourney() {
     entry.className = 'rank-tl-entry';
     const dot = document.createElement('div');
     dot.className = 'rank-tl-dot';
-    dot.textContent = i <= rankIdx ? '\u2713' : '';
+    if (i <= rankIdx) {
+      dot.innerHTML = rankSvgImg(r.name, 10);
+    }
     entry.appendChild(dot);
     const name = document.createElement('span');
     name.className = 'rank-tl-name';
@@ -129,6 +145,18 @@ function showRankJourney() {
     if (stats.bestTimes[d] < bestTime) bestTime = stats.bestTimes[d];
   });
   document.getElementById('rankBestTime').textContent = bestTime < Infinity ? formatTime(bestTime) : '--';
+
+  const earned = stats.achievements || [];
+  const grid = document.getElementById('rankAchievements');
+  grid.innerHTML = '';
+  ACHIEVEMENTS.forEach(a => {
+    const el = document.createElement('div');
+    el.className = 'rank-achievement';
+    const unlocked = earned.includes(a.id);
+    if (unlocked) el.classList.add('unlocked');
+    el.innerHTML = '<div class="rank-ach-icon"><svg width="18" height="18" viewBox="0 0 24 24"><use href="#' + a.icon + '"/></svg></div><div class="rank-ach-info"><div class="rank-ach-name">' + a.name + '</div><div class="rank-ach-desc">' + a.desc + '</div></div>';
+    grid.appendChild(el);
+  });
 
   document.getElementById('rankOverlay').classList.add('open');
 }

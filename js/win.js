@@ -20,6 +20,23 @@ function fireConfetti() {
   setTimeout(() => container.innerHTML = '', 5000);
 }
 
+function rankSvgTag(rankName, size) {
+  const t = rankName.toLowerCase();
+  let src;
+  if (t.includes('wood')) src = 'assets/rank-wood.svg';
+  else if (t.includes('bronze')) src = 'assets/rank-bronze.svg';
+  else if (t.includes('silver')) src = 'assets/rank-silver.svg';
+  else if (t.includes('gold')) src = 'assets/rank-gold.svg';
+  else if (t.includes('platinum')) src = 'assets/rank-platinum.svg';
+  else if (t.includes('emerald')) src = 'assets/rank-emerald.svg';
+  else if (t.includes('diamond')) src = 'assets/rank-diamond.svg';
+  else if (t.includes('master')) src = 'assets/rank-master.svg';
+  else if (t.includes('grandmaster')) src = 'assets/rank-grandmaster.svg';
+  else if (t.includes('elite')) src = 'assets/rank-elite.svg';
+  else return '';
+  return '<img src="' + src + '" width="' + size + '" height="' + size + '" class="rank-svg-icon" alt="' + rankName + '">';
+}
+
 function showWinDialog() {
   const score = calcScore(state.difficulty, state.timer, state.mistakes, state.hintsUsed);
   const prevXp = stats.totalXp;
@@ -56,11 +73,13 @@ function showWinDialog() {
   const levelUpEl = document.getElementById('winLevelUp');
   if (leveledUp) {
     levelUpEl.style.display = 'inline-block';
-    levelUpEl.textContent = '\u2191 ' + newRank.name + '!\u2003';
+    levelUpEl.innerHTML = rankSvgTag(newRank.name, 18) + '\u2002&#8593; ' + newRank.name + '!';
   } else {
     levelUpEl.style.display = 'none';
   }
 
+  clearGame();
+  checkAchievements(state.difficulty, state.mistakes, state.hintsUsed);
   fireConfetti();
   document.getElementById('winOverlay').classList.add('open');
   updateMenuUI();

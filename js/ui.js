@@ -109,6 +109,7 @@ function setupInput() {
   }
 
   document.addEventListener('keydown', (e) => {
+    if (!state.settings.keyboardShortcuts) return;
     if (e.key >= '1' && e.key <= '9' && state.selectedCell)
       placeNumber(state.selectedCell[0], state.selectedCell[1], parseInt(e.key));
     if ((e.key === 'Backspace' || e.key === 'Delete') && state.selectedCell)
@@ -145,6 +146,13 @@ function setupInput() {
       if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
     }
     document.getElementById('timerWrap').classList.toggle('paused', !state.timerRunning);
+  });
+
+  document.getElementById('gameMuteBtn').addEventListener('click', () => {
+    state.settings.soundEnabled = !state.settings.soundEnabled;
+    const icon = state.settings.soundEnabled ? 'ico-volume' : 'ico-volume-x';
+    document.getElementById('gameMuteBtn').innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24"><use href="#' + icon + '"/></svg>';
+    saveSettings();
   });
 }
 
