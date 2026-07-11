@@ -8,24 +8,21 @@ function init() {
 
   loadStats();
   loadStreak();
+  loadBonus();
   checkStreak();
 
   setupSettings();
   setupInput();
   setupNavigation();
   setupDialogs();
+  requestNotificationPermission();
 
+  // Load saved game into state (for resume potential) but always show menu on page load
   const loaded = loadGame();
-  if (loaded && state.solution && state.solution.length === 9 && !state.won && !state.gameOver) {
-    if (state.timer > 0) startTimer();
-    document.getElementById('gameLabel').textContent = state.isDaily ? 'Daily Challenge' : capitalize(state.difficulty);
-    updateUndoRedo();
-    showPage('page-game');
-    render();
-  } else {
-    if (loaded) clearGame();
-    showPage('page-menu');
+  if (loaded && state.solution && state.solution.length === 9 && (state.won || state.gameOver || state.mistakes >= 3)) {
+    clearGame();
   }
+  showPage('page-menu');
   updateMenuUI();
 }
 

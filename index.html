@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;0,800;1,700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%232563eb'/%3E%3Ctext x='16' y='23' font-size='22' font-weight='800' fill='white' text-anchor='middle' font-family='sans-serif'%3ES%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -46,6 +47,14 @@
   <symbol id="ico-crown" viewBox="0 0 24 24"><path d="M2 19h20l-3-8-7 3-7-3-3 8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 3l2 5-2 2-2-2z" fill="currentColor"/></symbol>
   <symbol id="ico-volume" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M15 9a5 5 0 0 1 0 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M18 6a9 9 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
   <symbol id="ico-volume-x" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M18 9l-4 6M14 9l4 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="ico-brain" viewBox="0 0 24 24"><path d="M12 3a4 4 0 0 0-4 4c0 1.5.5 2.5 1 3.5S8 12.5 8 14a4 4 0 0 0 8 0c0-1.5-.5-2.5-1-3.5s1-2 1-3.5a4 4 0 0 0-4-4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M8 14a4 4 0 0 0 8 0" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 22v-5M8 7H4a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h2M16 7h4a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+  <symbol id="ico-zap" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-award" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-bar-chart" viewBox="0 0 24 24"><path d="M4 20h16M6 16l3-6 4 4 5-8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-archive" viewBox="0 0 24 24"><path d="M4 7v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7M4 7l2-3h12l2 3M4 7h16M9 12h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="ico-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-music" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="6" cy="18" r="3" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="18" cy="16" r="3" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
 </svg>
 
 <div id="app">
@@ -97,6 +106,42 @@
           <p>Choose your difficulty and play</p>
         </div>
         <span class="card-arrow"><svg width="18" height="18" viewBox="0 0 24 24"><use href="#ico-chevron-right"/></svg></span>
+      </div>
+
+      <div class="menu-card" id="achieveCard">
+        <div class="icon achieve-icon"><svg width="26" height="26" viewBox="0 0 24 24"><use href="#ico-award"/></svg></div>
+        <div class="card-text">
+          <h3>Achievements</h3>
+          <p id="achieveSub">View your unlocked achievements</p>
+        </div>
+        <span class="card-arrow"><svg width="18" height="18" viewBox="0 0 24 24"><use href="#ico-chevron-right"/></svg></span>
+      </div>
+
+      <div class="menu-card" id="statsCard">
+        <div class="icon stats-icon"><svg width="26" height="26" viewBox="0 0 24 24"><use href="#ico-bar-chart"/></svg></div>
+        <div class="card-text">
+          <h3>Statistics</h3>
+          <p>View your progress and records</p>
+        </div>
+        <span class="card-arrow"><svg width="18" height="18" viewBox="0 0 24 24"><use href="#ico-chevron-right"/></svg></span>
+      </div>
+
+      <div class="menu-card" id="leaderboardCard">
+        <div class="icon" style="background:rgba(251,191,36,0.15)"><svg width="26" height="26" viewBox="0 0 24 24"><use href="#ico-trophy"/></svg></div>
+        <div class="card-text">
+          <h3>Leaderboard</h3>
+          <p>Top scores and rankings</p>
+        </div>
+        <span class="card-arrow"><svg width="18" height="18" viewBox="0 0 24 24"><use href="#ico-chevron-right"/></svg></span>
+      </div>
+
+      <div class="menu-card" id="bonusCard" style="display:none">
+        <div class="icon" style="background:rgba(251,191,36,0.15)"><svg width="26" height="26" viewBox="0 0 24 24"><use href="#ico-sparkle"/></svg></div>
+        <div class="card-text">
+          <h3>Daily Bonus</h3>
+          <p id="bonusSub">Claim 10 bonus games with +3 hints each!</p>
+        </div>
+        <button class="bonus-claim-btn" id="bonusClaimBtn" style="display:none">Claim</button>
       </div>
 
       <div class="menu-card" id="settingsCard">
@@ -164,6 +209,15 @@
   </div>
 </div>
 
+<!-- ============ PAGE: SETTINGS ============ -->
+<div id="page-settings" class="page">
+  <div class="page-header">
+    <button class="back-btn" id="settingsBack"><svg width="20" height="20" viewBox="0 0 24 24"><use href="#ico-chevron-left"/></svg></button>
+    <h2>Settings</h2>
+  </div>
+  <div id="settingsPageContent" class="settings-page-content"></div>
+</div>
+
 <!-- ============ PAGE: GAME ============ -->
   <div id="page-game" class="page">
     <div class="deco-bg">
@@ -177,6 +231,7 @@
         <div class="game-meta">
           <span class="timer-wrap" id="timerWrap"><svg width="14" height="14" viewBox="0 0 24 24"><use href="#ico-clock"/></svg> <span id="timer">00:00</span></span>
           <span><svg width="14" height="14" viewBox="0 0 24 24"><use href="#ico-x"/></svg> <span id="mistakes">0</span></span>
+          <span class="game-level" id="gameLevelBadge" style="display:none"><svg width="12" height="12" viewBox="0 0 24 24"><use href="#ico-target"/></svg> Lv. <span id="gameLevelNum">1</span></span>
         </div>
       </div>
       <button class="game-settings-btn" id="gameMuteBtn" title="Toggle sound"><svg width="18" height="18" viewBox="0 0 24 24"><use href="#ico-volume"/></svg></button>
@@ -198,16 +253,24 @@
       </div>
     </div>
   </div>
+
+<!-- ============ PAGE: STATS ============ -->
+<div id="page-stats" class="page">
+  <div class="page-header">
+    <button class="back-btn" id="statsBack"><svg width="20" height="20" viewBox="0 0 24 24"><use href="#ico-chevron-left"/></svg></button>
+    <h2>Statistics</h2>
+  </div>
+  <div id="statsContent" class="stats-content"></div>
 </div>
 
-<!-- ============ SETTINGS MODAL ============ -->
-<div class="modal-overlay" id="settingsModal">
-  <div class="modal">
-    <svg class="deco-settings-gear" width="80" height="80" viewBox="0 0 24 24"><use href="#ico-gear"/></svg>
-    <h2>Settings</h2>
-    <div id="settingsList"></div>
-    <button id="closeSettings">Close</button>
+<!-- ============ PAGE: DAILY ARCHIVE ============ -->
+<div id="page-daily-archive" class="page">
+  <div class="page-header">
+    <button class="back-btn" id="archiveBack"><svg width="20" height="20" viewBox="0 0 24 24"><use href="#ico-chevron-left"/></svg></button>
+    <h2>Daily Archive</h2>
   </div>
+  <div id="archiveContent" class="archive-content"></div>
+</div>
 </div>
 
 <!-- ============ WIN MODAL ============ -->
@@ -218,6 +281,7 @@
     <div class="win-icon"><svg width="48" height="48" viewBox="0 0 24 24"><use href="#ico-party"/></svg></div>
     <h2>Solved!</h2>
     <div class="win-subtitle" id="winSubtitle">Great work!</div>
+    <div class="win-level-info" id="winLevelInfo" style="display:none">Level <span id="winLevelNum">1</span> cleared!</div>
     <div class="win-stats">
       <div class="win-stat"><div class="val" id="winTime">00:00</div><div class="lbl">Time</div></div>
       <div class="win-stat"><div class="val" id="winMistakes">0</div><div class="lbl">Mistakes</div></div>
@@ -299,10 +363,6 @@
         <div class="rank-diff-row"><span><svg width="14" height="14" viewBox="0 0 24 24"><use href="#ico-diamond"/></svg> Impossible</span><span class="rank-diff-count" id="rankImpossibleGames">0</span></div>
       </div>
     </div>
-    <div class="rank-achievements-section">
-      <div class="rank-section-title">Achievements</div>
-      <div class="rank-achievements-grid" id="rankAchievements"></div>
-    </div>
   </div>
 </div>
 
@@ -336,8 +396,70 @@
   </div>
 </div>
 
+<!-- ============ PAGE: ACHIEVEMENTS ============ -->
+<div id="page-achievements" class="page">
+  <div class="page-header">
+    <button class="back-btn" id="achieveBack"><svg width="20" height="20" viewBox="0 0 24 24"><use href="#ico-chevron-left"/></svg></button>
+    <h2><svg width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:6px;color:var(--xp-gold)"><use href="#ico-award"/></svg> Achievements</h2>
+  </div>
+  <div class="achieve-page-tabs">
+    <div class="achieve-tabs">
+      <button class="achieve-tab active" data-filter="all">All</button>
+      <button class="achieve-tab" data-filter="unlocked">Unlocked</button>
+      <button class="achieve-tab" data-filter="locked">Locked</button>
+    </div>
+    <div class="achieve-cat-tabs" id="achieveCatTabs">
+      <button class="achieve-cat-tab active" data-cat="all">All</button>
+      <button class="achieve-cat-tab" data-cat="progress">Progress</button>
+      <button class="achieve-cat-tab" data-cat="speed">Speed</button>
+      <button class="achieve-cat-tab" data-cat="flawless">Flawless</button>
+      <button class="achieve-cat-tab" data-cat="nohints">No Hints</button>
+      <button class="achieve-cat-tab" data-cat="comeback">Comeback</button>
+      <button class="achieve-cat-tab" data-cat="streak">Streak</button>
+      <button class="achieve-cat-tab" data-cat="impossible">Impossible</button>
+      <button class="achieve-cat-tab" data-cat="daily">Daily</button>
+      <button class="achieve-cat-tab" data-cat="misc">Misc</button>
+    </div>
+  </div>
+  <div class="achieve-stats-bar">
+    <span id="achieveCount">0 / 0</span> unlocked
+  </div>
+  <div class="achieve-grid" id="achieveGrid"></div>
+</div>
+
 <!-- ============ DAILY TOAST ============ -->
 <div class="daily-toast" id="dailyToast"><svg width="16" height="16" viewBox="0 0 24 24"><use href="#ico-check"/></svg> Today's daily completed!</div>
+
+<!-- ============ LEVEL ANIMATION ============ -->
+<div class="level-overlay" id="levelOverlay">
+  <div class="level-card">
+    <div class="level-label">LEVEL</div>
+    <div class="level-number" id="levelNumber">1</div>
+  </div>
+</div>
+
+<!-- ============ LEADERBOARD PAGE ============ -->
+<div id="page-leaderboard" class="page">
+  <div class="page-header">
+    <button class="back-btn" id="leaderBack"><svg width="20" height="20" viewBox="0 0 24 24"><use href="#ico-chevron-left"/></svg></button>
+    <h2><svg width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:6px;color:var(--xp-gold)"><use href="#ico-trophy"/></svg> Leaderboard</h2>
+  </div>
+  <div class="leader-tabs">
+    <button class="leader-tab active" data-lbview="top">Top Scores</button>
+    <button class="leader-tab" data-lbview="recent">Recent</button>
+  </div>
+  <div class="leaderboard-list" id="leaderboardList"></div>
+</div>
+
+<!-- ============ RETRY OVERLAY ============ -->
+<div class="retry-overlay" id="retryOverlay">
+  <div class="retry-card">
+    <div class="retry-icon"><svg width="48" height="48" viewBox="0 0 24 24"><use href="#ico-x"/></svg></div>
+    <h2>3 Mistakes!</h2>
+    <p>You made 3 mistakes. Retry this level with the same puzzle.</p>
+    <button id="retryBtn">Retry Level</button>
+  </div>
+</div>
 
 <script src="js/engine.js"></script>
 <script src="js/rng.js"></script>
@@ -352,6 +474,7 @@
 <script src="js/nav.js"></script>
 <script src="js/win.js"></script>
 <script src="js/menu.js"></script>
+<script src="js/leaderboard.js"></script>
 <script src="js/init.js"></script>
 </body>
 </html>

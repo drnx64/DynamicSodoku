@@ -12,6 +12,10 @@ function render(opts) {
     for (let c = 0; c < 9; c++) {
       const cell = document.createElement('div');
       cell.className = 'cell';
+      if (opts.entering) {
+        cell.classList.add('entering');
+        cell.style.animationDelay = ((r * 9 + c) * 12) + 'ms';
+      }
       cell.dataset.row = r; cell.dataset.col = c;
       if (state.givens[r][c]) cell.classList.add('given');
       else if (state.board[r][c]) cell.classList.add('user');
@@ -26,6 +30,10 @@ function render(opts) {
         cell.classList.add('same-num');
       if (conflicts.has(r+','+c)) cell.classList.add('conflict');
 
+      if (opts.hintHighlight && opts.hintHighlight.row === r && opts.hintHighlight.col === c) cell.classList.add('hint-cell');
+      if (opts.hintHighlight && (r === opts.hintHighlight.row || c === opts.hintHighlight.col || (Math.floor(r/3) === Math.floor(opts.hintHighlight.row/3) && Math.floor(c/3) === Math.floor(opts.hintHighlight.col/3)))) {
+        if (!(r === opts.hintHighlight.row && c === opts.hintHighlight.col)) cell.classList.add('hint-peer');
+      }
       if (opts.popCell && opts.popCell[0] === r && opts.popCell[1] === c) cell.classList.add('pop');
       if (opts.shakeCell && opts.shakeCell[0] === r && opts.shakeCell[1] === c) cell.classList.add('shake');
 
@@ -87,8 +95,37 @@ function updateNotesBtn() {
 }
 
 function updateUndoRedo() {
-  document.getElementById('undoBtn').disabled = state.historyIdx < 0;
-  document.getElementById('redoBtn').disabled = state.historyIdx >= state.history.length - 1;
+  const undo = document.getElementById('undoBtn');
+  const redo = document.getElementById('redoBtn');
+  const hint = document.getElementById('hintBtn');
+  const undoCount = state.historyIdx + 1;
+  const redoCount = state.history.length - state.historyIdx - 1;
+
+  undo.disabled = state.historyIdx < 0;
+  redo.disabled = state.historyIdx >= state.history.length - 1;
+
+  let undoBadge = undo.querySelector('.action-badge');
+  let redoBadge = redo.querySelector('.action-badge');
+
+  if (undoCount > 0 && !undo.disabled) {
+    if (!undoBadge) { undoBadge = document.createElement('span'); undoBadge.className = 'action-badge'; undo.appendChild(undoBadge); }
+    undoBadge.textContent = undoCount;
+    undoBadge.style.display = '';
+  } else if (undoBadge) { undoBadge.style.display = 'none'; }
+
+  if (redoCount > 0 && !redo.disabled) {
+    if (!redoBadge) { redoBadge = document.createElement('span'); redoBadge.className = 'action-badge'; redo.appendChild(redoBadge); }
+    redoBadge.textContent = redoCount;
+    redoBadge.style.display = '';
+  } else if (redoBadge) { redoBadge.style.display = 'none'; }
+
+  // Hint badge shows hints used
+  let hintBadge = hint.querySelector('.action-badge');
+  if (state.hintsUsed > 0) {
+    if (!hintBadge) { hintBadge = document.createElement('span'); hintBadge.className = 'action-badge'; hint.appendChild(hintBadge); }
+    hintBadge.textContent = state.hintsUsed;
+    hintBadge.style.display = '';
+  } else if (hintBadge) { hintBadge.style.display = 'none'; }
 }
 
 // ============================================================
@@ -120,6 +157,19 @@ function setupInput() {
     if (e.key === 'ArrowDown' && state.selectedCell) { e.preventDefault(); selectCell(Math.min(8, state.selectedCell[0] + 1), state.selectedCell[1]); }
     if (e.key === 'ArrowLeft' && state.selectedCell) { e.preventDefault(); selectCell(state.selectedCell[0], Math.max(0, state.selectedCell[1] - 1)); }
     if (e.key === 'ArrowRight' && state.selectedCell) { e.preventDefault(); selectCell(state.selectedCell[0], Math.min(8, state.selectedCell[1] + 1)); }
+    if (e.key === 'Home') { e.preventDefault(); selectCell(0, 0); }
+    if (e.key === 'End') { e.preventDefault(); selectCell(8, 8); }
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      if (!state.selectedCell) { selectCell(0, 0); return; }
+      const sr = state.selectedCell[0], sc = state.selectedCell[1];
+      const dir = e.shiftKey ? -1 : 1;
+      for (let i = 1; i <= 81; i++) {
+        const idx = ((sr * 9 + sc + i * dir) % 81 + 81) % 81;
+        const r = Math.floor(idx / 9), c = idx % 9;
+        if (state.board[r][c] === 0) { selectCell(r, c); break; }
+      }
+    }
     if ((e.key === 'z' || e.key === 'Z') && (e.ctrlKey || e.metaKey) && e.shiftKey) { e.preventDefault(); redo(); }
     if ((e.key === 'z' || e.key === 'Z') && (e.ctrlKey || e.metaKey)) { e.preventDefault(); undo(); }
   });
@@ -135,7 +185,7 @@ function setupInput() {
   });
 
   document.getElementById('timerWrap').addEventListener('click', () => {
-    if (!state.started) return;
+    if (!state.started || state.won || state.gameOver) return;
     state.timerRunning = !state.timerRunning;
     if (state.timerRunning) {
       state.timerInterval = setInterval(() => {
@@ -146,6 +196,7 @@ function setupInput() {
       if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
     }
     document.getElementById('timerWrap').classList.toggle('paused', !state.timerRunning);
+    saveGame();
   });
 
   document.getElementById('gameMuteBtn').addEventListener('click', () => {

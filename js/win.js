@@ -52,18 +52,43 @@ function showWinDialog() {
   if (state.isDaily) {
     totalEarned += calcDailyBonus();
     markDailyDone();
+    stats.dailyChallengesDone = (stats.dailyChallengesDone || 0) + 1;
+    const archive = stats.dailyArchive || [];
+    const today = todayStr();
+    if (!archive.includes(today)) {
+      archive.push(today);
+      stats.dailyArchive = archive;
+    }
     document.getElementById('winSubtitle').textContent = 'Daily Challenge completed!';
     updateStreak();
   } else {
     document.getElementById('winSubtitle').textContent = diffNames[state.difficulty] + ' puzzle solved!';
   }
 
+  // Level info
+  const levelInfo = document.getElementById('winLevelInfo');
+  const levelNum = document.getElementById('winLevelNum');
+  if (!state.isDaily) {
+    levelInfo.style.display = 'inline-block';
+    levelNum.textContent = state.currentLevel;
+    // Track highest level
+    const diff = state.difficulty;
+    if (state.currentLevel > stats.highestLevel) stats.highestLevel = state.currentLevel;
+    if (state.currentLevel > (stats.highestLevelByDifficulty[diff] || 0)) stats.highestLevelByDifficulty[diff] = state.currentLevel;
+  } else {
+    levelInfo.style.display = 'none';
+  }
+
+  if (!stats.firstGameDate) stats.firstGameDate = todayStr();
   stats.totalGames++;
   stats.totalXp += totalEarned;
   stats.totalTime += state.timer;
   stats.gamesByDifficulty[state.difficulty] = (stats.gamesByDifficulty[state.difficulty] || 0) + 1;
+  stats.totalMistakes = (stats.totalMistakes || 0) + state.mistakes;
   if (state.timer < stats.bestTimes[state.difficulty]) stats.bestTimes[state.difficulty] = state.timer;
   if (streak.count > stats.bestStreak) stats.bestStreak = streak.count;
+  if (state.mistakes === 0) stats.flawlessCount = (stats.flawlessCount || 0) + 1;
+  if (state.hintsUsed === 0) stats.puzzlesNoHints = (stats.puzzlesNoHints || 0) + 1;
   saveStats();
 
   const newRank = getRank(stats.totalXp);
@@ -78,8 +103,17 @@ function showWinDialog() {
     levelUpEl.style.display = 'none';
   }
 
+  // Set Next Puzzle button for level mode
+  const nextBtn = document.getElementById('winNext');
+  if (!state.isDaily) {
+    nextBtn.textContent = 'Next Level';
+  } else {
+    nextBtn.textContent = 'Next Puzzle';
+  }
+
   clearGame();
-  checkAchievements(state.difficulty, state.mistakes, state.hintsUsed);
+  checkAchievements(state.difficulty, state.mistakes, state.hintsUsed, state.notesUsed, totalEarned, state.settings.autoCandidates);
+  addScoreToLeaderboard('Player', Math.round(totalEarned), state.difficulty);
   fireConfetti();
   document.getElementById('winOverlay').classList.add('open');
   updateMenuUI();
@@ -99,5 +133,36 @@ function updateStreak() {
   }
   streak.lastDate = today;
   saveStreak();
+
+  // Check streak milestone rewards
+  loadBonus(); // refresh
+  if (!dailyBonus._claimedMilestones) dailyBonus._claimedMilestones = [];
+  for (const m of STREAK_MILESTONES) {
+    if (streak.count >= m.days && !dailyBonus._claimedMilestones.includes(m.days)) {
+      dailyBonus._claimedMilestones.push(m.days);
+      stats.totalXp = (stats.totalXp || 0) + m.xp;
+      saveStats();
+      saveBonus();
+      showMilestoneRewardToast(m);
+    }
+  }
+}
+
+function showMilestoneRewardToast(m) {
+  // Unlock the 1-Year Streak achievement too
+  if (m.days === 365) {
+    if (!stats.achievements) stats.achievements = {};
+    stats.achievements.yearStreak = { unlocked: true, date: todayStr() };
+    saveStats();
+  }
+  const toast = document.getElementById('toast');
+  toast.innerHTML =
+    '<div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border:2px solid var(--xp-gold);border-radius:12px;padding:14px 20px;text-align:center;box-shadow:0 8px 32px rgba(251,191,36,0.3);">' +
+    '<div style="font-size:28px;margin-bottom:4px;">🎉</div>' +
+    '<div style="font-size:15px;font-weight:800;color:var(--xp-gold);">' + m.label + '</div>' +
+    '<div style="font-size:13px;color:#ccc;margin-top:2px;">+' + m.xp + ' XP Bonus!</div>' +
+    '</div>';
+  toast.classList.add('open');
+  setTimeout(() => toast.classList.remove('open'), 3000);
 }
 

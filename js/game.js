@@ -15,7 +15,10 @@ const state = {
   timer: 0, timerRunning: false, timerInterval: null,
   mistakes: 0, hintsUsed: 0, started: false,
   difficulty: 'easy', gameOver: false, won: false,
-  isDaily: false,  // is this the daily challenge?
+  isDaily: false, gameMode: 'normal',
+  currentLevel: 1,
+  notesUsed: false,
+  _retryData: null,
 };
 state.settings = {};
 
@@ -34,6 +37,8 @@ function undo() {
   state.board[row][col] = prevVal;
   state.notes[row][col] = new Set(prevNotes);
   if (move.type === 'mistake') state.mistakes--;
+  stats.totalUndosUsed = (stats.totalUndosUsed || 0) + 1;
+  saveStats();
   updateUndoRedo();
   render();
   saveGame();
@@ -80,7 +85,9 @@ function placeNumber(row, col, num) {
     if (!state.started) { state.started = true; startTimer(); }
     render({ shakeCell: [row, col] }); saveGame(); playSound('error');
     haptic([30, 50, 30]);
-    if (state.settings.mistakeLimit && state.mistakes >= 3) gameOver();
+    if (state.mistakes >= 3) {
+      showRetryOverlay();
+    }
     return;
   }
 
@@ -94,9 +101,13 @@ function placeNumber(row, col, num) {
 
 function toggleNote(row, col, num) {
   if (state.givens[row][col] || state.board[row][col]) return;
+  state.notesUsed = true;
   const prevNotes = [...state.notes[row][col]];
   if (state.notes[row][col].has(num)) state.notes[row][col].delete(num);
-  else state.notes[row][col].add(num);
+  else {
+    state.notes[row][col].add(num);
+    stats.totalNotesPlaced = (stats.totalNotesPlaced || 0) + 1;
+  }
   pushHistory('note', row, col, 0, 0, prevNotes, [...state.notes[row][col]]);
   if (!state.started) { state.started = true; startTimer(); }
   render(); saveGame(); playSound('place');
@@ -161,7 +172,15 @@ function giveHint() {
     state.board[row][col] = correctVal;
     state.notes[row][col] = new Set();
     pushHistory('hint', row, col, prevVal, correctVal, prevNotes, []);
-    state.hintsUsed++;
+    // Bonus hints don't count toward stats
+    if (dailyBonus.hintsRemaining > 0) {
+      dailyBonus.hintsRemaining--;
+      saveBonus();
+    } else {
+      state.hintsUsed++;
+      stats.totalHintsUsedAll = (stats.totalHintsUsedAll || 0) + 1;
+      saveStats();
+    }
     state._hintCell = null;
     if (!state.started) { state.started = true; startTimer(); }
     render({ popCell: [row, col] }); saveGame(); playSound('place');
@@ -172,6 +191,7 @@ function giveHint() {
     if (!state.selectedCell || state.selectedCell[0] !== row || state.selectedCell[1] !== col) {
       selectCell(row, col);
     }
+    render({ hintHighlight: { row, col } });
     showHintToast(technique, desc);
     playSound('place');
   }
@@ -224,6 +244,45 @@ function startTimer() {
   }, 1000);
 }
 
+function showRetryOverlay() {
+  document.getElementById('retryOverlay').classList.add('open');
+  document.getElementById('retryBtn').onclick = () => {
+    document.getElementById('retryOverlay').classList.remove('open');
+    retryLevel();
+  };
+}
+
+function retryLevel() {
+  state.board = state.solution.map((r, ri) => r.map((c, ci) => state.givens[ri][ci] ? state.solution[ri][ci] : 0));
+  state.notes = Array.from({length: 9}, () => Array.from({length: 9}, () => new Set()));
+  state.history = []; state.historyIdx = -1;
+  state.selectedCell = null; state.notesMode = false;
+  state.timer = 0; state.timerRunning = false;
+  state.mistakes = 0; state.hintsUsed = 0; state.started = false;
+  state.gameOver = false; state.won = false;
+  state._hintCell = null;
+  document.getElementById('timer').textContent = '00:00';
+  document.getElementById('mistakes').textContent = '0';
+  updateUndoRedo();
+  render({ entering: true });
+  saveGame();
+  playSound('place');
+  if (!state.isDaily) showLevelAnimation(state.currentLevel);
+}
+
+function showLevelAnimation(level) {
+  const overlay = document.getElementById('levelOverlay');
+  const numEl = document.getElementById('levelNumber');
+  numEl.textContent = level;
+  overlay.classList.add('open');
+  const badge = document.getElementById('gameLevelBadge');
+  const numBadge = document.getElementById('gameLevelNum');
+  if (badge) { badge.style.display = 'inline-flex'; numBadge.textContent = level; }
+  setTimeout(() => {
+    overlay.classList.remove('open');
+  }, 1200);
+}
+
 function formatTime(secs) {
   const h = Math.floor(secs / 3600);
   const m = Math.floor((secs % 3600) / 60);
@@ -232,14 +291,43 @@ function formatTime(secs) {
   return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
 }
 
-function initNewGame(difficulty, isDaily) {
+function initNewGame(difficulty, isDaily, startLevel) {
   if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
   state.difficulty = difficulty || 'easy';
   state.isDaily = !!isDaily;
+  state.gameMode = isDaily ? 'daily' : 'normal';
+  state.currentLevel = startLevel || 1;
+
+  // Consume bonus game
+  loadBonus();
+  if (dailyBonus.gamesRemaining > 0 && !isDaily) {
+    dailyBonus.gamesRemaining--;
+    dailyBonus.hintsRemaining = 3;
+    saveBonus();
+  }
 
   document.getElementById('loadingOverlay').classList.add('open');
 
   setTimeout(() => {
+    // Daily mode: restore cached game if available
+    if (isDaily && loadDailyGame()) {
+      state.difficulty = 'medium';
+      state.isDaily = true;
+      state.gameMode = 'daily';
+      document.getElementById('timer').textContent = formatTime(state.timer);
+      document.getElementById('mistakes').textContent = String(state.mistakes);
+      document.getElementById('gameLabel').textContent = 'Daily Challenge';
+      document.getElementById('winOverlay').classList.remove('open');
+      const badge = document.getElementById('gameLevelBadge');
+      if (badge) badge.style.display = 'none';
+      updateUndoRedo();
+      render({ entering: true });
+      if (state.timer > 0 && !state.won && !state.gameOver) startTimer();
+      document.getElementById('loadingOverlay').classList.remove('open');
+      showPage('page-game');
+      return;
+    }
+
     let puzzle;
     if (isDaily) {
       const today = new Date();
@@ -258,19 +346,25 @@ function initNewGame(difficulty, isDaily) {
     state.notes = Array.from({length: 9}, () => Array.from({length: 9}, () => new Set()));
     state.history = []; state.historyIdx = -1;
     state.selectedCell = null; state.notesMode = false;
-    state.timer = 0; state.timerRunning = false;
+    state.timer = 0; state.timerRunning = false; state.timerPaused = false;
     state.mistakes = 0; state.hintsUsed = 0; state.started = false;
-    state.gameOver = false; state.won = false;
+    state.gameOver = false; state.won = false; state.notesUsed = false;
+    state._retryData = null;
     document.getElementById('timer').textContent = '00:00';
     document.getElementById('mistakes').textContent = '0';
     document.getElementById('gameLabel').textContent = state.isDaily ? 'Daily Challenge' : capitalize(state.difficulty);
     document.getElementById('winOverlay').classList.remove('open');
+    const badge = document.getElementById('gameLevelBadge');
+    if (badge) badge.style.display = state.isDaily ? 'none' : 'inline-flex';
+    const numBadge = document.getElementById('gameLevelNum');
+    if (numBadge) numBadge.textContent = state.currentLevel;
     updateUndoRedo();
-    render();
+    render({ entering: true });
     saveGame();
     playSound('place');
     document.getElementById('loadingOverlay').classList.remove('open');
     showPage('page-game');
+    if (!state.isDaily) showLevelAnimation(state.currentLevel);
   }, 50);
 }
 

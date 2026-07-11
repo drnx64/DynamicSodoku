@@ -1,9 +1,18 @@
 // ============================================================
 // 9. Page Navigation
 // ============================================================
+let _prevPage = 'page-menu';
+
 function showPage(id) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => {
+    if (p.classList.contains('active')) _prevPage = p.id;
+    p.classList.remove('active');
+  });
   document.getElementById(id).classList.add('active');
+}
+
+function goBack() {
+  showPage(_prevPage);
 }
 
 function updateDiffBestTimes() {
@@ -18,6 +27,19 @@ function updateDiffBestTimes() {
       el.textContent = 'Best: --';
       el.classList.remove('has-best');
     }
+    // Show highest level
+    const levelEl = el.parentElement.querySelector('.diff-level');
+    const hl = stats.highestLevelByDifficulty?.[d] || 0;
+    if (hl > 0) {
+      if (!levelEl) {
+        const lvl = document.createElement('div');
+        lvl.className = 'diff-level';
+        lvl.textContent = 'Lv. ' + hl;
+        el.parentElement.insertBefore(lvl, el.nextSibling);
+      } else {
+        levelEl.textContent = 'Lv. ' + hl;
+      }
+    }
   });
 }
 
@@ -29,18 +51,19 @@ function setupNavigation() {
     if (state.started && !state.won && !state.gameOver) {
       showConfirm('Abandon current game?', () => { clearGame(); showPage('page-menu'); });
     } else {
+      clearGame();
       showPage('page-menu');
     }
   });
 
   document.getElementById('gameSettingsBtn').addEventListener('click', () => {
-    document.getElementById('settingsModal').classList.add('open');
-    rebuildSettingsUI();
+    showPage('page-settings');
+    setupSettings();
   });
 
   document.getElementById('settingsCard').addEventListener('click', () => {
-    document.getElementById('settingsModal').classList.add('open');
-    rebuildSettingsUI();
+    showPage('page-settings');
+    setupSettings();
   });
 
   document.querySelectorAll('#diffCards .diff-card').forEach(card => {
@@ -65,13 +88,29 @@ function setupNavigation() {
     updateMenuUI();
   });
 
+  document.getElementById('leaderboardCard').addEventListener('click', () => { renderLeaderboard('top'); showPage('page-leaderboard'); });
+  document.getElementById('leaderBack').addEventListener('click', goBack);
+  document.querySelectorAll('.leader-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.leader-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      renderLeaderboard(tab.dataset.lbview);
+    });
+  });
+
+  document.getElementById('settingsBack').addEventListener('click', goBack);
+  document.getElementById('statsBack').addEventListener('click', goBack);
+  document.getElementById('archiveBack').addEventListener('click', goBack);
+  document.getElementById('achieveBack').addEventListener('click', goBack);
+
   document.getElementById('winNext').addEventListener('click', () => {
     document.getElementById('winOverlay').classList.remove('open');
     if (state.isDaily) {
       showPage('page-menu');
       updateMenuUI();
     } else {
-      initNewGame(state.difficulty, false);
+      const nextLevel = state.currentLevel + 1;
+      initNewGame(state.difficulty, false, nextLevel);
     }
   });
 }
