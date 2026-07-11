@@ -49,7 +49,8 @@ function setupNavigation() {
 
   document.getElementById('gameBack').addEventListener('click', () => {
     if (state.started && !state.won && !state.gameOver) {
-      showConfirm('Abandon current game?', () => { clearGame(); showPage('page-menu'); });
+      saveGame();
+      showPage('page-menu');
     } else {
       clearGame();
       showPage('page-menu');
@@ -102,6 +103,12 @@ function setupNavigation() {
   document.getElementById('statsBack').addEventListener('click', goBack);
   document.getElementById('archiveBack').addEventListener('click', goBack);
   document.getElementById('achieveBack').addEventListener('click', goBack);
+
+  document.getElementById('leaderShareBtn').addEventListener('click', shareLeaderboard);
+  document.getElementById('leaderImportBtn').addEventListener('click', () => {
+    const code = prompt('Paste leaderboard code:');
+    if (code) importLeaderboard(code);
+  });
 
   document.getElementById('winNext').addEventListener('click', () => {
     document.getElementById('winOverlay').classList.remove('open');

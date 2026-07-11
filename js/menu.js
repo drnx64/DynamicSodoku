@@ -19,6 +19,15 @@ function rankSvgImg(rankName, size) {
   return '<img src="' + src + '" width="' + size + '" height="' + size + '" class="rank-svg-icon" alt="' + rankName + '">';
 }
 
+function getStreakFire(count) {
+  if (count >= 30) return { level: 5, icon: 'ico-fire6', color: '#ec4899' };
+  if (count >= 20) return { level: 4, icon: 'ico-fire5', color: '#f59e0b' };
+  if (count >= 15) return { level: 3, icon: 'ico-fire4', color: '#22c55e' };
+  if (count >= 10) return { level: 2, icon: 'ico-fire3', color: '#8b5cf6' };
+  if (count >= 5)  return { level: 1, icon: 'ico-fire2', color: '#3b82f6' };
+  return { level: 0, icon: 'ico-fire', color: '#ef4444' };
+}
+
 function updateMenuUI() {
   const totalXp = stats.totalXp || 0;
   const rank = getRank(totalXp);
@@ -40,6 +49,8 @@ function updateMenuUI() {
         updateMenuUI();
       }
     };
+    // Pop-up toast notification
+    showBonusToast();
   } else if (dailyBonus.lastClaimDate === todayStr() && dailyBonus.gamesRemaining > 0) {
     bonusCard.style.display = 'flex';
     bonusSub.textContent = dailyBonus.gamesRemaining + ' / 10 bonus games remaining today';
@@ -82,6 +93,9 @@ function updateMenuUI() {
   const badge = document.getElementById('streakBadge');
   document.getElementById('streakCount').textContent = s;
   badge.classList.toggle('zero', s === 0);
+  const fire = getStreakFire(s);
+  badge.className = 'streak-badge' + (s === 0 ? ' zero' : '') + ' level-' + fire.level;
+  badge.querySelector('svg use').setAttribute('href', '#' + fire.icon);
 
   document.getElementById('totalGamesCount').textContent = stats.totalGames || 0;
 
@@ -107,6 +121,18 @@ function showDailyToast() {
   const toast = document.getElementById('dailyToast');
   toast.classList.add('show');
   setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+function showBonusToast() {
+  const toast = document.getElementById('toast');
+  toast.innerHTML =
+    '<div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border:2px solid var(--xp-gold);border-radius:12px;padding:14px 18px;text-align:center;box-shadow:0 8px 32px rgba(251,191,36,0.3);">' +
+    '<div style="font-size:22px;margin-bottom:2px;">🎁</div>' +
+    '<div style="font-size:14px;font-weight:800;color:var(--xp-gold);">Daily Bonus Available!</div>' +
+    '<div style="font-size:11px;color:#ccc;margin-top:2px;">10 bonus games with +3 hints</div>' +
+    '</div>';
+  toast.classList.add('open');
+  setTimeout(() => toast.classList.remove('open'), 4000);
 }
 
 function showStats() {
@@ -170,76 +196,6 @@ function showStats() {
     timeGrid.innerHTML += '<div class="stat-card"><div class="stat-value">' + (t < Infinity ? formatTime(t) : '--') + '</div><div class="stat-label">' + d.label + '</div></div>';
   });
   content.appendChild(timeGrid);
-
-  // Leaderboard section
-  const lbTitle = document.createElement('div');
-  lbTitle.className = 'stats-section-title';
-  lbTitle.textContent = 'Leaderboard';
-  content.appendChild(lbTitle);
-
-  const lbContainer = document.createElement('div');
-  lbContainer.style.cssText = 'background:var(--card-bg);border-radius:var(--radius);padding:12px;box-shadow:var(--card-shadow);margin-bottom:16px;';
-
-  function getMockLeaderboard() {
-    const mockNames = ['SudokuMaster', 'LogicQueen', 'NumberNinja', 'GridWizard', 'CellKing', 'PuzzleWhiz', 'DigitDancer', 'RowRuler', 'BoxBoss', 'CageBreaker', 'SolverSam', 'BrainAce', 'PencilMark', 'XWingFox', 'Swordfish'];
-    const userXp = stats.totalXp || 0;
-    const userGames = stats.totalGames || 0;
-    const userAvgScore = userGames > 0 ? Math.round(userXp / userGames) : 20;
-    const mockEntries = [];
-    mockNames.forEach((name, i) => {
-      const varScore = Math.round(userAvgScore * (0.5 + Math.random() * 1.0) + Math.random() * 30);
-      const games = Math.round(userGames * (0.2 + Math.random() * 1.5) + 1);
-      const xp = varScore * games + Math.round(Math.random() * 100);
-      mockEntries.push({
-        name, score: varScore + Math.round(Math.random() * 15),
-        xp, games, difficulty: ['easy','medium','hard','impossible'][Math.floor(Math.random() * 4)],
-        date: todayStr(), id: Date.now() + i, isMock: true,
-      });
-    });
-    return mockEntries.sort((a, b) => b.score - a.score);
-  }
-
-  const lbList = document.createElement('div');
-  const topScores = getLeaderboardTop(10);
-  const mockScores = getMockLeaderboard();
-  const allScores = topScores.length > 0 ? topScores : [];
-
-  if (allScores.length === 0) {
-    // Show mock data instead
-    mockScores.slice(0, 10).forEach((entry, i) => {
-      const row = document.createElement('div');
-      const isPlayer = i === 0 && topScores.length === 0;
-      row.style.cssText = 'display:flex;justify-content:space-between;padding:4px 0;font-size:12px;border-bottom:1px solid var(--border);' + (isPlayer ? 'font-weight:700;color:var(--xp-gold);' : '');
-      row.innerHTML = '<span>' + (i + 1) + '. ' + (isPlayer ? 'You' : entry.name) + '</span><span>' + entry.score + ' pts</span>';
-      lbList.appendChild(row);
-    });
-  } else {
-    allScores.forEach((entry, i) => {
-      const row = document.createElement('div');
-      row.style.cssText = 'display:flex;justify-content:space-between;padding:4px 0;font-size:12px;border-bottom:1px solid var(--border);' + (i === 0 ? 'font-weight:700;color:var(--xp-gold);' : '');
-      row.innerHTML = '<span>' + (i + 1) + '. ' + entry.name + '</span><span>' + entry.score + ' pts</span>';
-      lbList.appendChild(row);
-    });
-  }
-  lbContainer.appendChild(lbList);
-
-  const lbActions = document.createElement('div');
-  lbActions.style.cssText = 'display:flex;gap:8px;margin-top:8px;';
-  const shareBtn = document.createElement('button');
-  shareBtn.className = 'data-btn';
-  shareBtn.textContent = 'Share';
-  shareBtn.addEventListener('click', shareLeaderboard);
-  const importBtn2 = document.createElement('button');
-  importBtn2.className = 'data-btn';
-  importBtn2.textContent = 'Import';
-  importBtn2.addEventListener('click', () => {
-    const code = prompt('Paste leaderboard code:');
-    if (code) importLeaderboard(code);
-  });
-  lbActions.appendChild(shareBtn);
-  lbActions.appendChild(importBtn2);
-  lbContainer.appendChild(lbActions);
-  content.appendChild(lbContainer);
 
   showPage('page-stats');
 }
@@ -460,12 +416,12 @@ const _ACHIEVE_PER_PAGE = 20;
 
 function showAchievements() {
   const earned = stats.achievements || [];
-  const filter = document.querySelector('.achieve-tab.active')?.dataset?.filter || 'all';
-  const catFilter = document.querySelector('.achieve-cat-tab.active')?.dataset?.cat || 'all';
+  const filter = document.querySelector('#achieveFilterTabs .achieve-tab.active')?.dataset?.filter || 'all';
+  const catFilter = document.querySelector('#achieveCatTabs .achieve-cat-tab.active')?.dataset?.cat || 'all';
   const grid = document.getElementById('achieveGrid');
   grid.innerHTML = '';
 
-  document.getElementById('achieveCount').textContent = earned.length + ' / ' + ACHIEVEMENTS.length;
+  document.getElementById('achieveCount').textContent = earned.length + '/' + ACHIEVEMENTS.length;
 
   let filtered = ACHIEVEMENTS;
   if (catFilter !== 'all') {
@@ -479,7 +435,6 @@ function showAchievements() {
     filtered = [...unlocked, ...locked];
   }
 
-  // Group by category
   const catOrder = ['progress', 'speed', 'flawless', 'nohints', 'comeback', 'streak', 'impossible', 'daily', 'misc'];
   const catNames = { progress: 'Progress', speed: 'Speed', flawless: 'Flawless', nohints: 'No Hints', comeback: 'Comeback', streak: 'Streak', impossible: 'Impossible', daily: 'Daily', misc: 'Misc' };
   const catIcons = { progress: 'ico-trophy', speed: 'ico-bolt', flawless: 'ico-star', nohints: 'ico-lightbulb', comeback: 'ico-shield', streak: 'ico-fire', impossible: 'ico-diamond', daily: 'ico-calendar', misc: 'ico-award' };
@@ -491,16 +446,16 @@ function showAchievements() {
     grouped[cat].push(a);
   }
 
-  // Paginate: flatten groups in category order, then slice
   let flatOrdered = [];
   for (const catId of catOrder) {
     if (grouped[catId]) {
+      if (flatOrdered.length > 0) flatOrdered.push(null); // group separator
       flatOrdered = flatOrdered.concat(grouped[catId]);
     }
   }
-  // Add any unknown categories at the end
   for (const catId of Object.keys(grouped)) {
     if (!catOrder.includes(catId)) {
+      if (flatOrdered.length > 0) flatOrdered.push(null);
       flatOrdered = flatOrdered.concat(grouped[catId]);
     }
   }
@@ -512,33 +467,33 @@ function showAchievements() {
 
   let currentGroupCat = null;
   for (const a of pageItems) {
+    if (a === null) { currentGroupCat = null; continue; }
     const cat = a.cat || 'misc';
-    if (cat !== currentGroupCat) {
+    if (cat !== currentGroupCat && catFilter === 'all') {
       currentGroupCat = cat;
       const header = document.createElement('div');
       header.className = 'achieve-cat-header';
-      header.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24"><use href="#' + (catIcons[cat] || 'ico-award') + '"/></svg> ' + (catNames[cat] || cat);
+      header.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24"><use href="#' + (catIcons[cat] || 'ico-award') + '"/></svg> ' + (catNames[cat] || cat);
       grid.appendChild(header);
     }
     const unlocked = earned.includes(a.id);
-    const el = document.createElement('div');
-    el.className = 'achieve-item' + (unlocked ? ' unlocked' : '');
+    const card = document.createElement('div');
+    card.className = 'achieve-card' + (unlocked ? ' unlocked' : '');
     const progress = getAchievementProgress(a.id);
     let progressHtml = '';
     if (progress && !unlocked) {
       const pct = Math.min(100, (progress.current / progress.max * 100));
       progressHtml = '<div class="achieve-progress"><div class="achieve-progress-fill" style="width:' + pct + '%"></div></div><div class="achieve-progress-label">' + progress.current + '/' + progress.max + '</div>';
     }
-    el.innerHTML = '<div class="achieve-icon"><svg width="22" height="22" viewBox="0 0 24 24"><use href="#' + a.icon + '"/></svg></div><div class="achieve-info"><div class="achieve-name">' + a.name + '</div><div class="achieve-desc">' + a.desc + '</div>' + progressHtml + '</div>';
-    grid.appendChild(el);
+    card.innerHTML = '<div class="achieve-icon"><svg width="22" height="22" viewBox="0 0 24 24"><use href="#' + a.icon + '"/></svg></div><div class="achieve-info"><div class="achieve-name">' + a.name + '</div><div class="achieve-desc">' + a.desc + '</div>' + progressHtml + '</div>';
+    grid.appendChild(card);
   }
 
-  // Pagination controls
   if (totalPages > 1) {
     const pagination = document.createElement('div');
     pagination.className = 'achieve-pagination';
     const prevBtn = document.createElement('button');
-    prevBtn.className = 'data-btn';
+    prevBtn.className = 'pagi-btn';
     prevBtn.textContent = '\u2039 Prev';
     prevBtn.disabled = _achievePage === 0;
     prevBtn.addEventListener('click', () => { if (_achievePage > 0) { _achievePage--; showAchievements(); } });
@@ -546,7 +501,7 @@ function showAchievements() {
     pageInfo.className = 'achieve-page-info';
     pageInfo.textContent = (_achievePage + 1) + ' / ' + totalPages;
     const nextBtn = document.createElement('button');
-    nextBtn.className = 'data-btn';
+    nextBtn.className = 'pagi-btn';
     nextBtn.textContent = 'Next \u203A';
     nextBtn.disabled = _achievePage >= totalPages - 1;
     nextBtn.addEventListener('click', () => { if (_achievePage < totalPages - 1) { _achievePage++; showAchievements(); } });
@@ -563,6 +518,13 @@ function showStreakJourney() {
   const s = streak.count || 0;
   document.getElementById('streakBigCount').textContent = s;
   document.getElementById('streakBestCount').textContent = stats.bestStreak || s || 0;
+
+  const fire = getStreakFire(s);
+  const wrap = document.getElementById('streakFireWrap');
+  wrap.querySelector('svg use').setAttribute('href', '#' + fire.icon);
+  wrap.className = 'streak-fire-wrap level-' + fire.level;
+  document.getElementById('streakHeaderFire').style.color = fire.color;
+  document.getElementById('streakOverlay').style.setProperty('--streak-color', fire.color);
 
   const done = isDailyDoneToday();
   const status = document.getElementById('streakDailyStatus');

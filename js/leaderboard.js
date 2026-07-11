@@ -34,27 +34,44 @@ function getLeaderboardTop(limit) {
   return getLeaderboard().slice(0, limit || 20);
 }
 
+function getMockLeaderboard() {
+  const mockNames = ['SudokuMaster', 'LogicQueen', 'NumberNinja', 'GridWizard', 'CellKing', 'PuzzleWhiz', 'DigitDancer', 'RowRuler', 'BoxBoss', 'CageBreaker', 'SolverSam', 'BrainAce', 'PencilMark', 'XWingFox', 'Swordfish'];
+  const userXp = stats.totalXp || 0;
+  const userGames = stats.totalGames || 0;
+  const userAvgScore = userGames > 0 ? Math.round(userXp / userGames) : 20;
+  return mockNames.map((name, i) => {
+    const varScore = Math.round(userAvgScore * (0.5 + Math.random() * 1.0) + Math.random() * 30);
+    const games = Math.round(userGames * (0.2 + Math.random() * 1.5) + 1);
+    const xp = varScore * games + Math.round(Math.random() * 100);
+    return {
+      name, score: varScore + Math.round(Math.random() * 15),
+      xp, games, difficulty: ['easy','medium','hard','impossible'][Math.floor(Math.random() * 4)],
+      date: todayStr(), id: Date.now() + i, isMock: true,
+    };
+  }).sort((a, b) => b.score - a.score);
+}
+
 function renderLeaderboard(view) {
   const list = document.getElementById('leaderboardList');
   let entries = getLeaderboard();
+  if (entries.length === 0) {
+    entries = getMockLeaderboard();
+  }
   if (view === 'top') {
     entries.sort((a, b) => b.score - a.score);
   } else {
     entries.sort((a, b) => b.id - a.id);
   }
-  if (entries.length === 0) {
-    list.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text-muted);font-size:13px;">No entries yet. Complete a puzzle to appear here!</div>';
-    return;
-  }
   const top = entries.slice(0, 50);
   list.innerHTML = top.map((e, i) => {
+    const topThree = i < 3;
     const rankCls = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : '';
     const rankLabel = i === 0 ? '1' : i === 1 ? '2' : i === 2 ? '3' : '#' + (i + 1);
     const avatarUrl = 'https://api.dicebear.com/9.x/pixel-art/svg?seed=' + encodeURIComponent(e.name) + '&scale=120';
     const detail = view === 'recent'
       ? e.difficulty + ' \u00b7 ' + e.date
       : e.difficulty + ' \u00b7 ' + (e.games || 0) + ' games';
-    return '<div class="leader-entry">'
+    return '<div class="leader-entry' + (topThree ? ' top-three' : '') + '">'
       + '<div class="leader-rank ' + rankCls + '">' + rankLabel + '</div>'
       + '<img class="leader-avatar" src="' + avatarUrl + '" alt="" loading="lazy">'
       + '<div class="leader-info"><div class="leader-name">' + escapeHtml(e.name) + '</div><div class="leader-detail">' + detail + '</div></div>'

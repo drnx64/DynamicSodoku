@@ -19,8 +19,10 @@ function init() {
 
   // Load saved game into state (for resume potential) but always show menu on page load
   const loaded = loadGame();
-  if (loaded && state.solution && state.solution.length === 9 && (state.won || state.gameOver || state.mistakes >= 3)) {
-    clearGame();
+  if (loaded && state.solution && state.solution.length === 9) {
+    if (state.won || state.gameOver || state.mistakes >= 3) {
+      clearGame();
+    }
   }
   showPage('page-menu');
   updateMenuUI();

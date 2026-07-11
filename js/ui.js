@@ -64,6 +64,7 @@ function render(opts) {
   document.getElementById('mistakes').textContent = String(state.mistakes);
   updateNumPad();
   updateNotesBtn();
+  updateUndoRedo();
 }
 
 function selectCell(row, col) {

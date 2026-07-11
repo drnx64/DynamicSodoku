@@ -115,8 +115,25 @@ function showWinDialog() {
   checkAchievements(state.difficulty, state.mistakes, state.hintsUsed, state.notesUsed, totalEarned, state.settings.autoCandidates);
   addScoreToLeaderboard('Player', Math.round(totalEarned), state.difficulty);
   fireConfetti();
-  document.getElementById('winOverlay').classList.add('open');
-  updateMenuUI();
+
+  function openWinDialog() {
+    document.getElementById('winOverlay').classList.add('open');
+    updateMenuUI();
+  }
+
+  if (leveledUp) {
+    const overlay = document.getElementById('rankupOverlay');
+    document.getElementById('rankupBadge').innerHTML = rankSvgTag(newRank.name, 96);
+    document.getElementById('rankupOldRank').textContent = prevRank.name;
+    document.getElementById('rankupNewRank').textContent = newRank.name;
+    overlay.classList.add('open');
+    setTimeout(() => {
+      overlay.classList.remove('open');
+      openWinDialog();
+    }, 2200);
+  } else {
+    openWinDialog();
+  }
 }
 
 function updateStreak() {

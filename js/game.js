@@ -328,6 +328,33 @@ function initNewGame(difficulty, isDaily, startLevel) {
       return;
     }
 
+    // Normal mode: restore saved game if matching difficulty and in progress
+    if (!isDaily) {
+      const raw = localStorage.getItem(LS.game);
+      if (raw) {
+        try {
+          const saved = JSON.parse(raw);
+          if (saved.difficulty === difficulty && !saved.won && !saved.gameOver && saved.mistakes < 3) {
+            loadGame();
+            state.isDaily = false;
+            state.gameMode = 'normal';
+            document.getElementById('gameLabel').textContent = capitalize(difficulty);
+            document.getElementById('winOverlay').classList.remove('open');
+            const badge = document.getElementById('gameLevelBadge');
+            if (badge) badge.style.display = 'inline-flex';
+            const numBadge = document.getElementById('gameLevelNum');
+            if (numBadge) numBadge.textContent = state.currentLevel;
+            updateUndoRedo();
+            render({ entering: true });
+            if (state.timer > 0 && !state.won && !state.gameOver) startTimer();
+            document.getElementById('loadingOverlay').classList.remove('open');
+            showPage('page-game');
+            return;
+          }
+        } catch(e) {}
+      }
+    }
+
     let puzzle;
     if (isDaily) {
       const today = new Date();
