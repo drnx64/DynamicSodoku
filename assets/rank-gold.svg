@@ -1,1 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><circle cx="24" cy="22" r="16" fill="#ffd700" stroke="#b8960c" stroke-width="2"/><text x="24" y="27" text-anchor="middle" font-size="12" font-weight="bold" fill="#333">G</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <defs>
+    <radialGradient id="g1" cx="50%" cy="30%" r="60%"><stop offset="0%" stop-color="#fff4b0"/><stop offset="40%" stop-color="#ffd700"/><stop offset="100%" stop-color="#b8860b"/></radialGradient>
+    <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff8d0"/><stop offset="50%" stop-color="#ffd700"/><stop offset="100%" stop-color="#daa520"/></linearGradient>
+  </defs>
+  <path d="M24 4l4 8 9-1-6 7 5 8-9-2-3 9-3-9-9 2 5-8-6-7 9 1z" fill="url(#g1)" stroke="#b8860b" stroke-width="1.5"/>
+  <path d="M24 8l3 6 7-1-5 5.5 4 6-7-1.5-2 7-2-7-7 1.5 4-6-5-5.5 7 1z" fill="url(#g2)" stroke="#daa520" stroke-width="0.8"/>
+  <circle cx="24" cy="14" r="2.5" fill="#fff8d0" opacity="0.7"/>
+  <circle cx="30" cy="18" r="1.5" fill="#fff8d0" opacity="0.5"/>
+  <circle cx="18" cy="18" r="1.5" fill="#fff8d0" opacity="0.5"/>
+</svg>

@@ -1,1 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><path d="M24 6L6 24l18 18 18-18z" fill="#50c878" stroke="#2e8b57" stroke-width="2"/><text x="24" y="28" text-anchor="middle" font-size="12" font-weight="bold" fill="white">E</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <defs>
+    <linearGradient id="e1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#90ee90"/><stop offset="40%" stop-color="#50c878"/><stop offset="100%" stop-color="#1b6b3a"/></linearGradient>
+    <linearGradient id="e2" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#b8f0b8"/><stop offset="50%" stop-color="#60d888"/><stop offset="100%" stop-color="#2a8a4a"/></linearGradient>
+    <radialGradient id="e3" cx="40%" cy="35%" r="35%"><stop offset="0%" stop-color="#d0f8d0"/><stop offset="100%" stop-color="#40b868"/></radialGradient>
+  </defs>
+  <path d="M24 4L6 18l6 24h24l6-24z" fill="url(#e1)" stroke="#1b5e30" stroke-width="1.5"/>
+  <path d="M24 8L10 19l5 20h18l5-20z" fill="url(#e2)" stroke="#2a7a40" stroke-width="1"/>
+  <path d="M24 12l-10 8.5 4 17h12l4-17z" fill="url(#e3)" stroke="#3a8a50" stroke-width="0.5"/>
+  <path d="M24 16l-6 6 2.5 12h7l2.5-12z" fill="#b0f0c0" opacity="0.4"/>
+  <path d="M18 26l12-4M20 30l8-2" stroke="#1b6b3a" stroke-width="0.7" fill="none" opacity="0.4"/>
+</svg>

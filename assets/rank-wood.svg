@@ -1,5 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
-  <rect x="8" y="12" width="32" height="28" rx="4" fill="#a0522d" stroke="#6b3a1f" stroke-width="2"/>
-  <rect x="12" y="16" width="24" height="20" rx="2" fill="#c4783a"/>
-  <text x="24" y="30" text-anchor="middle" font-size="10" font-weight="bold" fill="white">W</text>
+  <defs>
+    <linearGradient id="w1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#b8864e"/><stop offset="100%" stop-color="#7a4a2e"/></linearGradient>
+    <linearGradient id="w2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#d4a56a"/><stop offset="100%" stop-color="#9c6b42"/></linearGradient>
+  </defs>
+  <path d="M24 4L6 16v10c0 8.5 7.5 16 18 18 10.5-2 18-9.5 18-18V16z" fill="url(#w1)" stroke="#5a3520" stroke-width="1.5"/>
+  <path d="M24 8L10 18v8c0 7 5.8 13 14 14.5 8.2-1.5 14-7.5 14-14.5v-8z" fill="url(#w2)" stroke="#8b5e34" stroke-width="1"/>
+  <path d="M24 14l-4 6 2 8 2-4 2 4 2-8z" fill="#5a3520" opacity="0.6"/>
+  <path d="M24 16l-2.5 4 1 5 1.5-3 1.5 3 1-5z" fill="#d4a56a" opacity="0.8"/>
+  <line x1="14" y1="20" x2="20" y2="20" stroke="#5a3520" stroke-width="0.8" opacity="0.5"/>
+  <line x1="14" y1="24" x2="22" y2="24" stroke="#5a3520" stroke-width="0.8" opacity="0.5"/>
+  <line x1="14" y1="28" x2="20" y2="28" stroke="#5a3520" stroke-width="0.8" opacity="0.5"/>
+  <line x1="28" y1="20" x2="34" y2="20" stroke="#5a3520" stroke-width="0.8" opacity="0.5"/>
+  <line x1="26" y1="24" x2="34" y2="24" stroke="#5a3520" stroke-width="0.8" opacity="0.5"/>
+  <line x1="28" y1="28" x2="34" y2="28" stroke="#5a3520" stroke-width="0.8" opacity="0.5"/>
 </svg>
