@@ -4,30 +4,42 @@
 function generateSolution(rand) {
   rand = rand || Math.random;
   const grid = Array.from({length: 9}, () => Array(9).fill(0));
-  for (let box = 0; box < 3; box++) {
-    const nums = shuffle([1,2,3,4,5,6,7,8,9], rand);
-    let idx = 0;
-    for (let r = box*3; r < box*3+3; r++)
-      for (let c = box*3; c < box*3+3; c++)
-        grid[r][c] = nums[idx++];
+  _solveDet(grid);
+
+  const numMap = shuffle([1,2,3,4,5,6,7,8,9], rand);
+  const bandPerm = shuffle([0,1,2], rand);
+  const stackPerm = shuffle([0,1,2], rand);
+  const rowPerm = [];
+  const colPerm = [];
+  for (let b = 0; b < 3; b++) {
+    const rows = shuffle([0,1,2], rand);
+    for (let i = 0; i < 3; i++)
+      rowPerm[b * 3 + i] = bandPerm[b] * 3 + rows[i];
   }
-  function _solveRand(g) {
-    for (let row = 0; row < 9; row++)
-      for (let col = 0; col < 9; col++)
-        if (g[row][col] === 0) {
-          const nums = shuffle([1,2,3,4,5,6,7,8,9], rand);
-          for (const n of nums)
-            if (isValidPlacement(g, row, col, n)) {
-              g[row][col] = n;
-              if (_solveRand(g)) return true;
-              g[row][col] = 0;
-            }
-          return false;
-        }
-    return true;
+  for (let s = 0; s < 3; s++) {
+    const cols = shuffle([0,1,2], rand);
+    for (let i = 0; i < 3; i++)
+      colPerm[s * 3 + i] = stackPerm[s] * 3 + cols[i];
   }
-  _solveRand(grid);
-  return grid;
+  const result = Array.from({length: 9}, () => Array(9).fill(0));
+  for (let r = 0; r < 9; r++)
+    for (let c = 0; c < 9; c++)
+      result[r][c] = numMap[grid[rowPerm[r]][colPerm[c]] - 1];
+  if (rand() > 0.5) {
+    const transposed = Array.from({length: 9}, () => Array(9).fill(0));
+    for (let r = 0; r < 9; r++)
+      for (let c = 0; c < 9; c++)
+        transposed[c][r] = result[r][c];
+    return transposed;
+  }
+  return result;
+}
+
+function isComplete(grid) {
+  for (let r = 0; r < 9; r++)
+    for (let c = 0; c < 9; c++)
+      if (grid[r][c] === 0) return false;
+  return true;
 }
 
 const DIFFICULTY_CONFIG = {
@@ -45,6 +57,14 @@ function hashGivens(givens) {
   return h;
 }
 
+function makePuzzleResult(solution, givens) {
+  const board = solution.map(r => [...r]);
+  for (let r = 0; r < 9; r++)
+    for (let c = 0; c < 9; c++)
+      if (!givens[r][c]) board[r][c] = 0;
+  return { solution, givens, board };
+}
+
 function generatePuzzle(difficulty, rand) {
   rand = rand || Math.random;
   const cfg = DIFFICULTY_CONFIG[difficulty];
@@ -53,16 +73,17 @@ function generatePuzzle(difficulty, rand) {
 
   for (let attempt = 0; attempt < 40; attempt++) {
     const solution = generateSolution(rand);
-    const allCells = [];
-    for (let r = 0; r < 9; r++)
-      for (let c = 0; c < 9; c++)
-        allCells.push([r, c]);
-    const shuffled = shuffle(allCells, rand);
+    if (!isComplete(solution)) continue;
+
+    const allCells = shuffle(
+      Array.from({length: 81}, (_, i) => [Math.floor(i / 9), i % 9]),
+      rand
+    );
 
     const board = solution.map(r => [...r]);
     const givens = Array.from({length: 9}, () => Array(9).fill(true));
     let clues = 81;
-    for (const [r, c] of shuffled) {
+    for (const [r, c] of allCells) {
       if (clues <= cfg.minClues) break;
       const saved = board[r][c];
       board[r][c] = 0;
@@ -75,40 +96,33 @@ function generatePuzzle(difficulty, rand) {
       }
     }
 
+    if (clues < cfg.minClues || clues > cfg.maxClues) continue;
+
     const h = hashGivens(givens);
     if (recentHashes.includes(h)) continue;
-    if (clues < cfg.minClues || clues > cfg.maxClues) continue;
 
     const tech = gradeDifficulty(board);
     if (tech <= cfg.maxTech) {
-      const result = { solution, board: solution.map(r => [...r]), givens };
-      for (let r = 0; r < 9; r++)
-        for (let c = 0; c < 9; c++)
-          if (!givens[r][c]) result.board[r][c] = 0;
       saveHash(h);
-      return result;
+      return makePuzzleResult(solution, givens);
     }
     if (tech < bestTech) {
       bestTech = tech;
-      const r = { solution, board: solution.map(r => [...r]), givens };
-      for (let rr = 0; rr < 9; rr++)
-        for (let cc = 0; cc < 9; cc++)
-          if (!givens[rr][cc]) r.board[rr][cc] = 0;
-      best = r;
+      best = makePuzzleResult(solution, givens);
     }
   }
   if (best) return best;
   for (let attempt = 0; attempt < 20; attempt++) {
     const solution = generateSolution(rand);
-    const allCells = [];
-    for (let r = 0; r < 9; r++)
-      for (let c = 0; c < 9; c++)
-        allCells.push([r, c]);
-    const shuffled = shuffle(allCells, rand);
+    if (!isComplete(solution)) continue;
+    const allCells = shuffle(
+      Array.from({length: 81}, (_, i) => [Math.floor(i / 9), i % 9]),
+      rand
+    );
     const board = solution.map(r => [...r]);
     const givens = Array.from({length: 9}, () => Array(9).fill(true));
     let clues = 81;
-    for (const [r, c] of shuffled) {
+    for (const [r, c] of allCells) {
       if (clues <= cfg.minClues) break;
       const saved = board[r][c];
       board[r][c] = 0;
@@ -118,12 +132,8 @@ function generatePuzzle(difficulty, rand) {
         givens[r][c] = true;
       } else { clues--; }
     }
-    const result = { solution, board: solution.map(r => [...r]), givens };
-    for (let r = 0; r < 9; r++)
-      for (let c = 0; c < 9; c++)
-        if (!givens[r][c]) result.board[r][c] = 0;
-    return result;
+    return makePuzzleResult(solution, givens);
   }
-  return generateSolution(rand);
+  return makePuzzleResult(generateSolution(rand), Array.from({length: 9}, () => Array(9).fill(true)));
 }
 

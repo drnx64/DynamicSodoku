@@ -234,34 +234,41 @@ function initNewGame(difficulty, isDaily) {
   state.difficulty = difficulty || 'easy';
   state.isDaily = !!isDaily;
 
-  let puzzle;
-  if (isDaily) {
-    const today = new Date();
-    const seed = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
-    const rng = createSeededRng(seed);
-    puzzle = generatePuzzle('medium', rng);
-  } else {
-    puzzle = generatePuzzle(state.difficulty);
-  }
+  document.getElementById('loadingOverlay').classList.add('open');
 
-  state.solution = puzzle.solution.map(r => [...r]);
-  state.board = puzzle.board.map(r => [...r]);
-  state.givens = puzzle.givens.map(r => [...r]);
-  state.notes = Array.from({length: 9}, () => Array.from({length: 9}, () => new Set()));
-  state.history = []; state.historyIdx = -1;
-  state.selectedCell = null; state.notesMode = false;
-  state.timer = 0; state.timerRunning = false;
-  state.mistakes = 0; state.hintsUsed = 0; state.started = false;
-  state.gameOver = false; state.won = false;
-  document.getElementById('timer').textContent = '00:00';
-  document.getElementById('mistakes').textContent = '0';
-  document.getElementById('gameLabel').textContent = state.isDaily ? 'Daily Challenge' : capitalize(state.difficulty);
-  document.getElementById('winOverlay').classList.remove('open');
-  updateUndoRedo();
-  render();
-  saveGame();
-  playSound('place');
-  showPage('page-game');
+  setTimeout(() => {
+    let puzzle;
+    if (isDaily) {
+      const today = new Date();
+      const seed = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+      const rng = createSeededRng(seed);
+      puzzle = generatePuzzle('medium', rng);
+    } else {
+      puzzle = generatePuzzle(state.difficulty);
+    }
+
+    console.log('[Sudoku] Game created successfully -', isDaily ? 'Daily' : state.difficulty, '-', puzzle.givens.flat().filter(Boolean).length, 'clues');
+
+    state.solution = puzzle.solution.map(r => [...r]);
+    state.board = puzzle.board.map(r => [...r]);
+    state.givens = puzzle.givens.map(r => [...r]);
+    state.notes = Array.from({length: 9}, () => Array.from({length: 9}, () => new Set()));
+    state.history = []; state.historyIdx = -1;
+    state.selectedCell = null; state.notesMode = false;
+    state.timer = 0; state.timerRunning = false;
+    state.mistakes = 0; state.hintsUsed = 0; state.started = false;
+    state.gameOver = false; state.won = false;
+    document.getElementById('timer').textContent = '00:00';
+    document.getElementById('mistakes').textContent = '0';
+    document.getElementById('gameLabel').textContent = state.isDaily ? 'Daily Challenge' : capitalize(state.difficulty);
+    document.getElementById('winOverlay').classList.remove('open');
+    updateUndoRedo();
+    render();
+    saveGame();
+    playSound('place');
+    document.getElementById('loadingOverlay').classList.remove('open');
+    showPage('page-game');
+  }, 50);
 }
 
 function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }

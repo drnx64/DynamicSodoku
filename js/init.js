@@ -14,6 +14,7 @@ function init() {
   setupSettings();
   setupInput();
   setupNavigation();
+  setupDialogs();
 
   const loaded = loadGame();
   if (loaded && state.solution && state.solution.length === 9) {

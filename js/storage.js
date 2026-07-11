@@ -17,6 +17,10 @@ function loadSettings() {
   try { const raw = localStorage.getItem(LS.settings); if (raw) Object.assign(state.settings, JSON.parse(raw)); } catch(e) {}
 }
 
+function clearGame() {
+  try { localStorage.removeItem(LS.game); } catch(e) {}
+}
+
 function saveGame() {
   try {
     const data = {
@@ -64,7 +68,12 @@ function loadHashes() {
 }
 
 // Stats
-let stats = { totalGames: 0, totalXp: 0, gamesByDifficulty: { easy: 0, medium: 0, hard: 0, impossible: 0 } };
+let stats = {
+  totalGames: 0, totalXp: 0, totalTime: 0,
+  gamesByDifficulty: { easy: 0, medium: 0, hard: 0, impossible: 0 },
+  bestTimes: { easy: Infinity, medium: Infinity, hard: Infinity, impossible: Infinity },
+  bestStreak: 0,
+};
 
 function loadStats() {
   try { const raw = localStorage.getItem(LS.stats); if (raw) stats = JSON.parse(raw); } catch(e) {}

@@ -12,7 +12,7 @@
 <body>
 
 <svg style="display:none" xmlns="http://www.w3.org/2000/svg">
-  <symbol id="ico-fire" viewBox="0 0 24 24"><path d="M12 23c-3.5 0-6-2.5-6-6 0-3.5 2.5-7 5.5-10 .5-.5 1.5 0 1.5.7V6c0 1.5.5 3 2 3 1.2 0 2-1 2-2.2 0-.5.3-.8.7-1 .7-.3 1.3.2 1.7.7A6 6 0 0 1 18 17c0 3.5-2.5 6-6 6z" fill="currentColor"/></symbol>
+  <symbol id="ico-fire" viewBox="0 0 24 24"><path fill="#dc2626" d="m8.468 8.395l-.002.001l-.003.002Zm9.954-.187a1.237 1.237 0 0 0-.23-.175a1 1 0 0 0-1.4.411a5.782 5.782 0 0 1-1.398 1.778a8.664 8.664 0 0 0 .134-1.51a8.714 8.714 0 0 0-4.4-7.582a1 1 0 0 0-1.492.806a7.017 7.017 0 0 1-2.471 4.942l-.23.187a8.513 8.513 0 0 0-1.988 1.863a8.983 8.983 0 0 0 3.656 13.908a1 1 0 0 0 1.377-.926a1.05 1.05 0 0 0-.05-.312a6.977 6.977 0 0 1-.19-2.581a9.004 9.004 0 0 0 4.313 4.016a.997.997 0 0 0 .715.038a8.995 8.995 0 0 0 3.654-14.863Zm-3.905 12.831a6.964 6.964 0 0 1-3.577-4.402a8.908 8.908 0 0 1-.18-.964a1 1 0 0 0-.799-.845a.982.982 0 0 0-.191-.018a1 1 0 0 0-.867.5a8.959 8.959 0 0 0-1.205 4.718a6.985 6.985 0 0 1-1.176-9.868a6.555 6.555 0 0 1 1.562-1.458a.745.745 0 0 0 .075-.055s.296-.245.306-.25a8.968 8.968 0 0 0 2.9-4.633a6.736 6.736 0 0 1 1.385 8.088a1 1 0 0 0 1.184 1.418a7.856 7.856 0 0 0 3.862-2.688a7 7 0 0 1-3.279 10.457Z"/></symbol>
   <symbol id="ico-star" viewBox="0 0 24 24"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.9L12 17.8 5.8 21.1 7 14.2 2 9.3l6.9-1z" fill="currentColor"/></symbol>
   <symbol id="ico-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 10h18M8 2v4M16 2v4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
   <symbol id="ico-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></symbol>
@@ -36,6 +36,7 @@
   <symbol id="ico-flame" viewBox="0 0 24 24"><path d="M12 22c-3 0-5-2-5-5 0-3 2-6 4.5-8.5.4-.4 1.2 0 1.2.6V11c0 1.2.5 2.5 2 2.5 1 0 1.5-.8 1.5-1.7 0-.4.3-.7.6-.9.6-.2 1 .2 1.3.6A5 5 0 0 1 17 17c0 3-2 5-5 5z" fill="currentColor"/></symbol>
   <symbol id="ico-pause" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1" fill="currentColor"/><rect x="14" y="4" width="4" height="16" rx="1" fill="currentColor"/></symbol>
   <symbol id="ico-auto" viewBox="0 0 24 24"><path d="M9 3l1 2h4l1-2M12 7v10M5 12H3M21 12h-2M7 17l2 2 2-2M15 7l2-2 2 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="ico-loader" viewBox="0 0 48 48"><circle cx="24" cy="24" r="18" fill="none" stroke="#e4e7ec" stroke-width="4"/><circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="4" stroke-dasharray="28 85" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" from="0 24 24" to="360 24 24" dur="1s" repeatCount="indefinite"/></circle></symbol>
 </svg>
 
 <div id="app">
@@ -55,7 +56,7 @@
     <div class="menu-title">Sudoku</div>
     <div class="menu-subtitle">Challenge your mind every day</div>
 
-    <div class="xp-bar-wrap">
+    <div class="xp-bar-wrap" id="xpBarWrap">
       <div class="xp-bar-label">
         <span id="xpCurrent">0 XP</span>
         <span id="xpNext">80 XP</span>
@@ -112,6 +113,7 @@
         <h3>Easy</h3>
         <p>Relax and unwind</p>
         <div class="diff-clues">40&ndash;46 clues</div>
+        <div class="diff-best" id="diffBestEasy">Best: --</div>
         <div class="diff-xp">10 XP avg</div>
       </div>
       <div class="diff-card medium" data-diff="medium">
@@ -120,6 +122,7 @@
         <h3>Medium</h3>
         <p>A fair challenge</p>
         <div class="diff-clues">32&ndash;39 clues</div>
+        <div class="diff-best" id="diffBestMedium">Best: --</div>
         <div class="diff-xp">25 XP avg</div>
       </div>
       <div class="diff-card hard" data-diff="hard">
@@ -128,6 +131,7 @@
         <h3>Hard</h3>
         <p>Test your skills</p>
         <div class="diff-clues">26&ndash;31 clues</div>
+        <div class="diff-best" id="diffBestHard">Best: --</div>
         <div class="diff-xp">50 XP avg</div>
       </div>
       <div class="diff-card impossible" data-diff="impossible">
@@ -136,6 +140,7 @@
         <h3>Impossible</h3>
         <p>For the brave only</p>
         <div class="diff-clues">21&ndash;25 clues</div>
+        <div class="diff-best" id="diffBestImpossible">Best: --</div>
         <div class="diff-xp">100 XP avg</div>
       </div>
   </div>
@@ -183,6 +188,7 @@
 
 <!-- ============ WIN MODAL ============ -->
 <div class="win-overlay" id="winOverlay">
+  <div class="confetti-container" id="confettiContainer"></div>
   <div class="win-card">
     <div class="win-icon"><svg width="48" height="48" viewBox="0 0 24 24"><use href="#ico-party"/></svg></div>
     <h2>Solved!</h2>
@@ -222,6 +228,82 @@
     <div class="old-streak" id="oldStreakCount">0</div>
     <div class="old-streak-label">day streak</div>
     <button id="streakLostOk">I'll do better</button>
+  </div>
+</div>
+
+<!-- ============ LOADING SCREEN ============ -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-card">
+    <div class="loading-spinner"><svg width="48" height="48" viewBox="0 0 48 48"><use href="#ico-loader"/></svg></div>
+    <div class="loading-text">Generating puzzle...</div>
+  </div>
+</div>
+
+<!-- ============ RANK JOURNEY MODAL ============ -->
+<div class="rank-overlay" id="rankOverlay">
+  <div class="rank-card">
+    <div class="rank-header">
+      <h2>Rank Journey</h2>
+      <button class="rank-close" id="rankClose"><svg width="20" height="20" viewBox="0 0 24 24"><use href="#ico-x"/></svg></button>
+    </div>
+    <div class="rank-summary">
+      <div class="rank-current-wrap">
+        <div class="rank-current-icon" id="rankCurrentIcon">W</div>
+        <div>
+          <div class="rank-current-name" id="rankCurrentName">Wood I</div>
+          <div class="rank-current-xp"><span id="rankCurrentXp">0</span> XP</div>
+        </div>
+      </div>
+      <div class="rank-progress-wrap">
+        <div class="rank-progress-bar"><div class="rank-progress-fill" id="rankProgressFill" style="width:0%"></div></div>
+      </div>
+      <div class="rank-next-label" id="rankNextLabel">80 XP to Wood II</div>
+    </div>
+    <div class="rank-timeline" id="rankTimeline"></div>
+    <div class="rank-stats-section">
+      <div class="rank-section-title">Statistics</div>
+      <div class="rank-stats-grid">
+        <div class="rank-stat"><div class="rank-stat-val" id="rankTotalGames">0</div><div class="rank-stat-lbl">Games</div></div>
+        <div class="rank-stat"><div class="rank-stat-val" id="rankTotalTime">0h</div><div class="rank-stat-lbl">Play Time</div></div>
+        <div class="rank-stat"><div class="rank-stat-val" id="rankBestTime">--</div><div class="rank-stat-lbl">Best Time</div></div>
+      </div>
+      <div class="rank-diff-stats">
+        <div class="rank-diff-row"><span><svg width="14" height="14" viewBox="0 0 24 24"><use href="#ico-circle"/></svg> Easy</span><span class="rank-diff-count" id="rankEasyGames">0</span></div>
+        <div class="rank-diff-row"><span><svg width="14" height="14" viewBox="0 0 24 24"><use href="#ico-circle-2"/></svg> Medium</span><span class="rank-diff-count" id="rankMediumGames">0</span></div>
+        <div class="rank-diff-row"><span><svg width="14" height="14" viewBox="0 0 24 24"><use href="#ico-flame"/></svg> Hard</span><span class="rank-diff-count" id="rankHardGames">0</span></div>
+        <div class="rank-diff-row"><span><svg width="14" height="14" viewBox="0 0 24 24"><use href="#ico-diamond"/></svg> Impossible</span><span class="rank-diff-count" id="rankImpossibleGames">0</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ STREAK JOURNEY MODAL ============ -->
+<div class="streak-overlay" id="streakOverlay">
+  <div class="streak-card">
+    <div class="streak-header">
+      <h2>Streak</h2>
+      <button class="streak-close" id="streakClose"><svg width="20" height="20" viewBox="0 0 24 24"><use href="#ico-x"/></svg></button>
+    </div>
+    <div class="streak-main">
+      <div class="streak-fire-wrap">
+        <svg width="64" height="64" viewBox="0 0 24 24"><use href="#ico-fire"/></svg>
+      </div>
+      <div class="streak-count-big" id="streakBigCount">0</div>
+      <div class="streak-label">day streak</div>
+      <div class="streak-best">Best: <span id="streakBestCount">0</span> days</div>
+    </div>
+    <div class="streak-daily-status" id="streakDailyStatus">
+      <div class="streak-daily-icon" id="streakDailyIcon"><svg width="18" height="18" viewBox="0 0 24 24"><use href="#ico-calendar"/></svg></div>
+      <span id="streakDailyText">Complete today's Daily Challenge to continue your streak</span>
+    </div>
+    <div class="streak-calendar" id="streakCalendar"></div>
+    <div class="streak-rewards">
+      <div class="streak-reward-title">Streak Rewards</div>
+      <div class="streak-reward-row"><span>1 day</span><span>Daily bonus available</span></div>
+      <div class="streak-reward-row"><span>3 days</span><span>+5 XP bonus per game</span></div>
+      <div class="streak-reward-row"><span>7 days</span><span>+10 XP bonus per game</span></div>
+      <div class="streak-reward-row"><span>30 days</span><span>+25 XP bonus per game</span></div>
+    </div>
   </div>
 </div>
 

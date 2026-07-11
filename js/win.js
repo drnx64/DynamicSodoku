@@ -1,6 +1,25 @@
 // ============================================================
 // 12. Win Dialog & XP Awarding
 // ============================================================
+function fireConfetti() {
+  const colors = ['#dc2626', '#f59e0b', '#16a34a', '#2563eb', '#8b5cf6', '#ec4899', '#06b6d4'];
+  const container = document.getElementById('confettiContainer');
+  container.innerHTML = '';
+  for (let i = 0; i < 60; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = Math.random() * 100 + '%';
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.width = (Math.random() * 6 + 4) + 'px';
+    piece.style.height = (Math.random() * 6 + 4) + 'px';
+    piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+    piece.style.animationDuration = (Math.random() * 2 + 1.5) + 's';
+    piece.style.animationDelay = (Math.random() * 1.5) + 's';
+    container.appendChild(piece);
+  }
+  setTimeout(() => container.innerHTML = '', 5000);
+}
+
 function showWinDialog() {
   const score = calcScore(state.difficulty, state.timer, state.mistakes, state.hintsUsed);
   const prevXp = stats.totalXp;
@@ -24,7 +43,10 @@ function showWinDialog() {
 
   stats.totalGames++;
   stats.totalXp += totalEarned;
+  stats.totalTime += state.timer;
   stats.gamesByDifficulty[state.difficulty] = (stats.gamesByDifficulty[state.difficulty] || 0) + 1;
+  if (state.timer < stats.bestTimes[state.difficulty]) stats.bestTimes[state.difficulty] = state.timer;
+  if (streak.count > stats.bestStreak) stats.bestStreak = streak.count;
   saveStats();
 
   const newRank = getRank(stats.totalXp);
@@ -39,6 +61,7 @@ function showWinDialog() {
     levelUpEl.style.display = 'none';
   }
 
+  fireConfetti();
   document.getElementById('winOverlay').classList.add('open');
   updateMenuUI();
 }

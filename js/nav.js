@@ -6,13 +6,28 @@ function showPage(id) {
   document.getElementById(id).classList.add('active');
 }
 
+function updateDiffBestTimes() {
+  const diffs = ['easy', 'medium', 'hard', 'impossible'];
+  diffs.forEach(d => {
+    const el = document.getElementById('diffBest' + d.charAt(0).toUpperCase() + d.slice(1));
+    const time = stats.bestTimes && stats.bestTimes[d];
+    if (time && time < Infinity) {
+      el.textContent = 'Best: ' + formatTime(time);
+      el.classList.add('has-best');
+    } else {
+      el.textContent = 'Best: --';
+      el.classList.remove('has-best');
+    }
+  });
+}
+
 function setupNavigation() {
-  document.getElementById('playCard').addEventListener('click', () => showPage('page-difficulty'));
+  document.getElementById('playCard').addEventListener('click', () => { updateDiffBestTimes(); showPage('page-difficulty'); });
   document.getElementById('diffBack').addEventListener('click', () => showPage('page-menu'));
 
   document.getElementById('gameBack').addEventListener('click', () => {
     if (state.started && !state.won && !state.gameOver) {
-      showConfirm('Abandon current game?', () => showPage('page-menu'));
+      showConfirm('Abandon current game?', () => { clearGame(); showPage('page-menu'); });
     } else {
       showPage('page-menu');
     }
