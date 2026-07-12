@@ -57,15 +57,18 @@ const SETTINGS_CATEGORIES = [
 ];
 
 function haptic(pattern) {
+  log('[settings] haptic()', { pattern });
   if (state.settings.hapticFeedback && navigator.vibrate) {
-    try { navigator.vibrate(pattern || 10); } catch(e) {}
+    try { navigator.vibrate(pattern || 10); } catch(e) { log('[settings] haptic error', e); }
   }
 }
 
 let darkModeMedia = null;
 
 function setupSettings() {
+  log('[settings] setupSettings()');
   const container = document.getElementById('settingsPageContent');
+  if (!container) { log('[settings] WARN: #settingsPageContent not found'); return; }
   container.innerHTML = '';
 
   for (const cat of SETTINGS_CATEGORIES) {
@@ -94,6 +97,7 @@ function setupSettings() {
           select.appendChild(op);
         }
         select.addEventListener('change', () => {
+          log('[settings] select changed', { key: def.key, value: select.value });
           state.settings[def.key] = select.value;
           applySettings();
           saveSettings();
@@ -111,6 +115,7 @@ function setupSettings() {
         if (state.settings[def.key]) toggle.classList.add('on');
         toggle.addEventListener('click', () => {
           state.settings[def.key] = !state.settings[def.key];
+          log('[settings] toggle clicked', { key: def.key, newVal: state.settings[def.key] });
           toggle.classList.toggle('on', state.settings[def.key]);
           applySettings();
           saveSettings();
@@ -134,18 +139,20 @@ function setupSettings() {
   const exportBtn = document.createElement('button');
   exportBtn.textContent = 'Export Data';
   exportBtn.className = 'data-btn';
-  exportBtn.addEventListener('click', exportData);
+  exportBtn.addEventListener('click', () => { log('[settings] click: exportData'); exportData(); });
   const importBtn = document.createElement('button');
   importBtn.textContent = 'Import Data';
   importBtn.className = 'data-btn';
-  importBtn.addEventListener('click', importData);
+  importBtn.addEventListener('click', () => { log('[settings] click: importData'); importData(); });
   dataRow.appendChild(exportBtn);
   dataRow.appendChild(importBtn);
   dataSection.appendChild(dataRow);
   container.appendChild(dataSection);
+  log('[settings] setupSettings complete');
 }
 
 function applySettings() {
+  log('[settings] applySettings()');
   document.body.classList.toggle('dark', state.settings.darkTheme);
   if (state.settings.autoDarkMode) {
     if (!darkModeMedia) {
@@ -161,7 +168,6 @@ function applySettings() {
     document.body.classList.toggle('dark', state.settings.darkTheme);
   }
 
-  // Apply color theme
   document.body.dataset.theme = state.settings.colorTheme || 'default';
 
   const timerEl = document.getElementById('timer');
@@ -174,11 +180,13 @@ function applySettings() {
 }
 
 function rebuildSettingsUI() {
+  log('[settings] rebuildSettingsUI()');
   const container = document.getElementById('settingsPageContent');
   if (container) setupSettings();
 }
 
 function exportData() {
+  log('[settings] exportData()');
   try {
     const data = { stats, streak, settings: state.settings, exportedAt: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -188,27 +196,30 @@ function exportData() {
     a.download = 'sudoku-backup-' + todayStr() + '.json';
     a.click();
     URL.revokeObjectURL(url);
-  } catch(e) { alert('Export failed: ' + e.message); }
+    log('[settings] data exported');
+  } catch(e) { log('[settings] export failed', e); alert('Export failed: ' + e.message); }
 }
 
 function importData() {
+  log('[settings] importData()');
   const input = document.createElement('input');
   input.type = 'file';
   input.accept = '.json';
   input.addEventListener('change', () => {
     const file = input.files[0];
-    if (!file) return;
+    if (!file) { log('[settings] import: no file selected'); return; }
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
         const data = JSON.parse(e.target.result);
+        log('[settings] import: data parsed', { hasStats: !!data.stats, hasStreak: !!data.streak, hasSettings: !!data.settings });
         if (data.stats) { stats = data.stats; saveStats(); }
         if (data.streak) { streak = data.streak; saveStreak(); }
         if (data.settings) { Object.assign(state.settings, data.settings); saveSettings(); applySettings(); }
         updateMenuUI();
         showPage('page-menu');
         alert('Data imported successfully!');
-      } catch(err) { alert('Import failed: ' + err.message); }
+      } catch(err) { log('[settings] import parse error', err); alert('Import failed: ' + err.message); }
     };
     reader.readAsText(file);
   });

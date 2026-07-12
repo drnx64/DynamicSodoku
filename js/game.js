@@ -23,6 +23,7 @@ const state = {
 state.settings = {};
 
 function pushHistory(type, row, col, prevVal, newVal, prevNotes, newNotes) {
+  log('[game] pushHistory()', { type, row, col, prevVal, newVal, historyIdx: state.historyIdx });
   state.history = state.history.slice(0, state.historyIdx + 1);
   state.history.push({ type, row, col, prevVal, newVal, prevNotes, newNotes });
   state.historyIdx = state.history.length - 1;
@@ -30,10 +31,14 @@ function pushHistory(type, row, col, prevVal, newVal, prevNotes, newNotes) {
 }
 
 function undo() {
-  if (state.historyIdx < 0 || state.gameOver || state.won) return;
+  log('[game] undo() called', { historyIdx: state.historyIdx, gameOver: state.gameOver, won: state.won });
+  if (state.historyIdx < 0) { log('[game] undo: nothing to undo'); return; }
+  if (state.gameOver) { log('[game] undo: game over'); return; }
+  if (state.won) { log('[game] undo: already won'); return; }
   const move = state.history[state.historyIdx];
   state.historyIdx--;
   const { row, col, prevVal, newVal, prevNotes, newNotes } = move;
+  log('[game] undo: applying', { row, col, prevVal, newVal, moveType: move.type });
   state.board[row][col] = prevVal;
   state.notes[row][col] = new Set(prevNotes);
   if (move.type === 'mistake') state.mistakes--;
@@ -45,10 +50,14 @@ function undo() {
 }
 
 function redo() {
-  if (state.historyIdx >= state.history.length - 1 || state.gameOver || state.won) return;
+  log('[game] redo() called', { historyIdx: state.historyIdx, totalHistory: state.history.length, gameOver: state.gameOver, won: state.won });
+  if (state.historyIdx >= state.history.length - 1) { log('[game] redo: nothing to redo'); return; }
+  if (state.gameOver) { log('[game] redo: game over'); return; }
+  if (state.won) { log('[game] redo: already won'); return; }
   state.historyIdx++;
   const move = state.history[state.historyIdx];
   const { row, col, prevVal, newVal, prevNotes, newNotes } = move;
+  log('[game] redo: applying', { row, col, newVal, prevVal, moveType: move.type });
   state.board[row][col] = newVal;
   state.notes[row][col] = new Set(newNotes);
   if (move.type === 'mistake') state.mistakes++;
@@ -58,14 +67,18 @@ function redo() {
 }
 
 function placeNumber(row, col, num) {
-  if (state.gameOver || state.won || !state.selectedCell) return;
-  if (state.givens[row][col]) return;
-  if (state.notesMode) { toggleNote(row, col, num); return; }
+  log('[game] placeNumber()', { row, col, num, gameOver: state.gameOver, won: state.won, hasSelectedCell: !!state.selectedCell });
+  if (state.gameOver) { log('[game] placeNumber: blocked - game over'); return; }
+  if (state.won) { log('[game] placeNumber: blocked - already won'); return; }
+  if (!state.selectedCell) { log('[game] placeNumber: blocked - no cell selected'); return; }
+  if (state.givens[row][col]) { log('[game] placeNumber: blocked - cell is given'); return; }
+  if (state.notesMode) { log('[game] placeNumber: delegating to toggleNote'); toggleNote(row, col, num); return; }
 
   const prevVal = state.board[row][col];
-  if (prevVal === num) return;
+  if (prevVal === num) { log('[game] placeNumber: blocked - same value'); return; }
 
   if (num === 0) {
+    log('[game] placeNumber: clearing cell');
     const prevNotes = [...state.notes[row][col]];
     state.board[row][col] = 0;
     state.notes[row][col] = new Set();
@@ -80,17 +93,20 @@ function placeNumber(row, col, num) {
   state.notes[row][col] = new Set();
 
   if (!isValidPlacement(state.board, row, col, num)) {
+    log('[game] placeNumber: invalid placement - mistake');
     state.mistakes++;
     pushHistory('mistake', row, col, prevVal, num, prevNotes, []);
     if (!state.started) { state.started = true; startTimer(); }
     render({ shakeCell: [row, col] }); saveGame(); playSound('error');
     haptic([30, 50, 30]);
     if (state.mistakes >= 3) {
+      log('[game] placeNumber: 3 mistakes reached, showing retry');
       showRetryOverlay();
     }
     return;
   }
 
+  log('[game] placeNumber: valid placement');
   pushHistory('place', row, col, prevVal, num, prevNotes, []);
   if (!state.started) { state.started = true; startTimer(); }
   render({ popCell: [row, col] }); saveGame(); playSound('place');
@@ -100,7 +116,9 @@ function placeNumber(row, col, num) {
 }
 
 function toggleNote(row, col, num) {
-  if (state.givens[row][col] || state.board[row][col]) return;
+  log('[game] toggleNote()', { row, col, num });
+  if (state.givens[row][col]) { log('[game] toggleNote: blocked - cell is given'); return; }
+  if (state.board[row][col]) { log('[game] toggleNote: blocked - cell has value'); return; }
   state.notesUsed = true;
   const prevNotes = [...state.notes[row][col]];
   if (state.notes[row][col].has(num)) state.notes[row][col].delete(num);
@@ -127,13 +145,11 @@ function findHint() {
     for (let c = 0; c < 9; c++)
       if (state.board[r][c] === 0) cands[r][c] = getCandidates(state.board, r, c);
 
-  // Naked Single
   for (let r = 0; r < 9; r++)
     for (let c = 0; c < 9; c++)
       if (state.board[r][c] === 0 && cands[r][c].size === 1)
         return { row: r, col: c, technique: 'Naked Single', desc: `Only ${[...cands[r][c]][0]} fits in row ${r+1}, column ${c+1}` };
 
-  // Hidden Single
   for (let n = 1; n <= 9; n++) {
     for (let row = 0; row < 9; row++) {
       const cells = [];
@@ -159,34 +175,37 @@ function findHint() {
 }
 
 function giveHint() {
-  if (state.gameOver || state.won) return;
+  log('[game] giveHint() called', { gameOver: state.gameOver, won: state.won });
+  if (state.gameOver) { log('[game] giveHint: blocked - game over'); return; }
+  if (state.won) { log('[game] giveHint: blocked - already won'); return; }
   const hint = findHint();
-  if (!hint) return;
+  if (!hint) { log('[game] giveHint: no hint found'); return; }
   const { row, col, technique, desc } = hint;
 
   if (state._hintCell && state._hintCell[0] === row && state._hintCell[1] === col) {
-    // Second ask — reveal the answer
+    log('[game] giveHint: second ask - revealing answer', { row, col, technique });
     const prevVal = state.board[row][col];
     const correctVal = state.solution[row][col];
     const prevNotes = [...state.notes[row][col]];
     state.board[row][col] = correctVal;
     state.notes[row][col] = new Set();
     pushHistory('hint', row, col, prevVal, correctVal, prevNotes, []);
-    // Bonus hints don't count toward stats
-    if (dailyBonus.hintsRemaining > 0) {
-      dailyBonus.hintsRemaining--;
+    if ((bonusChallenge.bonusHints || 0) > 0) {
+      bonusChallenge.bonusHints--;
       saveBonus();
+      log('[game] giveHint: used bonus hint', { remaining: bonusChallenge.bonusHints });
     } else {
       state.hintsUsed++;
       stats.totalHintsUsedAll = (stats.totalHintsUsedAll || 0) + 1;
       saveStats();
+      log('[game] giveHint: hint counted', { totalHints: state.hintsUsed });
     }
     state._hintCell = null;
     if (!state.started) { state.started = true; startTimer(); }
     render({ popCell: [row, col] }); saveGame(); playSound('place');
     checkWin();
   } else {
-    // First ask — show technique
+    log('[game] giveHint: first ask - showing technique', { technique, row, col });
     state._hintCell = [row, col];
     if (!state.selectedCell || state.selectedCell[0] !== row || state.selectedCell[1] !== col) {
       selectCell(row, col);
@@ -220,6 +239,7 @@ function checkWin() {
   for (let r = 0; r < 9; r++)
     for (let c = 0; c < 9; c++)
       if (state.board[r][c] !== state.solution[r][c]) return;
+  log('[game] checkWin: puzzle solved!');
   state.won = true;
   state.timerRunning = false;
   if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
@@ -228,6 +248,7 @@ function checkWin() {
 }
 
 function gameOver() {
+  log('[game] gameOver()');
   state.gameOver = true;
   state.timerRunning = false;
   if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
@@ -236,7 +257,8 @@ function gameOver() {
 }
 
 function startTimer() {
-  if (state.timerRunning) return;
+  if (state.timerRunning) { log('[game] startTimer: already running'); return; }
+  log('[game] startTimer()');
   state.timerRunning = true;
   state.timerInterval = setInterval(() => {
     state.timer++;
@@ -245,14 +267,21 @@ function startTimer() {
 }
 
 function showRetryOverlay() {
-  document.getElementById('retryOverlay').classList.add('open');
-  document.getElementById('retryBtn').onclick = () => {
-    document.getElementById('retryOverlay').classList.remove('open');
+  log('[game] showRetryOverlay()');
+  const retryOverlay = document.getElementById('retryOverlay');
+  if (!retryOverlay) { log('[game] WARN: #retryOverlay not found'); return; }
+  retryOverlay.classList.add('open');
+  const retryBtn = document.getElementById('retryBtn');
+  if (!retryBtn) { log('[game] WARN: #retryBtn not found'); return; }
+  retryBtn.onclick = () => {
+    log('[game] retryBtn clicked');
+    retryOverlay.classList.remove('open');
     retryLevel();
   };
 }
 
 function retryLevel() {
+  log('[game] retryLevel()');
   state.board = state.solution.map((r, ri) => r.map((c, ci) => state.givens[ri][ci] ? state.solution[ri][ci] : 0));
   state.notes = Array.from({length: 9}, () => Array.from({length: 9}, () => new Set()));
   state.history = []; state.historyIdx = -1;
@@ -271,8 +300,11 @@ function retryLevel() {
 }
 
 function showLevelAnimation(level) {
+  log('[game] showLevelAnimation()', { level });
   const overlay = document.getElementById('levelOverlay');
+  if (!overlay) { log('[game] WARN: #levelOverlay not found'); return; }
   const numEl = document.getElementById('levelNumber');
+  if (!numEl) { log('[game] WARN: #levelNumber not found'); return; }
   numEl.textContent = level;
   overlay.classList.add('open');
   const badge = document.getElementById('gameLevelBadge');
@@ -292,80 +324,109 @@ function formatTime(secs) {
 }
 
 function initNewGame(difficulty, isDaily, startLevel) {
+  log('[game] initNewGame()', { difficulty, isDaily, startLevel });
   if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
   state.difficulty = difficulty || 'easy';
   state.isDaily = !!isDaily;
   state.gameMode = isDaily ? 'daily' : 'normal';
   state.currentLevel = startLevel || 1;
 
-  // Consume bonus game
-  loadBonus();
-  if (dailyBonus.gamesRemaining > 0 && !isDaily) {
-    dailyBonus.gamesRemaining--;
-    dailyBonus.hintsRemaining = 3;
-    saveBonus();
+  const boardEl = document.getElementById('board');
+  const levelOverlay = document.getElementById('levelOverlay');
+  const levelNum = document.getElementById('levelNumber');
+
+  if (isDaily && loadDailyGame()) {
+    log('[game] restoring daily game from cache');
+    state.difficulty = 'medium';
+    state.isDaily = true;
+    state.gameMode = 'daily';
+    document.getElementById('timer').textContent = formatTime(state.timer);
+    document.getElementById('mistakes').textContent = String(state.mistakes);
+    document.getElementById('gameLabel').textContent = 'Daily Challenge';
+    document.getElementById('winOverlay').classList.remove('open');
+    const gameBadge = document.getElementById('gameLevelBadge');
+    if (gameBadge) gameBadge.style.display = 'none';
+    updateUndoRedo();
+    render({ entering: true });
+    if (state.timer > 0 && !state.won && !state.gameOver) startTimer();
+    showPage('page-game');
+    return;
   }
 
-  document.getElementById('loadingOverlay').classList.add('open');
+  if (!isDaily) {
+    const raw = localStorage.getItem(LS.game);
+    if (raw) {
+      try {
+        const saved = JSON.parse(raw);
+        if (saved.difficulty === difficulty && !saved.won && !saved.gameOver && saved.mistakes < 3) {
+          log('[game] restoring saved game', { difficulty, mistakes: saved.mistakes });
+          loadGame();
+          state.isDaily = false;
+          state.gameMode = 'normal';
+          document.getElementById('gameLabel').textContent = capitalize(difficulty);
+          document.getElementById('winOverlay').classList.remove('open');
+          const gameBadge = document.getElementById('gameLevelBadge');
+          if (gameBadge) gameBadge.style.display = 'inline-flex';
+          const numBadge = document.getElementById('gameLevelNum');
+          if (numBadge) numBadge.textContent = state.currentLevel;
+          updateUndoRedo();
+          render({ entering: true });
+          if (state.timer > 0 && !state.won && !state.gameOver) startTimer();
+          showPage('page-game');
+          return;
+        } else {
+          log('[game] saved game does not match or is finished, generating new', { savedDiff: saved.difficulty, savedWon: saved.won, savedGameOver: saved.gameOver });
+        }
+      } catch(e) { log('[game] error parsing saved game', e); }
+    }
+  }
+
+  showPage('page-game');
+  if (boardEl) boardEl.classList.add('blurred');
+  if (levelNum) levelNum.textContent = state.currentLevel;
+  if (levelOverlay) levelOverlay.classList.add('open');
+
+  const cells = boardEl ? boardEl.querySelectorAll('.cell') : [];
+  let visualTimer = setInterval(() => {
+    if (cells.length === 0) return;
+    const idx = Math.floor(Math.random() * cells.length);
+    const cell = cells[idx];
+    if (cell && !cell.classList.contains('given')) {
+      const n = Math.floor(Math.random() * 9) + 1;
+      const oldText = cell.querySelector('.cell-value')?.textContent || '';
+      const valEl = cell.querySelector('.cell-value');
+      if (valEl) valEl.textContent = n;
+      cell.style.color = 'var(--text-muted)';
+      cell.style.opacity = '0.6';
+      setTimeout(() => {
+        if (valEl) valEl.textContent = oldText;
+        cell.style.color = '';
+        cell.style.opacity = '';
+      }, 300);
+    }
+  }, 80);
 
   setTimeout(() => {
-    // Daily mode: restore cached game if available
-    if (isDaily && loadDailyGame()) {
-      state.difficulty = 'medium';
-      state.isDaily = true;
-      state.gameMode = 'daily';
-      document.getElementById('timer').textContent = formatTime(state.timer);
-      document.getElementById('mistakes').textContent = String(state.mistakes);
-      document.getElementById('gameLabel').textContent = 'Daily Challenge';
-      document.getElementById('winOverlay').classList.remove('open');
-      const badge = document.getElementById('gameLevelBadge');
-      if (badge) badge.style.display = 'none';
-      updateUndoRedo();
-      render({ entering: true });
-      if (state.timer > 0 && !state.won && !state.gameOver) startTimer();
-      document.getElementById('loadingOverlay').classList.remove('open');
-      showPage('page-game');
-      return;
-    }
-
-    // Normal mode: restore saved game if matching difficulty and in progress
-    if (!isDaily) {
-      const raw = localStorage.getItem(LS.game);
-      if (raw) {
-        try {
-          const saved = JSON.parse(raw);
-          if (saved.difficulty === difficulty && !saved.won && !saved.gameOver && saved.mistakes < 3) {
-            loadGame();
-            state.isDaily = false;
-            state.gameMode = 'normal';
-            document.getElementById('gameLabel').textContent = capitalize(difficulty);
-            document.getElementById('winOverlay').classList.remove('open');
-            const badge = document.getElementById('gameLevelBadge');
-            if (badge) badge.style.display = 'inline-flex';
-            const numBadge = document.getElementById('gameLevelNum');
-            if (numBadge) numBadge.textContent = state.currentLevel;
-            updateUndoRedo();
-            render({ entering: true });
-            if (state.timer > 0 && !state.won && !state.gameOver) startTimer();
-            document.getElementById('loadingOverlay').classList.remove('open');
-            showPage('page-game');
-            return;
-          }
-        } catch(e) {}
-      }
-    }
-
     let puzzle;
     if (isDaily) {
       const today = new Date();
       const seed = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
       const rng = createSeededRng(seed);
       puzzle = generatePuzzle('medium', rng);
+      log('[game] generated daily puzzle with seed', { seed });
     } else {
       puzzle = generatePuzzle(state.difficulty);
     }
 
-    console.log('[Sudoku] Game created successfully -', isDaily ? 'Daily' : state.difficulty, '-', puzzle.givens.flat().filter(Boolean).length, 'clues');
+    if (!puzzle || !puzzle.solution) {
+      log('[game] ERROR: puzzle generation failed');
+      clearInterval(visualTimer);
+      if (boardEl) boardEl.classList.remove('blurred');
+      if (levelOverlay) levelOverlay.classList.remove('open');
+      return;
+    }
+
+    log('[game] puzzle generated', { clues: puzzle.givens.flat().filter(Boolean).length });
 
     state.solution = puzzle.solution.map(r => [...r]);
     state.board = puzzle.board.map(r => [...r]);
@@ -381,19 +442,22 @@ function initNewGame(difficulty, isDaily, startLevel) {
     document.getElementById('mistakes').textContent = '0';
     document.getElementById('gameLabel').textContent = state.isDaily ? 'Daily Challenge' : capitalize(state.difficulty);
     document.getElementById('winOverlay').classList.remove('open');
-    const badge = document.getElementById('gameLevelBadge');
-    if (badge) badge.style.display = state.isDaily ? 'none' : 'inline-flex';
+    const gameBadge = document.getElementById('gameLevelBadge');
+    if (gameBadge) gameBadge.style.display = state.isDaily ? 'none' : 'inline-flex';
     const numBadge = document.getElementById('gameLevelNum');
     if (numBadge) numBadge.textContent = state.currentLevel;
     updateUndoRedo();
+
+    clearInterval(visualTimer);
+    if (boardEl) boardEl.classList.remove('blurred');
     render({ entering: true });
     saveGame();
     playSound('place');
-    document.getElementById('loadingOverlay').classList.remove('open');
-    showPage('page-game');
-    if (!state.isDaily) showLevelAnimation(state.currentLevel);
-  }, 50);
+
+    setTimeout(() => {
+      if (levelOverlay) levelOverlay.classList.remove('open');
+    }, 800);
+  }, 150);
 }
 
 function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
-

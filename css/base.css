@@ -1,0 +1,162 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f0f2f5;
+  --surface: rgba(255,255,255,0.75);
+  --surface-solid: #fff;
+  --text: #1a1a2e;
+  --text-muted: #888;
+  --text-dim: #aaa;
+  --grid-line: #d0d4dc;
+  --grid-bold: #334;
+  --given: #1a1a2e;
+  --user: #2563eb;
+  --selected: rgba(37,99,235,0.18);
+  --peer: rgba(16,185,129,0.1);
+  --same-num: rgba(245,158,11,0.2);
+  --same-num-border: rgba(245,158,11,0.4);
+  --conflict: rgba(220,38,38,0.25);
+  --conflict-text: #dc2626;
+  --note: #888;
+  --btn-bg: #e8ecf0;
+  --btn-hover: #dce0e8;
+  --btn-text: #1a1a2e;
+  --btn-active: #2563eb;
+  --btn-active-hover: #1d4ed8;
+  --btn-active-text: #fff;
+  --card-bg: #fff;
+  --card-shadow: 0 2px 20px rgba(0,0,0,0.06);
+  --modal-overlay: rgba(0,0,0,0.4);
+  --modal-bg: #fff;
+  --shadow: 0 2px 16px rgba(0,0,0,0.08);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-lg: 16px;
+  --glass: rgba(255,255,255,0.7);
+  --border: #e4e7ec;
+  --toggle-bg: #ddd;
+  --toggle-active: #2563eb;
+  --accent: #2563eb;
+  --accent-glow: rgba(37,99,235,0.15);
+  --success: #16a34a;
+  --danger: #dc2626;
+  --warning: #f59e0b;
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --xp-gold: #f59e0b;
+}
+
+.dark {
+  --bg: #0f0f1a;
+  --surface: rgba(30,30,50,0.8);
+  --surface-solid: #1a1a2e;
+  --text: #e8e8f0;
+  --text-muted: #8888aa;
+  --text-dim: #555;
+  --grid-line: #2a2a44;
+  --grid-bold: #556;
+  --given: #e8e8f0;
+  --user: #60a5fa;
+  --selected: rgba(96,165,250,0.25);
+  --peer: rgba(52,211,153,0.12);
+  --same-num: rgba(251,191,36,0.22);
+  --same-num-border: rgba(251,191,36,0.45);
+  --conflict: rgba(239,68,68,0.3);
+  --conflict-text: #ef4444;
+  --note: #777;
+  --btn-bg: #2a2a3e;
+  --btn-hover: #333350;
+  --btn-text: #e8e8f0;
+  --btn-active: #60a5fa;
+  --btn-active-hover: #3b82f6;
+  --btn-active-text: #0f0f1a;
+  --card-bg: #1e1e32;
+  --card-shadow: 0 2px 20px rgba(0,0,0,0.3);
+  --modal-bg: #1a1a2e;
+  --shadow: 0 2px 16px rgba(0,0,0,0.3);
+  --glass: rgba(30,30,50,0.6);
+  --border: #2a2a44;
+  --toggle-bg: #444;
+  --toggle-active: #60a5fa;
+  --accent: #60a5fa;
+  --accent-glow: rgba(96,165,250,0.15);
+}
+
+body[data-theme="ocean"] {
+  --accent: #0891b2;
+  --accent-glow: rgba(8,145,178,0.15);
+  --selected: rgba(8,145,178,0.18);
+  --user: #06b6d4;
+  --toggle-active: #0891b2;
+}
+body[data-theme="ocean"].dark {
+  --accent: #22d3ee;
+  --accent-glow: rgba(34,211,238,0.15);
+  --selected: rgba(34,211,238,0.25);
+  --user: #22d3ee;
+  --toggle-active: #22d3ee;
+}
+body[data-theme="forest"] {
+  --accent: #16a34a;
+  --accent-glow: rgba(22,163,74,0.15);
+  --selected: rgba(22,163,74,0.18);
+  --user: #22c55e;
+  --toggle-active: #16a34a;
+}
+body[data-theme="forest"].dark {
+  --accent: #4ade80;
+  --accent-glow: rgba(74,222,128,0.15);
+  --selected: rgba(74,222,128,0.25);
+  --user: #4ade80;
+  --toggle-active: #4ade80;
+}
+body[data-theme="sunset"] {
+  --accent: #ea580c;
+  --accent-glow: rgba(234,88,12,0.15);
+  --selected: rgba(234,88,12,0.18);
+  --user: #f97316;
+  --toggle-active: #ea580c;
+  --xp-gold: #dc2626;
+}
+body[data-theme="sunset"].dark {
+  --accent: #fb923c;
+  --accent-glow: rgba(251,146,60,0.15);
+  --selected: rgba(251,146,60,0.25);
+  --user: #fb923c;
+  --toggle-active: #fb923c;
+  --xp-gold: #f97316;
+}
+body[data-theme="mono"] {
+  --accent: #6b7280;
+  --accent-glow: rgba(107,114,128,0.15);
+  --selected: rgba(107,114,128,0.18);
+  --user: #4b5563;
+  --toggle-active: #6b7280;
+  --xp-gold: #9ca3af;
+}
+body[data-theme="mono"].dark {
+  --accent: #d1d5db;
+  --accent-glow: rgba(209,213,219,0.15);
+  --selected: rgba(209,213,219,0.25);
+  --user: #e5e7eb;
+  --toggle-active: #d1d5db;
+  --xp-gold: #9ca3af;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-body) !important;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100dvh;
+  margin: 0;
+  padding: 0;
+  transition: background 0.3s, color 0.3s;
+  overflow-x: hidden;
+}

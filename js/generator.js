@@ -2,6 +2,7 @@
 // 3. Puzzle Generator
 // ============================================================
 function generateSolution(rand) {
+  log('[generator] generateSolution()');
   rand = rand || Math.random;
   const grid = Array.from({length: 9}, () => Array(9).fill(0));
   _solveDet(grid);
@@ -36,6 +37,7 @@ function generateSolution(rand) {
 }
 
 function isComplete(grid) {
+  log('[generator] isComplete()');
   for (let r = 0; r < 9; r++)
     for (let c = 0; c < 9; c++)
       if (grid[r][c] === 0) return false;
@@ -50,6 +52,7 @@ const DIFFICULTY_CONFIG = {
 };
 
 function hashGivens(givens) {
+  log('[generator] hashGivens()');
   let h = 0;
   for (let r = 0; r < 9; r++)
     for (let c = 0; c < 9; c++)
@@ -58,6 +61,7 @@ function hashGivens(givens) {
 }
 
 function makePuzzleResult(solution, givens) {
+  log('[generator] makePuzzleResult()');
   const board = solution.map(r => [...r]);
   for (let r = 0; r < 9; r++)
     for (let c = 0; c < 9; c++)
@@ -66,6 +70,7 @@ function makePuzzleResult(solution, givens) {
 }
 
 function generatePuzzle(difficulty, rand) {
+  log('[generator] generatePuzzle()', { difficulty });
   rand = rand || Math.random;
   const cfg = DIFFICULTY_CONFIG[difficulty];
   let best = null, bestTech = Infinity;

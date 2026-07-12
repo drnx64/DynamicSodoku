@@ -1,6 +1,11 @@
 // ============================================================
 // 1. Sudoku Engine
 // ============================================================
+const DEBUG = true;
+function log(...args) {
+  if (DEBUG) console.log(...args);
+}
+
 function isValidPlacement(board, row, col, val) {
   if (!val) return true;
   for (let i = 0; i < 9; i++) {
@@ -15,6 +20,7 @@ function isValidPlacement(board, row, col, val) {
 }
 
 function findConflicts(board) {
+  log('[engine] findConflicts()');
   const conflicts = new Set();
   for (let row = 0; row < 9; row++)
     for (let col = 0; col < 9; col++) {
@@ -33,6 +39,7 @@ function findConflicts(board) {
 }
 
 function getCandidates(board, row, col) {
+  log('[engine] getCandidates()', { row, col });
   if (board[row][col]) return new Set();
   const cands = new Set([1,2,3,4,5,6,7,8,9]);
   for (let i = 0; i < 9; i++) {
@@ -47,46 +54,79 @@ function getCandidates(board, row, col) {
 }
 
 function solve(grid) {
+  log('[engine] solve()');
   const copy = grid.map(r => [...r]);
   if (_solveDet(copy)) return copy;
   return null;
 }
 
 function _solveDet(grid) {
-  for (let row = 0; row < 9; row++)
-    for (let col = 0; col < 9; col++)
-      if (grid[row][col] === 0) {
-        for (let n = 1; n <= 9; n++)
-          if (isValidPlacement(grid, row, col, n)) {
-            grid[row][col] = n;
-            if (_solveDet(grid)) return true;
-            grid[row][col] = 0;
-          }
-        return false;
-      }
-  return true;
+  const rows = new Array(9).fill(0);
+  const cols = new Array(9).fill(0);
+  const boxes = new Array(9).fill(0);
+  const boxIdx = (r, c) => Math.floor(r / 3) * 3 + Math.floor(c / 3);
+  for (let r = 0; r < 9; r++)
+    for (let c = 0; c < 9; c++) {
+      const v = grid[r][c];
+      if (!v) continue;
+      const m = 1 << v;
+      rows[r] |= m; cols[c] |= m; boxes[boxIdx(r, c)] |= m;
+    }
+  function canPlace(r, c, n) { const m = 1 << n; return !(rows[r] & m || cols[c] & m || boxes[boxIdx(r, c)] & m); }
+  function place(r, c, n) { const m = 1 << n; rows[r] |= m; cols[c] |= m; boxes[boxIdx(r, c)] |= m; grid[r][c] = n; }
+  function unplace(r, c, n) { const m = ~(1 << n); rows[r] &= m; cols[c] &= m; boxes[boxIdx(r, c)] &= m; grid[r][c] = 0; }
+  function solve() {
+    for (let r = 0; r < 9; r++)
+      for (let c = 0; c < 9; c++)
+        if (grid[r][c] === 0) {
+          for (let n = 1; n <= 9; n++)
+            if (canPlace(r, c, n)) {
+              place(r, c, n);
+              if (solve()) return true;
+              unplace(r, c, n);
+            }
+          return false;
+        }
+    return true;
+  }
+  return solve();
 }
 
 function countSolutions(grid, cap) {
   cap = cap || 2;
   let count = 0;
-  function _count(g) {
+  const g = grid.map(r => [...r]);
+  const rows = new Array(9).fill(0);
+  const cols = new Array(9).fill(0);
+  const boxes = new Array(9).fill(0);
+  const boxIdx = (r, c) => Math.floor(r / 3) * 3 + Math.floor(c / 3);
+  for (let r = 0; r < 9; r++)
+    for (let c = 0; c < 9; c++) {
+      const v = g[r][c];
+      if (!v) continue;
+      const m = 1 << v;
+      rows[r] |= m; cols[c] |= m; boxes[boxIdx(r, c)] |= m;
+    }
+  function canPlace(r, c, n) { const m = 1 << n; return !(rows[r] & m || cols[c] & m || boxes[boxIdx(r, c)] & m); }
+  function place(r, c, n) { const m = 1 << n; rows[r] |= m; cols[c] |= m; boxes[boxIdx(r, c)] |= m; g[r][c] = n; }
+  function unplace(r, c, n) { const m = ~(1 << n); rows[r] &= m; cols[c] &= m; boxes[boxIdx(r, c)] &= m; g[r][c] = 0; }
+  function solve() {
     if (count >= cap) return;
-    for (let row = 0; row < 9; row++)
-      for (let col = 0; col < 9; col++)
-        if (g[row][col] === 0) {
+    for (let r = 0; r < 9; r++)
+      for (let c = 0; c < 9; c++)
+        if (g[r][c] === 0) {
           for (let n = 1; n <= 9; n++)
-            if (isValidPlacement(g, row, col, n)) {
-              g[row][col] = n;
-              _count(g);
-              g[row][col] = 0;
+            if (canPlace(r, c, n)) {
+              place(r, c, n);
+              solve();
+              unplace(r, c, n);
               if (count >= cap) return;
             }
           return;
         }
     count++;
   }
-  _count(grid.map(r => [...r]));
+  solve();
   return count;
 }
 

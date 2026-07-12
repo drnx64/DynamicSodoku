@@ -1,0 +1,248 @@
+#page-game {
+  gap: 10px;
+}
+
+.game-header {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 8px;
+}
+.game-header .back-btn { flex-shrink: 0; }
+
+.game-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.game-info .game-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+}
+.game-info .game-meta {
+  display: flex;
+  gap: 14px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.game-info .game-meta span { display: flex; align-items: center; gap: 4px; }
+.timer-wrap { cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+.timer-wrap:hover { opacity: 0.8; }
+.timer-wrap.paused { opacity: 0.5; }
+
+.mistake-counter { color: var(--mistake-color, #ef4444); font-weight: 700; }
+.mistake-counter svg { color: var(--mistake-color, #ef4444); }
+
+.game-settings-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.game-settings-btn:hover { background: var(--btn-bg); }
+
+#boardWrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  max-width: 480px;
+  background: var(--glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 4px;
+}
+
+#board {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  grid-template-rows: repeat(9, 1fr);
+  width: 100%;
+  height: 100%;
+  gap: 0;
+  transition: filter 0.4s ease;
+}
+#board.blurred {
+  filter: blur(6px);
+  pointer-events: none;
+}
+
+.cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(18px, 5vw, 34px);
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  border: 0.5px solid var(--grid-line);
+  background: transparent;
+  transition: background 0.12s;
+  font-variant-numeric: tabular-nums;
+}
+.cell.given { font-weight: 700; color: var(--given); }
+.cell.user { color: var(--user); }
+.cell.selected {
+  background: var(--selected) !important;
+  box-shadow: inset 0 0 0 2.5px var(--accent);
+  z-index: 2;
+}
+.cell.peer { background: var(--peer); }
+.cell.same-num {
+  background: var(--same-num);
+  box-shadow: inset 0 0 0 1.5px var(--same-num-border);
+}
+.cell.peer.same-num {
+  background: var(--same-num);
+  box-shadow: inset 0 0 0 1.5px var(--same-num-border);
+}
+.cell.conflict { background: var(--conflict); }
+.cell.conflict .cell-value { color: var(--conflict-text); }
+.cell .cell-value { position: relative; z-index: 1; }
+.cell.pop .cell-value { animation: popPlace 0.25s ease; }
+.cell.entering { animation: cellEnter 0.35s ease backwards; }
+.cell.shake { animation: shake 0.3s ease; }
+.cell.selected { animation: cellPulse 1.5s ease-in-out infinite; }
+
+.cell .notes-grid {
+  display: none;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+.cell:not(.given):not(.user) .notes-grid {
+  display: grid;
+}
+.cell .notes-grid span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(7px, 1.6vw, 11px);
+  color: var(--note);
+  font-weight: 400;
+  line-height: 1;
+}
+
+.cell[data-col="2"], .cell[data-col="5"] { border-right-width: 2px; border-right-color: var(--grid-bold); }
+.cell[data-col="3"], .cell[data-col="6"] { border-left-width: 2px; border-left-color: var(--grid-bold); }
+.cell[data-row="2"], .cell[data-row="5"] { border-bottom-width: 2px; border-bottom-color: var(--grid-bold); }
+.cell[data-row="3"], .cell[data-row="6"] { border-top-width: 2px; border-top-color: var(--grid-bold); }
+.cell[data-col="0"] { border-left-width: 2px; border-left-color: var(--grid-bold); }
+.cell[data-col="8"] { border-right-width: 2px; border-right-color: var(--grid-bold); }
+.cell[data-row="0"] { border-top-width: 2px; border-top-color: var(--grid-bold); }
+.cell[data-row="8"] { border-bottom-width: 2px; border-bottom-color: var(--grid-bold); }
+
+#controls {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#numPad {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 4px;
+}
+#numPad button {
+  padding: 11px 0;
+  font-size: 17px;
+  font-weight: 500;
+  border: none;
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.12s, transform 0.08s;
+  font-variant-numeric: tabular-nums;
+  position: relative;
+}
+#numPad button:active { transform: scale(0.92); background: var(--btn-hover); }
+#numPad button:hover { background: var(--btn-hover); }
+#numPad button.placed { opacity: 0.3; pointer-events: none; }
+#numPad .remaining {
+  position: absolute;
+  top: 1px;
+  right: 4px;
+  font-size: 8px;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+#numPad .remaining.zero { color: var(--conflict-text); opacity: 0.5; }
+
+#actions {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+#actions button {
+  flex: 1;
+  min-width: 48px;
+  padding: 9px 6px;
+  font-size: 12px;
+  font-weight: 600;
+  border: none;
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.12s, transform 0.08s;
+  position: relative;
+}
+#actions button:active { transform: scale(0.95); }
+#actions button:hover { background: var(--btn-hover); }
+#actions button svg {
+  vertical-align: middle;
+  margin-right: 2px;
+}
+#actions button.primary { background: var(--btn-active); color: var(--btn-active-text); }
+#actions button.primary:hover { background: var(--btn-active-hover); }
+#actions button.active { background: var(--btn-active); color: var(--btn-active-text); }
+
+.action-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  pointer-events: none;
+}
+
+.cell.hint-cell {
+  animation: hintPulse 0.8s ease 2;
+  box-shadow: inset 0 0 0 3px var(--accent), 0 0 16px var(--accent-glow) !important;
+  z-index: 3;
+}
+.cell.hint-peer {
+  animation: hintFade 0.8s ease 2;
+}

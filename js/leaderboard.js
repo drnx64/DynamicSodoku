@@ -6,15 +6,18 @@ const LB_KEY = 'sudoku_leaderboard';
 function getLeaderboard() {
   try {
     const raw = localStorage.getItem(LB_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch(e) { return []; }
+    const data = raw ? JSON.parse(raw) : [];
+    return data;
+  } catch(e) { log('[leaderboard] getLeaderboard error', e); return []; }
 }
 
 function saveLeaderboard(data) {
-  try { localStorage.setItem(LB_KEY, JSON.stringify(data)); } catch(e) {}
+  log('[leaderboard] saveLeaderboard()', { count: data.length });
+  try { localStorage.setItem(LB_KEY, JSON.stringify(data)); } catch(e) { log('[leaderboard] saveLeaderboard error', e); }
 }
 
 function addScoreToLeaderboard(name, score, difficulty) {
+  log('[leaderboard] addScoreToLeaderboard()', { name, score, difficulty });
   const board = getLeaderboard();
   board.push({
     name: name || 'Anonymous',
@@ -28,10 +31,28 @@ function addScoreToLeaderboard(name, score, difficulty) {
   board.sort((a, b) => b.score - a.score);
   if (board.length > 100) board.length = 100;
   saveLeaderboard(board);
+  log('[leaderboard] score added', { totalEntries: board.length });
 }
 
 function getLeaderboardTop(limit) {
   return getLeaderboard().slice(0, limit || 20);
+}
+
+function getUserEntry() {
+  const totalXp = stats.totalXp || 0;
+  const totalGames = stats.totalGames || 0;
+  const avgScore = totalGames > 0 ? Math.round(totalXp / totalGames) : 0;
+  const lastDiff = stats.lastDifficulty || 'medium';
+  return {
+    name: 'You',
+    score: avgScore || 10,
+    xp: totalXp,
+    games: totalGames,
+    difficulty: lastDiff,
+    date: todayStr(),
+    id: 0,
+    isMe: true,
+  };
 }
 
 function getMockLeaderboard() {
@@ -52,10 +73,20 @@ function getMockLeaderboard() {
 }
 
 function renderLeaderboard(view) {
+  log('[leaderboard] renderLeaderboard()', { view });
   const list = document.getElementById('leaderboardList');
+  if (!list) { log('[leaderboard] WARN: #leaderboardList not found'); return; }
   let entries = getLeaderboard();
+  let usingMock = false;
   if (entries.length === 0) {
+    log('[leaderboard] no real entries, using mock data');
     entries = getMockLeaderboard();
+    usingMock = true;
+  }
+  const userEntry = getUserEntry();
+  const exists = entries.some(e => e.isMe);
+  if (!exists && (stats.totalGames || 0) > 0) {
+    entries.push(userEntry);
   }
   if (view === 'top') {
     entries.sort((a, b) => b.score - a.score);
@@ -63,6 +94,7 @@ function renderLeaderboard(view) {
     entries.sort((a, b) => b.id - a.id);
   }
   const top = entries.slice(0, 50);
+  log('[leaderboard] rendering entries', { count: top.length, view, userRank: top.findIndex(e => e.isMe) + 1 });
   list.innerHTML = top.map((e, i) => {
     const topThree = i < 3;
     const rankCls = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : '';
@@ -71,13 +103,16 @@ function renderLeaderboard(view) {
     const detail = view === 'recent'
       ? e.difficulty + ' \u00b7 ' + e.date
       : e.difficulty + ' \u00b7 ' + (e.games || 0) + ' games';
-    return '<div class="leader-entry' + (topThree ? ' top-three' : '') + '">'
+    return '<div class="leader-entry' + (topThree ? ' top-three' : '') + (e.isMe ? ' is-me' : '') + '">'
       + '<div class="leader-rank ' + rankCls + '">' + rankLabel + '</div>'
       + '<img class="leader-avatar" src="' + avatarUrl + '" alt="" loading="lazy">'
       + '<div class="leader-info"><div class="leader-name">' + escapeHtml(e.name) + '</div><div class="leader-detail">' + detail + '</div></div>'
       + '<div class="leader-score">+' + e.score + '</div>'
       + '</div>';
   }).join('');
+
+  const tabs = document.querySelector('.leader-tabs');
+  if (tabs) tabs.scrollLeft = 0;
 }
 
 function escapeHtml(s) {
@@ -87,6 +122,7 @@ function escapeHtml(s) {
 }
 
 function shareLeaderboard() {
+  log('[leaderboard] shareLeaderboard()');
   const board = getLeaderboard();
   try {
     const code = btoa(JSON.stringify(board));
@@ -96,19 +132,25 @@ function shareLeaderboard() {
     };
     if (navigator.share) {
       navigator.share(shareData);
+      log('[leaderboard] shared via navigator.share');
     } else {
       navigator.clipboard.writeText(code);
       alert('Leaderboard data copied to clipboard! Share it with friends.');
+      log('[leaderboard] copied to clipboard');
     }
-  } catch(e) { alert('Share failed: ' + e.message); }
+  } catch(e) { log('[leaderboard] share error', e); alert('Share failed: ' + e.message); }
 }
 
 function importLeaderboard(code) {
+  log('[leaderboard] importLeaderboard()');
   try {
     const data = JSON.parse(atob(code));
     if (Array.isArray(data)) {
       saveLeaderboard(data);
+      log('[leaderboard] imported entries', { count: data.length });
       alert('Leaderboard imported! (' + data.length + ' entries)');
+    } else {
+      log('[leaderboard] import: invalid data format');
     }
-  } catch(e) { alert('Invalid leaderboard data.'); }
+  } catch(e) { log('[leaderboard] import error', e); alert('Invalid leaderboard data.'); }
 }

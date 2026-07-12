@@ -12,17 +12,21 @@ const LS = {
 };
 
 function saveSettings() {
-  try { localStorage.setItem(LS.settings, JSON.stringify(state.settings)); } catch(e) {}
+  log('[storage] saveSettings()');
+  try { localStorage.setItem(LS.settings, JSON.stringify(state.settings)); } catch(e) { log('[storage] saveSettings error', e); }
 }
 function loadSettings() {
-  try { const raw = localStorage.getItem(LS.settings); if (raw) Object.assign(state.settings, JSON.parse(raw)); } catch(e) {}
+  log('[storage] loadSettings()');
+  try { const raw = localStorage.getItem(LS.settings); if (raw) Object.assign(state.settings, JSON.parse(raw)); else log('[storage] no settings found'); } catch(e) { log('[storage] loadSettings error', e); }
 }
 
 function clearGame() {
-  try { localStorage.removeItem(LS.game); localStorage.removeItem(LS.dailyState); } catch(e) {}
+  log('[storage] clearGame()');
+  try { localStorage.removeItem(LS.game); localStorage.removeItem(LS.dailyState); } catch(e) { log('[storage] clearGame error', e); }
 }
 
 function saveGame() {
+  log('[storage] saveGame()', { isDaily: state.isDaily, started: state.started, timer: state.timer });
   try {
     const data = {
       solution: state.solution, givens: state.givens, board: state.board,
@@ -35,13 +39,14 @@ function saveGame() {
     };
     localStorage.setItem(LS.game, JSON.stringify(data));
     if (state.isDaily) saveDailyGame();
-  } catch(e) {}
+  } catch(e) { log('[storage] saveGame error', e); }
 }
 
 function loadGame() {
+  log('[storage] loadGame()');
   try {
     const raw = localStorage.getItem(LS.game);
-    if (!raw) return false;
+    if (!raw) { log('[storage] no saved game found'); return false; }
     const data = JSON.parse(raw);
     state.solution = data.solution; state.givens = data.givens; state.board = data.board;
     state.notes = data.notes.map(r => r.map(s => new Set(s)));
@@ -53,12 +58,14 @@ function loadGame() {
     state.isDaily = data.isDaily || false; state.notesUsed = data.notesUsed || false;
     state.currentLevel = data.currentLevel || 1;
     state.gameMode = data.isDaily ? 'daily' : 'normal';
+    log('[storage] game loaded', { difficulty: state.difficulty, timer: state.timer, mistakes: state.mistakes, won: state.won });
     return true;
-  } catch(e) { return false; }
+  } catch(e) { log('[storage] loadGame error', e); return false; }
 }
 
 function saveDailyGame() {
-  if (!state.isDaily) return;
+  if (!state.isDaily) { log('[storage] saveDailyGame: not daily, skipping'); return; }
+  log('[storage] saveDailyGame()');
   try {
     const data = {
       date: todayStr(),
@@ -71,14 +78,15 @@ function saveDailyGame() {
       notesUsed: state.notesUsed, currentLevel: state.currentLevel,
     };
     localStorage.setItem(LS.dailyState, JSON.stringify(data));
-  } catch(e) {}
+  } catch(e) { log('[storage] saveDailyGame error', e); }
 }
 function loadDailyGame() {
+  log('[storage] loadDailyGame()');
   try {
     const raw = localStorage.getItem(LS.dailyState);
-    if (!raw) return false;
+    if (!raw) { log('[storage] no daily game found'); return false; }
     const data = JSON.parse(raw);
-    if (data.date !== todayStr()) return false;
+    if (data.date !== todayStr()) { log('[storage] daily game is from a different date', { saved: data.date, today: todayStr() }); return false; }
     state.solution = data.solution; state.givens = data.givens; state.board = data.board;
     state.notes = data.notes.map(r => r.map(s => new Set(s)));
     state.history = data.history; state.historyIdx = data.historyIdx;
@@ -88,11 +96,13 @@ function loadDailyGame() {
     state.started = data.started || false; state.selectedCell = data.selectedCell || null;
     state.notesUsed = data.notesUsed || false; state.currentLevel = data.currentLevel || 1;
     state.isDaily = true; state.gameMode = 'daily';
+    log('[storage] daily game loaded', { timer: state.timer, mistakes: state.mistakes });
     return true;
-  } catch(e) { return false; }
+  } catch(e) { log('[storage] loadDailyGame error', e); return false; }
 }
 
 function saveHash(h) {
+  log('[storage] saveHash()', { h });
   try {
     let hashes = [];
     const raw = localStorage.getItem(LS.hashes);
@@ -100,10 +110,11 @@ function saveHash(h) {
     hashes.push(h);
     if (hashes.length > 100) hashes = hashes.slice(-100);
     localStorage.setItem(LS.hashes, JSON.stringify(hashes));
-  } catch(e) {}
+  } catch(e) { log('[storage] saveHash error', e); }
 }
 function loadHashes() {
-  try { const raw = localStorage.getItem(LS.hashes); if (raw) return JSON.parse(raw); } catch(e) {}
+  log('[storage] loadHashes()');
+  try { const raw = localStorage.getItem(LS.hashes); if (raw) { const h = JSON.parse(raw); log('[storage] hashes loaded', { count: h.length }); return h; } } catch(e) { log('[storage] loadHashes error', e); }
   return [];
 }
 
@@ -136,7 +147,6 @@ const ACHIEVEMENTS = [
   { id: 'dailyPlayer',     name: 'Daily Player',       desc: 'Complete 7 daily challenges',                    icon: 'ico-calendar', cat: 'daily' },
   { id: 'dailyDevotee',    name: 'Daily Devotee',      desc: 'Complete 30 daily challenges',                   icon: 'ico-calendar', cat: 'daily' },
   { id: 'collector',       name: 'Collector',          desc: 'Unlock 10 achievements',                        icon: 'ico-award',    cat: 'misc' },
-  // ---- Progress (16) ----
   { id: 'twoGames', name: 'Getting Started', desc: 'Solve 2 puzzles', icon: 'ico-trophy', cat: 'progress' },
   { id: 'fiveGames', name: 'Puzzle Fan', desc: 'Solve 5 puzzles', icon: 'ico-trophy', cat: 'progress' },
   { id: 'fifteenGames', name: 'Fifteen Club', desc: 'Solve 15 puzzles', icon: 'ico-trophy', cat: 'progress' },
@@ -153,7 +163,6 @@ const ACHIEVEMENTS = [
   { id: 'fourHundred', name: 'Quad Century', desc: 'Solve 400 puzzles', icon: 'ico-crown', cat: 'progress' },
   { id: 'fiveHundred', name: 'Half Millennium', desc: 'Solve 500 puzzles', icon: 'ico-crown', cat: 'progress' },
   { id: 'sevenFifty', name: 'Seven Fifty', desc: 'Solve 750 puzzles', icon: 'ico-crown', cat: 'progress' },
-  // ---- Speed (16) ----
   { id: 'easyOneMin', name: 'Easy Breeze', desc: 'Solve Easy in under 1 minute', icon: 'ico-bolt', cat: 'speed' },
   { id: 'easyThreeMin', name: 'Easy Stroll', desc: 'Solve Easy in under 3 minutes', icon: 'ico-bolt', cat: 'speed' },
   { id: 'easyFiveMin', name: 'Easy Cruise', desc: 'Solve Easy in under 5 minutes', icon: 'ico-bolt', cat: 'speed' },
@@ -170,7 +179,6 @@ const ACHIEVEMENTS = [
   { id: 'impossibleFifteenMin', name: 'Impossible Grind', desc: 'Solve Impossible in under 15 minutes', icon: 'ico-diamond', cat: 'speed' },
   { id: 'impossibleTwentyMin', name: 'Impossible Marathon', desc: 'Solve Impossible in under 20 minutes', icon: 'ico-diamond', cat: 'speed' },
   { id: 'blitzWin', name: 'Blitz', desc: 'Solve any puzzle in under 30 seconds', icon: 'ico-zap', cat: 'speed' },
-  // ---- Flawless (8) ----
   { id: 'twoFlawless', name: 'Double Perfect', desc: 'Complete 2 flawless puzzles', icon: 'ico-star', cat: 'flawless' },
   { id: 'threeFlawless', name: 'Hat Trick', desc: 'Complete 3 flawless puzzles', icon: 'ico-star', cat: 'flawless' },
   { id: 'tenFlawless', name: 'Perfect Ten', desc: 'Complete 10 flawless puzzles', icon: 'ico-star', cat: 'flawless' },
@@ -179,7 +187,6 @@ const ACHIEVEMENTS = [
   { id: 'fiftyFlawless', name: 'Golden Perfection', desc: 'Complete 50 flawless puzzles', icon: 'ico-star', cat: 'flawless' },
   { id: 'seventyFiveFlawless', name: 'Platinum Perfection', desc: 'Complete 75 flawless puzzles', icon: 'ico-star', cat: 'flawless' },
   { id: 'hundredFlawless', name: 'Diamond Perfection', desc: 'Complete 100 flawless puzzles', icon: 'ico-star', cat: 'flawless' },
-  // ---- No Hints (8) ----
   { id: 'threeNoHints', name: 'Pure Thoughts', desc: 'Solve 3 puzzles without hints', icon: 'ico-lightbulb', cat: 'nohints' },
   { id: 'fiveNoHints', name: 'Pure Streak', desc: 'Solve 5 puzzles without hints', icon: 'ico-lightbulb', cat: 'nohints' },
   { id: 'fifteenNoHints', name: 'Pure Focus', desc: 'Solve 15 puzzles without hints', icon: 'ico-lightbulb', cat: 'nohints' },
@@ -188,12 +195,10 @@ const ACHIEVEMENTS = [
   { id: 'fortyNoHints', name: 'Pure Forty', desc: 'Solve 40 puzzles without hints', icon: 'ico-brain', cat: 'nohints' },
   { id: 'seventyFiveNoHints', name: 'Pure Soul', desc: 'Solve 75 puzzles without hints', icon: 'ico-brain', cat: 'nohints' },
   { id: 'hundredNoHints', name: 'Pure Legend', desc: 'Solve 100 puzzles without hints', icon: 'ico-brain', cat: 'nohints' },
-  // ---- Comeback (4) ----
   { id: 'twoMistakes', name: 'Almost Perfect', desc: 'Complete a puzzle with exactly 2 mistakes', icon: 'ico-shield', cat: 'comeback' },
   { id: 'fourMistakes', name: 'Persistent', desc: 'Complete a puzzle with exactly 4 mistakes', icon: 'ico-shield', cat: 'comeback' },
   { id: 'sixMistakes', name: 'Never Say Die', desc: 'Complete a puzzle with 6+ mistakes', icon: 'ico-shield', cat: 'comeback' },
   { id: 'crutchUser', name: 'Help Seeker', desc: 'Complete a puzzle using 3+ hints', icon: 'ico-lightbulb', cat: 'comeback' },
-  // ---- Streak (7) ----
   { id: 'streakTwo', name: 'Double Streak', desc: 'Reach a 2-day streak', icon: 'ico-fire', cat: 'streak' },
   { id: 'streakFive', name: 'Streak Five', desc: 'Reach a 5-day streak', icon: 'ico-fire', cat: 'streak' },
   { id: 'streakTen', name: 'Streak Ten', desc: 'Reach a 10-day streak', icon: 'ico-fire', cat: 'streak' },
@@ -202,20 +207,17 @@ const ACHIEVEMENTS = [
   { id: 'streakFifty', name: 'Streak Fifty', desc: 'Reach a 50-day streak', icon: 'ico-fire', cat: 'streak' },
   { id: 'streakHundred', name: 'Century Streak', desc: 'Reach a 100-day streak', icon: 'ico-fire', cat: 'streak' },
   { id: 'yearStreak', name: 'Year-Long Warrior', desc: 'Maintain a streak for 1 full year', icon: 'ico-fire', cat: 'streak' },
-  // ---- Impossible (5) ----
   { id: 'threeImpossible', name: 'Brave Trio', desc: 'Complete 3 Impossible puzzles', icon: 'ico-diamond', cat: 'impossible' },
   { id: 'fiveImpossible', name: 'Brave Five', desc: 'Complete 5 Impossible puzzles', icon: 'ico-diamond', cat: 'impossible' },
   { id: 'twentyFiveImpossible', name: 'Brave Twenty Five', desc: 'Complete 25 Impossible puzzles', icon: 'ico-diamond', cat: 'impossible' },
   { id: 'fiftyImpossible', name: 'Brave Fifty', desc: 'Complete 50 Impossible puzzles', icon: 'ico-diamond', cat: 'impossible' },
   { id: 'hundredImpossible', name: 'Brave Hundred', desc: 'Complete 100 Impossible puzzles', icon: 'ico-diamond', cat: 'impossible' },
-  // ---- Daily (6) ----
   { id: 'firstDaily', name: 'First Daily', desc: 'Complete your first daily challenge', icon: 'ico-calendar', cat: 'daily' },
   { id: 'threeDaily', name: 'Daily Trio', desc: 'Complete 3 daily challenges', icon: 'ico-calendar', cat: 'daily' },
   { id: 'tenDaily', name: 'Daily Ten', desc: 'Complete 10 daily challenges', icon: 'ico-calendar', cat: 'daily' },
   { id: 'twentyDaily', name: 'Daily Twenty', desc: 'Complete 20 daily challenges', icon: 'ico-calendar', cat: 'daily' },
   { id: 'fiftyDaily', name: 'Daily Fifty', desc: 'Complete 50 daily challenges', icon: 'ico-calendar', cat: 'daily' },
   { id: 'hundredDaily', name: 'Daily Century', desc: 'Complete 100 daily challenges', icon: 'ico-calendar', cat: 'daily' },
-  // ---- Misc (28) ----
   { id: 'xp1000', name: 'Thousand XP', desc: 'Earn 1,000 total XP', icon: 'ico-trophy', cat: 'misc' },
   { id: 'xp5000', name: 'Five Thousand XP', desc: 'Earn 5,000 total XP', icon: 'ico-trophy', cat: 'misc' },
   { id: 'xp10000', name: 'Ten Thousand XP', desc: 'Earn 10,000 total XP', icon: 'ico-crown', cat: 'misc' },
@@ -223,12 +225,12 @@ const ACHIEVEMENTS = [
   { id: 'xp50000', name: 'Fifty K XP', desc: 'Earn 50,000 total XP', icon: 'ico-crown', cat: 'misc' },
   { id: 'xp100000', name: 'Century XP', desc: 'Earn 100,000 total XP', icon: 'ico-crown', cat: 'misc' },
   { id: 'time30m', name: 'Thirty Minutes', desc: 'Play for 30 minutes total', icon: 'ico-clock', cat: 'misc' },
-{ id: 'time1h', name: 'One Hour', desc: 'Play for 1 hour total', icon: 'ico-clock', cat: 'misc' },
+  { id: 'time1h', name: 'One Hour', desc: 'Play for 1 hour total', icon: 'ico-clock', cat: 'misc' },
   { id: 'time10h', name: 'Ten Hours', desc: 'Play for 10 hours total', icon: 'ico-clock', cat: 'misc' },
   { id: 'time50h', name: 'Fifty Hours', desc: 'Play for 50 hours total', icon: 'ico-clock', cat: 'misc' },
   { id: 'time100h', name: 'Hundred Hours', desc: 'Play for 100 hours total', icon: 'ico-clock', cat: 'misc' },
   { id: 'mistakes50', name: 'Fifty Mistakes', desc: 'Make 50 total mistakes', icon: 'ico-x', cat: 'misc' },
-{ id: 'mistakes100', name: 'Hundred Mistakes', desc: 'Make 100 total mistakes', icon: 'ico-x', cat: 'misc' },
+  { id: 'mistakes100', name: 'Hundred Mistakes', desc: 'Make 100 total mistakes', icon: 'ico-x', cat: 'misc' },
   { id: 'mistakes500', name: 'Five Hundred Mistakes', desc: 'Make 500 total mistakes', icon: 'ico-x', cat: 'misc' },
   { id: 'mistakes1000', name: 'Thousand Mistakes', desc: 'Make 1,000 total mistakes', icon: 'ico-x', cat: 'misc' },
   { id: 'mistakes5000', name: 'Five Thousand Mistakes', desc: 'Make 5,000 total mistakes', icon: 'ico-x', cat: 'misc' },
@@ -246,7 +248,6 @@ const ACHIEVEMENTS = [
   { id: 'undo1000', name: 'Undo Master', desc: 'Undo 1,000 moves', icon: 'ico-undo', cat: 'misc' },
   { id: 'noAutoCandidates', name: 'Pure Skill', desc: 'Solve a puzzle without auto-candidates', icon: 'ico-brain', cat: 'misc' },
   { id: 'noNotesMode', name: 'Memory Master', desc: 'Solve a puzzle without using notes', icon: 'ico-brain', cat: 'misc' },
-  // ---- Almost Impossible (3) ----
   { id: 'legendary', name: 'Legendary', desc: 'Solve 1,000 puzzles', icon: 'ico-crown', cat: 'progress' },
   { id: 'speedOfLight', name: 'Speed of Light', desc: 'Solve Impossible in under 60 seconds', icon: 'ico-zap', cat: 'speed' },
   { id: 'jackpot', name: 'Jackpot', desc: 'Score 80 XP in a single game', icon: 'ico-star', cat: 'misc' },
@@ -266,6 +267,7 @@ const ACHIEVE_CATEGORIES = [
 ];
 
 function checkAchievements(difficulty, mistakes, hintsUsed, notesUsed, score, autoCandidates) {
+  log('[storage] checkAchievements()', { difficulty, mistakes, hintsUsed, notesUsed, score, autoCandidates });
   const earned = stats.achievements || [];
   const newOnes = [];
   const total = stats.totalGames || 0;
@@ -316,7 +318,6 @@ function checkAchievements(difficulty, mistakes, hintsUsed, notesUsed, score, au
 
   if (!earned.includes('collector') && (earned.length + newOnes.length) >= 10) newOnes.push('collector');
 
-  // ---- Progress (16) ----
   if (!earned.includes('twoGames') && total >= 2) newOnes.push('twoGames');
   if (!earned.includes('fiveGames') && total >= 5) newOnes.push('fiveGames');
   if (!earned.includes('fifteenGames') && total >= 15) newOnes.push('fifteenGames');
@@ -334,7 +335,6 @@ function checkAchievements(difficulty, mistakes, hintsUsed, notesUsed, score, au
   if (!earned.includes('fiveHundred') && total >= 500) newOnes.push('fiveHundred');
   if (!earned.includes('sevenFifty') && total >= 750) newOnes.push('sevenFifty');
 
-  // ---- Speed (16) ----
   if (!earned.includes('easyOneMin') && difficulty === 'easy' && state.timer < 60) newOnes.push('easyOneMin');
   if (!earned.includes('easyThreeMin') && difficulty === 'easy' && state.timer < 180) newOnes.push('easyThreeMin');
   if (!earned.includes('easyFiveMin') && difficulty === 'easy' && state.timer < 300) newOnes.push('easyFiveMin');
@@ -352,7 +352,6 @@ function checkAchievements(difficulty, mistakes, hintsUsed, notesUsed, score, au
   if (!earned.includes('impossibleTwentyMin') && difficulty === 'impossible' && state.timer < 1200) newOnes.push('impossibleTwentyMin');
   if (!earned.includes('blitzWin') && state.timer < 30) newOnes.push('blitzWin');
 
-  // ---- Flawless (8) ----
   if (!earned.includes('twoFlawless') && flawlessCount >= 2) newOnes.push('twoFlawless');
   if (!earned.includes('threeFlawless') && flawlessCount >= 3) newOnes.push('threeFlawless');
   if (!earned.includes('tenFlawless') && flawlessCount >= 10) newOnes.push('tenFlawless');
@@ -362,7 +361,6 @@ function checkAchievements(difficulty, mistakes, hintsUsed, notesUsed, score, au
   if (!earned.includes('seventyFiveFlawless') && flawlessCount >= 75) newOnes.push('seventyFiveFlawless');
   if (!earned.includes('hundredFlawless') && flawlessCount >= 100) newOnes.push('hundredFlawless');
 
-  // ---- No Hints (8) ----
   if (!earned.includes('threeNoHints') && puzzlesNoHints >= 3) newOnes.push('threeNoHints');
   if (!earned.includes('fiveNoHints') && puzzlesNoHints >= 5) newOnes.push('fiveNoHints');
   if (!earned.includes('fifteenNoHints') && puzzlesNoHints >= 15) newOnes.push('fifteenNoHints');
@@ -372,13 +370,11 @@ function checkAchievements(difficulty, mistakes, hintsUsed, notesUsed, score, au
   if (!earned.includes('seventyFiveNoHints') && puzzlesNoHints >= 75) newOnes.push('seventyFiveNoHints');
   if (!earned.includes('hundredNoHints') && puzzlesNoHints >= 100) newOnes.push('hundredNoHints');
 
-  // ---- Comeback (4) ----
   if (!earned.includes('twoMistakes') && mistakes === 2) newOnes.push('twoMistakes');
   if (!earned.includes('fourMistakes') && mistakes === 4) newOnes.push('fourMistakes');
   if (!earned.includes('sixMistakes') && mistakes >= 6) newOnes.push('sixMistakes');
   if (!earned.includes('crutchUser') && hintsUsed >= 3) newOnes.push('crutchUser');
 
-  // ---- Streak (7) ----
   if (!earned.includes('streakTwo') && (streak.count || 0) >= 2) newOnes.push('streakTwo');
   if (!earned.includes('streakFive') && (streak.count || 0) >= 5) newOnes.push('streakFive');
   if (!earned.includes('streakTen') && (streak.count || 0) >= 10) newOnes.push('streakTen');
@@ -388,14 +384,12 @@ function checkAchievements(difficulty, mistakes, hintsUsed, notesUsed, score, au
   if (!earned.includes('streakHundred') && (streak.count || 0) >= 100) newOnes.push('streakHundred');
   if (!earned.includes('yearStreak') && (streak.count || 0) >= 365) newOnes.push('yearStreak');
 
-  // ---- Impossible (5) ----
   if (!earned.includes('threeImpossible') && (stats.gamesByDifficulty.impossible || 0) >= 3) newOnes.push('threeImpossible');
   if (!earned.includes('fiveImpossible') && (stats.gamesByDifficulty.impossible || 0) >= 5) newOnes.push('fiveImpossible');
   if (!earned.includes('twentyFiveImpossible') && (stats.gamesByDifficulty.impossible || 0) >= 25) newOnes.push('twentyFiveImpossible');
   if (!earned.includes('fiftyImpossible') && (stats.gamesByDifficulty.impossible || 0) >= 50) newOnes.push('fiftyImpossible');
   if (!earned.includes('hundredImpossible') && (stats.gamesByDifficulty.impossible || 0) >= 100) newOnes.push('hundredImpossible');
 
-  // ---- Daily (6) ----
   if (!earned.includes('firstDaily') && dailyDone >= 1) newOnes.push('firstDaily');
   if (!earned.includes('threeDaily') && dailyDone >= 3) newOnes.push('threeDaily');
   if (!earned.includes('tenDaily') && dailyDone >= 10) newOnes.push('tenDaily');
@@ -403,7 +397,6 @@ function checkAchievements(difficulty, mistakes, hintsUsed, notesUsed, score, au
   if (!earned.includes('fiftyDaily') && dailyDone >= 50) newOnes.push('fiftyDaily');
   if (!earned.includes('hundredDaily') && dailyDone >= 100) newOnes.push('hundredDaily');
 
-  // ---- Misc (28) ----
   if (!earned.includes('xp1000') && (stats.totalXp || 0) >= 1000) newOnes.push('xp1000');
   if (!earned.includes('xp5000') && (stats.totalXp || 0) >= 5000) newOnes.push('xp5000');
   if (!earned.includes('xp10000') && (stats.totalXp || 0) >= 10000) newOnes.push('xp10000');
@@ -435,10 +428,15 @@ function checkAchievements(difficulty, mistakes, hintsUsed, notesUsed, score, au
   if (!earned.includes('noAutoCandidates') && !autoCandidates) newOnes.push('noAutoCandidates');
   if (!earned.includes('noNotesMode') && !notesUsed) newOnes.push('noNotesMode');
 
-  // ---- Almost Impossible (3) ----
   if (!earned.includes('legendary') && total >= 1000) newOnes.push('legendary');
   if (!earned.includes('speedOfLight') && difficulty === 'impossible' && state.timer < 60) newOnes.push('speedOfLight');
   if (!earned.includes('jackpot') && score >= 80) newOnes.push('jackpot');
+
+  if (newOnes.length > 0) {
+    log('[storage] new achievements earned', { newOnes });
+  } else {
+    log('[storage] no new achievements');
+  }
 
   for (const id of newOnes) {
     if (!earned.includes(id)) earned.push(id);
@@ -469,7 +467,6 @@ function getAchievementProgress(id) {
     case 'dailyPlayer':   return { current: Math.min(dailyDone, 7), max: 7 };
     case 'dailyDevotee':  return { current: Math.min(dailyDone, 30), max: 30 };
     case 'collector':     return { current: Math.min(earned.length, 10), max: 10 };
-    // Progress
     case 'twoGames':        return { current: Math.min(total, 2), max: 2 };
     case 'fiveGames':       return { current: Math.min(total, 5), max: 5 };
     case 'fifteenGames':    return { current: Math.min(total, 15), max: 15 };
@@ -487,7 +484,6 @@ function getAchievementProgress(id) {
     case 'fiveHundred':     return { current: Math.min(total, 500), max: 500 };
     case 'sevenFifty':      return { current: Math.min(total, 750), max: 750 };
     case 'legendary':       return { current: Math.min(total, 1000), max: 1000 };
-    // Flawless
     case 'twoFlawless':      return { current: Math.min(flawlessCount, 2), max: 2 };
     case 'threeFlawless':    return { current: Math.min(flawlessCount, 3), max: 3 };
     case 'tenFlawless':      return { current: Math.min(flawlessCount, 10), max: 10 };
@@ -496,7 +492,6 @@ function getAchievementProgress(id) {
     case 'fiftyFlawless':    return { current: Math.min(flawlessCount, 50), max: 50 };
     case 'seventyFiveFlawless': return { current: Math.min(flawlessCount, 75), max: 75 };
     case 'hundredFlawless':  return { current: Math.min(flawlessCount, 100), max: 100 };
-    // No hints
     case 'threeNoHints':         return { current: Math.min(puzzlesNoHints, 3), max: 3 };
     case 'fiveNoHints':          return { current: Math.min(puzzlesNoHints, 5), max: 5 };
     case 'fifteenNoHints':       return { current: Math.min(puzzlesNoHints, 15), max: 15 };
@@ -505,54 +500,45 @@ function getAchievementProgress(id) {
     case 'fortyNoHints':         return { current: Math.min(puzzlesNoHints, 40), max: 40 };
     case 'seventyFiveNoHints':   return { current: Math.min(puzzlesNoHints, 75), max: 75 };
     case 'hundredNoHints':       return { current: Math.min(puzzlesNoHints, 100), max: 100 };
-    // Impossible
     case 'threeImpossible':       return { current: Math.min(stats.gamesByDifficulty.impossible || 0, 3), max: 3 };
     case 'fiveImpossible':        return { current: Math.min(stats.gamesByDifficulty.impossible || 0, 5), max: 5 };
     case 'twentyFiveImpossible':  return { current: Math.min(stats.gamesByDifficulty.impossible || 0, 25), max: 25 };
     case 'fiftyImpossible':       return { current: Math.min(stats.gamesByDifficulty.impossible || 0, 50), max: 50 };
     case 'hundredImpossible':     return { current: Math.min(stats.gamesByDifficulty.impossible || 0, 100), max: 100 };
-    // Daily
     case 'firstDaily':     return { current: Math.min(dailyDone, 1), max: 1 };
     case 'threeDaily':     return { current: Math.min(dailyDone, 3), max: 3 };
     case 'tenDaily':       return { current: Math.min(dailyDone, 10), max: 10 };
     case 'twentyDaily':    return { current: Math.min(dailyDone, 20), max: 20 };
     case 'fiftyDaily':     return { current: Math.min(dailyDone, 50), max: 50 };
     case 'hundredDaily':   return { current: Math.min(dailyDone, 100), max: 100 };
-    // Misc XP
     case 'xp1000':          return { current: Math.min(stats.totalXp || 0, 1000), max: 1000 };
     case 'xp5000':          return { current: Math.min(stats.totalXp || 0, 5000), max: 5000 };
     case 'xp10000':         return { current: Math.min(stats.totalXp || 0, 10000), max: 10000 };
     case 'xp25000':         return { current: Math.min(stats.totalXp || 0, 25000), max: 25000 };
     case 'xp50000':         return { current: Math.min(stats.totalXp || 0, 50000), max: 50000 };
     case 'xp100000':        return { current: Math.min(stats.totalXp || 0, 100000), max: 100000 };
-    // Misc Time
     case 'time30m':         return { current: Math.min(stats.totalTime || 0, 1800), max: 1800 };
     case 'time1h':          return { current: Math.min(stats.totalTime || 0, 3600), max: 3600 };
     case 'time10h':         return { current: Math.min(stats.totalTime || 0, 36000), max: 36000 };
     case 'time50h':         return { current: Math.min(stats.totalTime || 0, 180000), max: 180000 };
     case 'time100h':        return { current: Math.min(stats.totalTime || 0, 360000), max: 360000 };
-    // Misc Mistakes
     case 'mistakes50':      return { current: Math.min(stats.totalMistakes || 0, 50), max: 50 };
     case 'mistakes100':     return { current: Math.min(stats.totalMistakes || 0, 100), max: 100 };
     case 'mistakes500':     return { current: Math.min(stats.totalMistakes || 0, 500), max: 500 };
     case 'mistakes1000':    return { current: Math.min(stats.totalMistakes || 0, 1000), max: 1000 };
     case 'mistakes5000':    return { current: Math.min(stats.totalMistakes || 0, 5000), max: 5000 };
-    // Misc Notes
     case 'notes100':        return { current: Math.min(stats.totalNotesPlaced || 0, 100), max: 100 };
     case 'notes500':        return { current: Math.min(stats.totalNotesPlaced || 0, 500), max: 500 };
     case 'notes1000':       return { current: Math.min(stats.totalNotesPlaced || 0, 1000), max: 1000 };
     case 'notes5000':       return { current: Math.min(stats.totalNotesPlaced || 0, 5000), max: 5000 };
-    // Misc Hints
     case 'firstHint':       return { current: Math.min(stats.totalHintsUsedAll || 0, 1), max: 1 };
     case 'tenHints':        return { current: Math.min(stats.totalHintsUsedAll || 0, 10), max: 10 };
     case 'fiftyHints':      return { current: Math.min(stats.totalHintsUsedAll || 0, 50), max: 50 };
     case 'hundredHints':    return { current: Math.min(stats.totalHintsUsedAll || 0, 100), max: 100 };
     case 'fiveHundredHints': return { current: Math.min(stats.totalHintsUsedAll || 0, 500), max: 500 };
-    // Misc Undos
     case 'undo100':         return { current: Math.min(stats.totalUndosUsed || 0, 100), max: 100 };
     case 'undo500':         return { current: Math.min(stats.totalUndosUsed || 0, 500), max: 500 };
     case 'undo1000':        return { current: Math.min(stats.totalUndosUsed || 0, 1000), max: 1000 };
-    // Streak
     case 'streakTwo':        return { current: Math.min(streak.count || 0, 2), max: 2 };
     case 'streakFive':       return { current: Math.min(streak.count || 0, 5), max: 5 };
     case 'streakTen':        return { current: Math.min(streak.count || 0, 10), max: 10 };
@@ -566,6 +552,7 @@ function getAchievementProgress(id) {
 }
 
 function showAchievementToast(ids) {
+  log('[storage] showAchievementToast()', { ids });
   const container = document.getElementById('achievementToastContainer') || (() => {
     const el = document.createElement('div');
     el.id = 'achievementToastContainer';
@@ -575,7 +562,7 @@ function showAchievementToast(ids) {
   })();
   ids.forEach((id, idx) => {
     const a = ACHIEVEMENTS.find(x => x.id === id);
-    if (!a) return;
+    if (!a) { log('[storage] achievement not found', { id }); return; }
     const toast = document.createElement('div');
     toast.style.cssText = 'background:linear-gradient(135deg,var(--xp-gold),#f97316,#ef4444);color:#fff;padding:18px 32px;border-radius:14px;font-size:17px;font-weight:700;box-shadow:0 8px 32px rgba(0,0,0,0.3);animation:achievePop 1.2s ease forwards;display:flex;align-items:center;gap:12px;text-align:center;border:2px solid rgba(255,255,255,0.3);max-width:340px;';
     toast.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24"><use href="#' + a.icon + '"/></svg> <div><div style="font-size:11px;opacity:0.8;font-weight:600;text-transform:uppercase;letter-spacing:1px;">Achievement Unlocked!</div><div>' + a.name + '</div></div>';
@@ -583,14 +570,12 @@ function showAchievementToast(ids) {
     container.appendChild(toast);
   });
 
-  // Browser notification
   if ('Notification' in window && Notification.permission === 'granted') {
     const first = ACHIEVEMENTS.find(x => x.id === ids[0]);
     if (first) new Notification('Achievement Unlocked!', { body: first.name + ' - ' + first.desc, icon: 'icon.svg' });
   }
 }
 
-// Stats
 let stats = {
   totalGames: 0, totalXp: 0, totalTime: 0,
   gamesByDifficulty: { easy: 0, medium: 0, hard: 0, impossible: 0 },
@@ -611,40 +596,75 @@ let stats = {
   _vault: '',
 };
 
-const BONUS_KEY = 'sudoku_bonus';
-let dailyBonus = { lastClaimDate: null, gamesRemaining: 0, hintsRemaining: 0 };
+const BONUS_KEY = 'sudoku_bonus_challenge';
+let bonusChallenge = { startDate: null, gamesPlayed: 0, claimed: false, _claimedMilestones: [] };
 
 function loadBonus() {
-  try { const r = localStorage.getItem(BONUS_KEY); if (r) dailyBonus = JSON.parse(r); } catch(e) {}
-  // Reset if stale day
-  const today = todayStr();
-  if (dailyBonus.lastClaimDate !== today) {
-    dailyBonus.hintsRemaining = 0;
-    dailyBonus.gamesRemaining = 0;
-  }
+  log('[storage] loadBonus()');
+  try { const r = localStorage.getItem(BONUS_KEY); if (r) bonusChallenge = JSON.parse(r); } catch(e) { log('[storage] loadBonus error', e); }
+  if (!bonusChallenge._claimedMilestones) bonusChallenge._claimedMilestones = [];
 }
 function saveBonus() {
-  try { localStorage.setItem(BONUS_KEY, JSON.stringify(dailyBonus)); } catch(e) {}
+  log('[storage] saveBonus()', { gamesPlayed: bonusChallenge.gamesPlayed, claimed: bonusChallenge.claimed });
+  try { localStorage.setItem(BONUS_KEY, JSON.stringify(bonusChallenge)); } catch(e) { log('[storage] saveBonus error', e); }
 }
 
-function canClaimBonus() {
-  if (!stats.firstGameDate) return false;
-  const first = new Date(stats.firstGameDate);
+function isBonusChallengeActive() {
+  if (!bonusChallenge.startDate) return false;
+  const start = new Date(bonusChallenge.startDate);
   const now = new Date();
-  const diffDays = Math.floor((now - first) / 86400000);
-  return diffDays >= 7 && dailyBonus.lastClaimDate !== todayStr();
+  const diffDays = Math.floor((now - start) / 86400000);
+  return diffDays < 7 && !bonusChallenge.claimed;
 }
 
-function claimBonus() {
-  if (!canClaimBonus()) return false;
-  dailyBonus.lastClaimDate = todayStr();
-  dailyBonus.gamesRemaining = 10;
-  dailyBonus.hintsRemaining = 0;
+function getBonusDaysLeft() {
+  if (!bonusChallenge.startDate) return 0;
+  const start = new Date(bonusChallenge.startDate);
+  const now = new Date();
+  const elapsed = Math.floor((now - start) / 86400000);
+  return Math.max(0, 7 - elapsed);
+}
+
+function getBonusHoursLeft() {
+  if (!bonusChallenge.startDate) return 0;
+  const start = new Date(bonusChallenge.startDate);
+  const now = new Date();
+  const elapsed = (now - start) / 3600000;
+  return Math.max(0, Math.floor(168 - elapsed));
+}
+
+function startBonusChallenge() {
+  if (bonusChallenge.startDate) return;
+  bonusChallenge = { startDate: new Date().toISOString(), gamesPlayed: 1, claimed: false };
   saveBonus();
+}
+
+function trackBonusGame() {
+  if (!bonusChallenge.startDate) {
+    bonusChallenge = { startDate: new Date().toISOString(), gamesPlayed: 1, claimed: false };
+    saveBonus();
+    return;
+  }
+  const active = isBonusChallengeActive();
+  if (active || (!bonusChallenge.claimed && getBonusDaysLeft() > 0)) {
+    bonusChallenge.gamesPlayed = (bonusChallenge.gamesPlayed || 0) + 1;
+    saveBonus();
+  }
+}
+
+function claimBonusReward() {
+  log('[storage] claimBonusReward()');
+  if (!isBonusChallengeActive()) return false;
+  if ((bonusChallenge.gamesPlayed || 0) < 10) return false;
+  bonusChallenge.bonusHints = (bonusChallenge.bonusHints || 0) + 3;
+  bonusChallenge.claimed = true;
+  saveBonus();
+  log('[storage] bonus reward claimed: +3 hints');
   return true;
 }
 
 function loadStats() {
+  log('[storage] loadStats()');
   try {
     const raw = localStorage.getItem(LS.stats);
     if (raw) {
@@ -655,16 +675,21 @@ function loadStats() {
         const checks = ['totalHintsUsedAll', 'totalUndosUsed', 'totalGames', 'totalXp'];
         for (const key of checks) {
           if (decoded[key] !== undefined && decoded[key] !== stats[key]) {
+            log('[storage] stats tampered for', { key, decoded: decoded[key], stored: stats[key] });
             stats[key] = decoded[key];
             tampered = true;
           }
         }
         if (tampered) saveStats();
       }
+      log('[storage] stats loaded', { totalGames: stats.totalGames, totalXp: stats.totalXp });
+    } else {
+      log('[storage] no stats found, using defaults');
     }
-  } catch(e) {}
+  } catch(e) { log('[storage] loadStats error', e); }
 }
 function saveStats() {
+  log('[storage] saveStats()', { totalGames: stats.totalGames, totalXp: stats.totalXp });
   try {
     stats._vault = encodeVault({
       totalHintsUsedAll: stats.totalHintsUsedAll,
@@ -673,10 +698,9 @@ function saveStats() {
       totalXp: stats.totalXp,
     });
     localStorage.setItem(LS.stats, JSON.stringify(stats));
-  } catch(e) {}
+  } catch(e) { log('[storage] saveStats error', e); }
 }
 
-// Streak (anti-cheat: vault encoding recovers original values)
 function encodeVault(obj) {
   const salt = 'sd_v2';
   const raw = salt + ':' + JSON.stringify(obj);
@@ -703,24 +727,30 @@ const STREAK_MILESTONES = [
 ];
 
 function loadStreak() {
+  log('[storage] loadStreak()');
   try {
     const raw = localStorage.getItem(LS.streak);
     if (raw) {
       streak = JSON.parse(raw);
       const decoded = decodeVault(streak._vault || '');
       if (decoded && (decoded.count !== streak.count || decoded.lastDate !== streak.lastDate)) {
+        log('[storage] streak tampered, restoring', { decoded: decoded.count, stored: streak.count });
         streak.count = decoded.count;
         streak.lastDate = decoded.lastDate;
         saveStreak();
       }
+      log('[storage] streak loaded', { count: streak.count, lastDate: streak.lastDate });
+    } else {
+      log('[storage] no streak found');
     }
-  } catch(e) {}
+  } catch(e) { log('[storage] loadStreak error', e); }
 }
 function saveStreak() {
+  log('[storage] saveStreak()', { count: streak.count, lastDate: streak.lastDate });
   try {
     streak._vault = encodeVault({ count: streak.count, lastDate: streak.lastDate });
     localStorage.setItem(LS.streak, JSON.stringify(streak));
-  } catch(e) {}
+  } catch(e) { log('[storage] saveStreak error', e); }
 }
 
 function todayStr() {
@@ -737,6 +767,7 @@ function isDailyDoneToday() {
 }
 
 function markDailyDone() {
+  log('[storage] markDailyDone()');
   try {
     localStorage.setItem(LS.daily, JSON.stringify({ date: todayStr(), done: true }));
     localStorage.removeItem(LS.dailyState);
@@ -744,15 +775,17 @@ function markDailyDone() {
 }
 
 function checkStreak() {
+  log('[storage] checkStreak()');
   const today = todayStr();
-  if (!streak.lastDate) return;
-  if (streak.lastDate === today) return;
+  if (!streak.lastDate) { log('[storage] checkStreak: no lastDate'); return; }
+  if (streak.lastDate === today) { log('[storage] checkStreak: already updated today'); return; }
   const last = new Date(streak.lastDate);
   const now = new Date(today);
   const diffMs = now - last;
   const diffDays = Math.round(diffMs / 86400000);
   if (diffDays > 1) {
     const lostStreak = streak.count;
+    log('[storage] streak lost!', { lostStreak, diffDays });
     streak.count = 0;
     streak.lastDate = null;
     saveStreak();
@@ -761,6 +794,7 @@ function checkStreak() {
 }
 
 function showStreakLost(count) {
+  log('[storage] showStreakLost()', { count });
   document.getElementById('oldStreakCount').textContent = count;
   document.getElementById('streakLostOverlay').classList.add('open');
   document.getElementById('streakLostOk').onclick = () => document.getElementById('streakLostOverlay').classList.remove('open');
@@ -771,4 +805,3 @@ function requestNotificationPermission() {
     Notification.requestPermission();
   }
 }
-

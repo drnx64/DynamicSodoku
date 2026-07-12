@@ -2,6 +2,7 @@
 // 15. Initialization
 // ============================================================
 function init() {
+  log('[init] init() starting');
   loadSettings();
   state.settings = Object.assign({}, DEFAULT_SETTINGS, state.settings);
   applySettings();
@@ -17,15 +18,19 @@ function init() {
   setupDialogs();
   requestNotificationPermission();
 
-  // Load saved game into state (for resume potential) but always show menu on page load
   const loaded = loadGame();
   if (loaded && state.solution && state.solution.length === 9) {
     if (state.won || state.gameOver || state.mistakes >= 3) {
+      log('[init] clearing finished/unplayable game', { won: state.won, gameOver: state.gameOver, mistakes: state.mistakes });
       clearGame();
     }
   }
   showPage('page-menu');
   updateMenuUI();
+  log('[init] init() complete');
 }
 
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', () => {
+  log('[init] DOMContentLoaded fired');
+  init();
+});

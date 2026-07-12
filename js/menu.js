@@ -29,85 +29,61 @@ function getStreakFire(count) {
 }
 
 function updateMenuUI() {
+  log('[menu] updateMenuUI()');
   const totalXp = stats.totalXp || 0;
   const rank = getRank(totalXp);
   const nextRank = getNextRank(totalXp);
 
-  // Daily bonus card
-  const bonusCard = document.getElementById('bonusCard');
-  const bonusSub = document.getElementById('bonusSub');
-  const claimBtn = document.getElementById('bonusClaimBtn');
-  loadBonus();
-  if (canClaimBonus()) {
-    bonusCard.style.display = 'flex';
-    bonusSub.textContent = 'Claim 10 bonus games with +3 hints each!';
-    claimBtn.style.display = 'block';
-    claimBtn.onclick = () => {
-      if (claimBonus()) {
-        claimBtn.style.display = 'none';
-        bonusSub.textContent = '10 bonus games claimed today!';
-        updateMenuUI();
-      }
-    };
-    // Pop-up toast notification
-    showBonusToast();
-  } else if (dailyBonus.lastClaimDate === todayStr() && dailyBonus.gamesRemaining > 0) {
-    bonusCard.style.display = 'flex';
-    bonusSub.textContent = dailyBonus.gamesRemaining + ' / 10 bonus games remaining today';
-    claimBtn.style.display = 'none';
-  } else if (stats.firstGameDate) {
-    const first = new Date(stats.firstGameDate);
-    const now = new Date();
-    const diffDays = Math.floor((now - first) / 86400000);
-    if (diffDays < 7) {
-      bonusCard.style.display = 'flex';
-      bonusSub.textContent = 'Bonus unlocks in ' + (7 - diffDays) + ' days';
-      claimBtn.style.display = 'none';
-    } else {
-      bonusCard.style.display = 'none';
-    }
-  } else {
-    bonusCard.style.display = 'none';
-  }
-
   const levelBadge = document.getElementById('levelBadge');
+  if (!levelBadge) { log('[menu] WARN: #levelBadge not found'); return; }
   const existing = levelBadge.querySelector('.rank-svg-icon');
   if (existing) existing.remove();
   const imgHtml = rankSvgImg(rank.name, 18);
   if (imgHtml) {
     levelBadge.insertAdjacentHTML('afterbegin', imgHtml);
   }
-  document.getElementById('levelName').textContent = rank.name;
-  document.getElementById('xpCurrent').textContent = totalXp + ' XP';
+  const levelName = document.getElementById('levelName');
+  if (levelName) levelName.textContent = rank.name;
+  const xpCurrent = document.getElementById('xpCurrent');
+  if (xpCurrent) xpCurrent.textContent = totalXp + ' XP';
 
   if (nextRank && nextRank.xp > rank.xp) {
     const progress = ((totalXp - rank.xp) / (nextRank.xp - rank.xp)) * 100;
-    document.getElementById('xpBarFill').style.width = Math.min(100, progress) + '%';
-    document.getElementById('xpNext').textContent = nextRank.xp - totalXp + ' XP to ' + nextRank.name;
+    const xpBarFill = document.getElementById('xpBarFill');
+    if (xpBarFill) xpBarFill.style.width = Math.min(100, progress) + '%';
+    const xpNext = document.getElementById('xpNext');
+    if (xpNext) xpNext.textContent = nextRank.xp - totalXp + ' XP to ' + nextRank.name;
   } else {
-    document.getElementById('xpBarFill').style.width = '100%';
-    document.getElementById('xpNext').textContent = 'MAX LEVEL';
+    const xpBarFill = document.getElementById('xpBarFill');
+    if (xpBarFill) xpBarFill.style.width = '100%';
+    const xpNext = document.getElementById('xpNext');
+    if (xpNext) xpNext.textContent = 'MAX LEVEL';
   }
 
   const s = streak.count || 0;
-  const badge = document.getElementById('streakBadge');
-  document.getElementById('streakCount').textContent = s;
-  badge.classList.toggle('zero', s === 0);
-  const fire = getStreakFire(s);
-  badge.className = 'streak-badge' + (s === 0 ? ' zero' : '') + ' level-' + fire.level;
-  badge.querySelector('svg use').setAttribute('href', '#' + fire.icon);
+  const streakBadge = document.getElementById('streakBadge');
+  if (streakBadge) {
+    document.getElementById('streakCount').textContent = s;
+    streakBadge.classList.toggle('zero', s === 0);
+    const fire = getStreakFire(s);
+    streakBadge.className = 'streak-badge' + (s === 0 ? ' zero' : '') + ' level-' + fire.level;
+    streakBadge.querySelector('svg use').setAttribute('href', '#' + fire.icon);
+  }
 
-  document.getElementById('totalGamesCount').textContent = stats.totalGames || 0;
+  const totalGamesCount = document.getElementById('totalGamesCount');
+  if (totalGamesCount) totalGamesCount.textContent = stats.totalGames || 0;
 
   const dailyDone = isDailyDoneToday();
   const dailyCard = document.getElementById('dailyCard');
   const dailySub = document.getElementById('dailySub');
-  if (dailyDone) {
-    dailyCard.classList.add('daily-completed');
-    dailySub.textContent = '\u2705 Completed today!';
-  } else {
-    dailyCard.classList.remove('daily-completed');
-    dailySub.textContent = 'Complete today\'s puzzle for a bonus';
+  if (dailyCard && dailySub) {
+    if (dailyDone) {
+      dailyCard.classList.add('daily-completed');
+      dailySub.textContent = '\u2705 Completed today!';
+    } else {
+      dailyCard.classList.remove('daily-completed');
+      dailySub.textContent = 'Complete today\'s puzzle for a bonus';
+    }
   }
 
   const earned = stats.achievements || [];
@@ -115,39 +91,35 @@ function updateMenuUI() {
   if (achieveSub) {
     achieveSub.textContent = earned.length + ' / ' + ACHIEVEMENTS.length + ' unlocked';
   }
+  const bonusCircle = document.getElementById('bonusCircle');
+  if (bonusCircle) {
+    loadBonus();
+    const ready = isBonusChallengeActive() && (bonusChallenge.gamesPlayed || 0) >= 10;
+    bonusCircle.classList.toggle('claimable', ready);
+  }
+  log('[menu] updateMenuUI complete', { rank: rank.name, xp: totalXp, streak: s });
 }
 
 function showDailyToast() {
+  log('[menu] showDailyToast()');
   const toast = document.getElementById('dailyToast');
+  if (!toast) { log('[menu] WARN: #dailyToast not found'); return; }
   toast.classList.add('show');
   setTimeout(() => toast.classList.remove('show'), 2500);
 }
 
-function showBonusToast() {
-  const toast = document.getElementById('toast');
-  toast.innerHTML =
-    '<div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border:2px solid var(--xp-gold);border-radius:12px;padding:14px 18px;text-align:center;box-shadow:0 8px 32px rgba(251,191,36,0.3);">' +
-    '<div style="font-size:22px;margin-bottom:2px;">🎁</div>' +
-    '<div style="font-size:14px;font-weight:800;color:var(--xp-gold);">Daily Bonus Available!</div>' +
-    '<div style="font-size:11px;color:#ccc;margin-top:2px;">10 bonus games with +3 hints</div>' +
-    '</div>';
-  toast.classList.add('open');
-  setTimeout(() => toast.classList.remove('open'), 4000);
-}
-
 function showStats() {
+  log('[menu] showStats()');
   const content = document.getElementById('statsContent');
+  if (!content) { log('[menu] WARN: #statsContent not found'); return; }
   content.innerHTML = '';
 
   const total = stats.totalGames || 0;
   const totalTime = stats.totalTime || 0;
   const totalXp = stats.totalXp || 0;
   const bestStreak = stats.bestStreak || 0;
-  const flawlessCount = stats.flawlessCount || 0;
   const totalMistakes = stats.totalMistakes || 0;
   const avgTime = total > 0 ? Math.round(totalTime / total) : 0;
-  const accuracy = total > 0 ? Math.round(((total - totalMistakes) / (total * 81)) * 100) : 100;
-
   const highestLevel = stats.highestLevel || 1;
 
   const grid = document.createElement('div');
@@ -201,7 +173,9 @@ function showStats() {
 }
 
 function showDailyArchive() {
+  log('[menu] showDailyArchive()');
   const content = document.getElementById('archiveContent');
+  if (!content) { log('[menu] WARN: #archiveContent not found'); return; }
   content.innerHTML = '';
 
   const archive = stats.dailyArchive || [];
@@ -260,24 +234,46 @@ function showDailyArchive() {
 }
 
 function setupDialogs() {
-  document.getElementById('levelBadge').addEventListener('click', showRankJourney);
-  document.getElementById('xpBarWrap').addEventListener('click', showRankJourney);
-  document.getElementById('streakBadge').addEventListener('click', showStreakJourney);
-  document.getElementById('achieveCard').addEventListener('click', showAchievements);
-  document.getElementById('statsCard').addEventListener('click', showStats);
+  log('[menu] setupDialogs()');
+  const levelBadge = document.getElementById('levelBadge');
+  if (levelBadge) levelBadge.addEventListener('click', () => { log('[menu] click: levelBadge'); showRankJourney(); });
+  const xpBarWrap = document.getElementById('xpBarWrap');
+  if (xpBarWrap) xpBarWrap.addEventListener('click', () => { log('[menu] click: xpBarWrap'); showRankJourney(); });
+  const streakBadge = document.getElementById('streakBadge');
+  if (streakBadge) streakBadge.addEventListener('click', () => { log('[menu] click: streakBadge'); showStreakJourney(); });
+  const achieveCard = document.getElementById('achieveCard');
+  if (achieveCard) achieveCard.addEventListener('click', () => { log('[menu] click: achieveCard'); showAchievements(); });
+  const statsCard = document.getElementById('statsCard');
+  if (statsCard) statsCard.addEventListener('click', () => { log('[menu] click: statsCard'); showStats(); });
+  const bonusCircle = document.getElementById('bonusCircle');
+  if (bonusCircle) bonusCircle.addEventListener('click', () => { log('[menu] click: bonusCircle'); loadBonus(); showBonusModal(); });
+  const bonusClose = document.getElementById('bonusClose');
+  if (bonusClose) bonusClose.addEventListener('click', () => { log('[menu] click: bonusClose'); document.getElementById('bonusOverlay').classList.remove('open'); });
+  document.getElementById('bonusOverlay').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) document.getElementById('bonusOverlay').classList.remove('open');
+  });
+  const bonusClaimBtn = document.getElementById('bonusModalClaimBtn');
+  if (bonusClaimBtn) bonusClaimBtn.addEventListener('click', () => { log('[menu] click: bonusModalClaimBtn'); claimBonusReward(); showBonusModal(); });
 
-  document.getElementById('rankClose').addEventListener('click', () => document.getElementById('rankOverlay').classList.remove('open'));
+  const rankClose = document.getElementById('rankClose');
+  if (rankClose) {
+    rankClose.addEventListener('click', () => { log('[menu] click: rankClose'); document.getElementById('rankOverlay').classList.remove('open'); });
+  }
   document.getElementById('rankOverlay').addEventListener('click', (e) => {
     if (e.target === e.currentTarget) document.getElementById('rankOverlay').classList.remove('open');
   });
 
-  document.getElementById('streakClose').addEventListener('click', () => document.getElementById('streakOverlay').classList.remove('open'));
+  const streakClose = document.getElementById('streakClose');
+  if (streakClose) {
+    streakClose.addEventListener('click', () => { log('[menu] click: streakClose'); document.getElementById('streakOverlay').classList.remove('open'); });
+  }
   document.getElementById('streakOverlay').addEventListener('click', (e) => {
     if (e.target === e.currentTarget) document.getElementById('streakOverlay').classList.remove('open');
   });
 
   document.querySelectorAll('.achieve-tab').forEach(tab => {
     tab.addEventListener('click', () => {
+      log('[menu] click: achieve-tab', { filter: tab.dataset.filter });
       document.querySelectorAll('.achieve-tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
       showAchievements();
@@ -286,6 +282,7 @@ function setupDialogs() {
 
   document.querySelectorAll('.achieve-cat-tab').forEach(tab => {
     tab.addEventListener('click', () => {
+      log('[menu] click: achieve-cat-tab', { cat: tab.dataset.cat });
       document.querySelectorAll('.achieve-cat-tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
       showAchievements();
@@ -294,12 +291,14 @@ function setupDialogs() {
 }
 
 function showRankJourney() {
+  log('[menu] showRankJourney()');
   const totalXp = stats.totalXp || 0;
   const rank = getRank(totalXp);
   const nextRank = getNextRank(totalXp);
   const rankIdx = RANKS.indexOf(rank);
 
   const iconEl = document.getElementById('rankCurrentIcon');
+  if (!iconEl) { log('[menu] WARN: #rankCurrentIcon not found'); return; }
   iconEl.innerHTML = rankSvgImg(rank.name, 28);
   document.getElementById('rankCurrentName').textContent = rank.name;
   document.getElementById('rankCurrentXp').textContent = totalXp + ' XP';
@@ -314,6 +313,7 @@ function showRankJourney() {
   }
 
   const timeline = document.getElementById('rankTimeline');
+  if (!timeline) { log('[menu] WARN: #rankTimeline not found'); return; }
   timeline.innerHTML = '';
   const count = RANKS.length;
   const gapY = 56, marginL = 60, marginR = 60;
@@ -329,7 +329,6 @@ function showRankJourney() {
   const wrap = document.createElement('div');
   wrap.className = 'rank-tl-svg-wrap';
 
-  // Draw connector lines between each pair of consecutive nodes
   for (let i = 0; i < nodes.length - 1; i++) {
     const a = nodes[i], b = nodes[i + 1];
     const dx = b.x - a.x, dy = b.y - a.y;
@@ -342,7 +341,6 @@ function showRankJourney() {
     if (nodes[i + 1].idx <= rankIdx) {
       line.style.background = 'var(--success)';
     } else if (nodes[i].idx < rankIdx && nodes[i + 1].idx > rankIdx) {
-      // Transition: first half green, second half dashed
       line.style.background = 'linear-gradient(90deg, var(--success) 50%, var(--border) 50%)';
     } else {
       line.style.background = 'var(--border)';
@@ -353,7 +351,6 @@ function showRankJourney() {
     wrap.appendChild(line);
   }
 
-  // Place rank nodes
   for (const p of nodes) {
     const r = RANKS[p.idx];
     const node = document.createElement('div');
@@ -373,7 +370,7 @@ function showRankJourney() {
 
     const name = document.createElement('div');
     name.className = 'rank-tl-name';
-    name.textContent = r.name;
+    name.innerHTML = rankSvgImg(r.name, 10) + ' ' + r.name;
     node.appendChild(name);
 
     const xp = document.createElement('div');
@@ -387,7 +384,6 @@ function showRankJourney() {
   wrap.style.height = (count * gapY + 30) + 'px';
   timeline.appendChild(wrap);
 
-  // Scroll to current rank
   const currentEl = wrap.querySelector('.rank-tl-node.current');
   if (currentEl) {
     setTimeout(() => {
@@ -395,33 +391,39 @@ function showRankJourney() {
     }, 100);
   }
 
-  document.getElementById('rankTotalGames').textContent = stats.totalGames || 0;
-  const hours = Math.floor((stats.totalTime || 0) / 3600);
-  document.getElementById('rankTotalTime').textContent = hours + 'h';
+  const rankTotalGames = document.getElementById('rankTotalGames');
+  if (rankTotalGames) rankTotalGames.textContent = stats.totalGames || 0;
+  const rankTotalTime = document.getElementById('rankTotalTime');
+  if (rankTotalTime) {
+    const hours = Math.floor((stats.totalTime || 0) / 3600);
+    rankTotalTime.textContent = hours + 'h';
+  }
 
   const diffs = ['easy', 'medium', 'hard', 'impossible'];
   let bestTime = Infinity;
   diffs.forEach(d => {
     const count = stats.gamesByDifficulty[d] || 0;
-    document.getElementById('rank' + d.charAt(0).toUpperCase() + d.slice(1) + 'Games').textContent = count;
+    const el = document.getElementById('rank' + d.charAt(0).toUpperCase() + d.slice(1) + 'Games');
+    if (el) el.textContent = count;
     if (stats.bestTimes[d] < bestTime) bestTime = stats.bestTimes[d];
   });
-  document.getElementById('rankBestTime').textContent = bestTime < Infinity ? formatTime(bestTime) : '--';
+  const rankBestTime = document.getElementById('rankBestTime');
+  if (rankBestTime) rankBestTime.textContent = bestTime < Infinity ? formatTime(bestTime) : '--';
 
   document.getElementById('rankOverlay').classList.add('open');
 }
 
-let _achievePage = 0;
-const _ACHIEVE_PER_PAGE = 20;
-
 function showAchievements() {
+  log('[menu] showAchievements()');
   const earned = stats.achievements || [];
   const filter = document.querySelector('#achieveFilterTabs .achieve-tab.active')?.dataset?.filter || 'all';
   const catFilter = document.querySelector('#achieveCatTabs .achieve-cat-tab.active')?.dataset?.cat || 'all';
   const grid = document.getElementById('achieveGrid');
+  if (!grid) { log('[menu] WARN: #achieveGrid not found'); return; }
   grid.innerHTML = '';
 
-  document.getElementById('achieveCount').textContent = earned.length + '/' + ACHIEVEMENTS.length;
+  const achieveCount = document.getElementById('achieveCount');
+  if (achieveCount) achieveCount.textContent = earned.length + '/' + ACHIEVEMENTS.length;
 
   let filtered = ACHIEVEMENTS;
   if (catFilter !== 'all') {
@@ -434,6 +436,8 @@ function showAchievements() {
     const locked = filtered.filter(a => !earned.includes(a.id));
     filtered = [...unlocked, ...locked];
   }
+
+  log('[menu] showAchievements: filtered count', { total: ACHIEVEMENTS.length, filtered: filtered.length, filter, catFilter });
 
   const catOrder = ['progress', 'speed', 'flawless', 'nohints', 'comeback', 'streak', 'impossible', 'daily', 'misc'];
   const catNames = { progress: 'Progress', speed: 'Speed', flawless: 'Flawless', nohints: 'No Hints', comeback: 'Comeback', streak: 'Streak', impossible: 'Impossible', daily: 'Daily', misc: 'Misc' };
@@ -449,7 +453,7 @@ function showAchievements() {
   let flatOrdered = [];
   for (const catId of catOrder) {
     if (grouped[catId]) {
-      if (flatOrdered.length > 0) flatOrdered.push(null); // group separator
+      if (flatOrdered.length > 0) flatOrdered.push(null);
       flatOrdered = flatOrdered.concat(grouped[catId]);
     }
   }
@@ -460,13 +464,8 @@ function showAchievements() {
     }
   }
 
-  const totalPages = Math.max(1, Math.ceil(flatOrdered.length / _ACHIEVE_PER_PAGE));
-  _achievePage = Math.min(_achievePage, totalPages - 1);
-
-  const pageItems = flatOrdered.slice(_achievePage * _ACHIEVE_PER_PAGE, (_achievePage + 1) * _ACHIEVE_PER_PAGE);
-
   let currentGroupCat = null;
-  for (const a of pageItems) {
+  for (const a of flatOrdered) {
     if (a === null) { currentGroupCat = null; continue; }
     const cat = a.cat || 'misc';
     if (cat !== currentGroupCat && catFilter === 'all') {
@@ -489,38 +488,86 @@ function showAchievements() {
     grid.appendChild(card);
   }
 
-  if (totalPages > 1) {
-    const pagination = document.createElement('div');
-    pagination.className = 'achieve-pagination';
-    const prevBtn = document.createElement('button');
-    prevBtn.className = 'pagi-btn';
-    prevBtn.textContent = '\u2039 Prev';
-    prevBtn.disabled = _achievePage === 0;
-    prevBtn.addEventListener('click', () => { if (_achievePage > 0) { _achievePage--; showAchievements(); } });
-    const pageInfo = document.createElement('span');
-    pageInfo.className = 'achieve-page-info';
-    pageInfo.textContent = (_achievePage + 1) + ' / ' + totalPages;
-    const nextBtn = document.createElement('button');
-    nextBtn.className = 'pagi-btn';
-    nextBtn.textContent = 'Next \u203A';
-    nextBtn.disabled = _achievePage >= totalPages - 1;
-    nextBtn.addEventListener('click', () => { if (_achievePage < totalPages - 1) { _achievePage++; showAchievements(); } });
-    pagination.appendChild(prevBtn);
-    pagination.appendChild(pageInfo);
-    pagination.appendChild(nextBtn);
-    grid.appendChild(pagination);
+  showPage('page-achievements');
+
+  const catScroll = document.getElementById('achieveCatTabs');
+  if (catScroll) catScroll.scrollLeft = 0;
+
+  const filterTabs = document.getElementById('achieveFilterTabs');
+  if (filterTabs) filterTabs.scrollLeft = 0;
+
+  log('[menu] achievements page shown');
+}
+
+function showBonusModal() {
+  log('[menu] showBonusModal()');
+  const overlay = document.getElementById('bonusOverlay');
+  const timerEl = document.getElementById('bonusTimer');
+  const countEl = document.getElementById('bonusCount');
+  const fillEl = document.getElementById('bonusProgressFill');
+  const claimBtn = document.getElementById('bonusModalClaimBtn');
+  const statusEl = document.getElementById('bonusStatus');
+  if (!overlay) return;
+
+  const played = bonusChallenge.gamesPlayed || 0;
+  const pct = Math.min(100, (played / 10) * 100);
+  countEl.textContent = played + ' / 10';
+  countEl.className = 'bonus-count' + (played >= 10 ? ' done' : '');
+  fillEl.style.width = pct + '%';
+
+  if (bonusChallenge.claimed) {
+    timerEl.textContent = 'Reward claimed!';
+    timerEl.className = 'bonus-timer';
+    claimBtn.disabled = true;
+    const hints = bonusChallenge.bonusHints || 0;
+    statusEl.textContent = 'You earned +3 bonus hints! (' + hints + ' remaining)';
+    overlay.classList.add('open');
+    return;
   }
 
-  showPage('page-achievements');
+  if (!bonusChallenge.startDate) {
+    timerEl.textContent = 'Complete your first game to start!';
+    timerEl.className = 'bonus-timer';
+    claimBtn.disabled = true;
+    statusEl.textContent = '';
+    overlay.classList.add('open');
+    return;
+  }
+
+  const hoursLeft = getBonusHoursLeft();
+  if (hoursLeft <= 0) {
+    timerEl.textContent = 'Challenge expired!';
+    timerEl.className = 'bonus-timer expired';
+    claimBtn.disabled = true;
+    statusEl.textContent = played >= 10 ? 'You completed the challenge but didn\'t claim in time' : 'Play 10 games within 7 days to earn the reward';
+    overlay.classList.add('open');
+    return;
+  }
+
+  const days = Math.floor(hoursLeft / 24);
+  const hours = hoursLeft % 24;
+  timerEl.textContent = days + 'd ' + hours + 'h remaining';
+  timerEl.className = 'bonus-timer';
+
+  if (played >= 10) {
+    claimBtn.disabled = false;
+    statusEl.textContent = 'Ready! Claim your reward!';
+  } else {
+    claimBtn.disabled = true;
+    statusEl.textContent = played + ' / 10 games played';
+  }
+  overlay.classList.add('open');
 }
 
 function showStreakJourney() {
+  log('[menu] showStreakJourney()');
   const s = streak.count || 0;
   document.getElementById('streakBigCount').textContent = s;
   document.getElementById('streakBestCount').textContent = stats.bestStreak || s || 0;
 
   const fire = getStreakFire(s);
   const wrap = document.getElementById('streakFireWrap');
+  if (!wrap) { log('[menu] WARN: #streakFireWrap not found'); return; }
   wrap.querySelector('svg use').setAttribute('href', '#' + fire.icon);
   wrap.className = 'streak-fire-wrap level-' + fire.level;
   document.getElementById('streakHeaderFire').style.color = fire.color;
@@ -541,6 +588,7 @@ function showStreakJourney() {
   }
 
   const cal = document.getElementById('streakCalendar');
+  if (!cal) { log('[menu] WARN: #streakCalendar not found'); return; }
   cal.innerHTML = '';
   const labels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
   labels.forEach(l => {

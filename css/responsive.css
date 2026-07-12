@@ -1,0 +1,83 @@
+@media (max-width: 480px) {
+  #app { padding: 0 4px; }
+  .menu-title { font-size: 42px; }
+  .page-header { gap: 8px; }
+  .page-header h2 { font-size: 17px; }
+  .back-btn { width: 36px; height: 36px; }
+  .stats-grid { gap: 6px; }
+  .stat-card { padding: 12px 8px; }
+  .stat-card .stat-value { font-size: 22px; }
+  .achieve-grid { width: calc(100% - 8px); padding: 8px; gap: 6px; }
+  .achieve-card { padding: 10px 12px; min-height: 44px; gap: 10px; }
+  .achieve-card .achieve-icon { width: 34px; height: 34px; }
+  .achieve-card .achieve-name { font-size: 12px; }
+  .leaderboard-list { width: calc(100% - 8px); padding: 6px 0; }
+  .leader-entry { padding: 8px 12px; gap: 8px; min-height: 40px; }
+  .leader-score { font-size: 12px; }
+  .leader-avatar { width: 26px; height: 26px; }
+  .leader-rank { width: 20px; font-size: 11px; }
+  .leader-rank.top1 { font-size: 13px; }
+  .leader-rank.top2 { font-size: 12px; }
+  .leader-rank.top3 { font-size: 12px; }
+  .leaderboard-actions { padding: 6px 12px 12px; }
+  .leaderboard-actions .data-btn { padding: 6px 14px; font-size: 11px; }
+}
+
+@media (max-width: 420px) {
+  #app { padding: 6px; }
+  .menu-title { font-size: 34px; }
+  .menu-subtitle { font-size: 13px; }
+  .menu-card { padding: 14px 16px; gap: 12px; }
+  .menu-card .icon { width: 38px; height: 38px; }
+  .menu-card .card-text h3 { font-size: 14px; }
+  .diff-cards { gap: 6px; }
+  .diff-card { padding: 12px 10px; }
+  .diff-card .diff-icon { font-size: 22px; }
+  .diff-card h3 { font-size: 13px; }
+  #numPad { gap: 3px; }
+  #numPad button { padding: 9px 0; font-size: 14px; }
+  #actions { gap: 3px; }
+  #actions button { font-size: 10px; padding: 7px 3px; min-width: 36px; }
+  .modal { padding: 18px 14px; }
+  .win-card { padding: 24px 16px; }
+  .win-stats { gap: 4px; }
+  .win-stat { padding: 8px 4px; }
+  .stat-card .stat-value { font-size: 20px; }
+  .rank-timeline { max-height: 180px; }
+  .streak-count-big { font-size: 36px; }
+  .achieve-grid { margin: 0 auto 6px; width: calc(100% - 6px); padding: 4px 6px; border-radius: var(--radius-sm); }
+  .leaderboard-list { margin: 4px auto 6px; width: calc(100% - 6px); padding: 4px 6px; border-radius: var(--radius-sm); }
+  .achieve-item { padding: 8px 10px; min-height: 38px; gap: 8px; }
+  .achieve-item .achieve-icon { width: 30px; height: 30px; font-size: 14px; }
+  .achieve-item .achieve-name { font-size: 11px; }
+  .achieve-item .achieve-desc { font-size: 9px; }
+}
+
+@media (max-width: 360px) {
+  #app { padding: 4px; }
+  .menu-title { font-size: 28px; }
+  .menu-card { padding: 12px 12px; gap: 10px; }
+  .menu-card .icon { width: 34px; height: 34px; }
+  .diff-card { padding: 10px 8px; }
+  #numPad button { padding: 7px 0; font-size: 13px; }
+  #actions button { font-size: 9px; padding: 6px 2px; }
+  .game-header { gap: 4px; }
+  .game-info .game-meta { font-size: 11px; gap: 8px; }
+  .back-btn { width: 32px; height: 32px; }
+  .achieve-tab { font-size: 10px; padding: 5px 8px; }
+  .achieve-cat-tab { font-size: 8px; padding: 2px 5px; }
+  .achieve-grid { margin: 0 auto 4px; width: calc(100% - 4px); padding: 2px 4px; }
+  .leaderboard-list { margin: 4px auto 4px; width: calc(100% - 4px); padding: 2px 4px; }
+  .leader-entry { padding: 5px 6px; gap: 6px; min-height: 32px; }
+  .leader-score { font-size: 11px; }
+  .leader-avatar { width: 20px; height: 20px; }
+  .leader-name { font-size: 11px; }
+  .leader-detail { font-size: 8px; }
+}
+
+@media (max-width: 320px) {
+  .diff-cards { grid-template-columns: 1fr; }
+  #numPad { grid-template-columns: repeat(5, 1fr); }
+  #numPad button:nth-child(n+6) { display: none; }
+  .cell { font-size: clamp(14px, 4vw, 28px); }
+}

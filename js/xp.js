@@ -36,17 +36,20 @@ const RANKS = [
 ];
 
 function getRank(totalXp) {
+  log('[xp] getRank()', { totalXp });
   let rank = RANKS[0];
   for (const r of RANKS) { if (totalXp >= r.xp) rank = r; }
   return rank;
 }
 
 function getNextRank(totalXp) {
+  log('[xp] getNextRank()', { totalXp });
   for (const r of RANKS) { if (totalXp < r.xp) return r; }
   return RANKS[RANKS.length - 1];
 }
 
 function calcScore(difficulty, timeSec, mistakes, hintsUsed) {
+  log('[xp] calcScore()', { difficulty, timeSec, mistakes, hintsUsed });
   const roll = Math.floor(Math.random() * 10000) + 1;
   let base;
   if (roll <= 8000)       base = 5 + Math.floor(Math.random() * 4);      // 5-8
@@ -75,6 +78,7 @@ function calcScore(difficulty, timeSec, mistakes, hintsUsed) {
 }
 
 function calcDailyBonus() {
+  log('[xp] calcDailyBonus()');
   return 30;
 }
 

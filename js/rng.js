@@ -2,6 +2,7 @@
 // 2. Seeded RNG
 // ============================================================
 function createSeededRng(seed) {
+  log('[rng] createSeededRng()', { seed });
   let s = (typeof seed === 'number' ? seed : hashStr(String(seed))) >>> 0;
   return function() {
     s |= 0;
@@ -13,6 +14,7 @@ function createSeededRng(seed) {
 }
 
 function hashStr(str) {
+  log('[rng] hashStr()', { str });
   let h = 0;
   for (let i = 0; i < str.length; i++)
     h = ((h << 5) - h) + str.charCodeAt(i) | 0;
@@ -20,6 +22,7 @@ function hashStr(str) {
 }
 
 function shuffle(arr, rand) {
+  log('[rng] shuffle()', { arrLen: arr.length });
   rand = rand || Math.random;
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {

@@ -33,11 +33,13 @@ const SOUND_THEMES = {
 };
 
 function getSoundTheme() {
+  log('[sound] getSoundTheme()');
   const themeName = state.settings.soundTheme || 'classic';
   return SOUND_THEMES[themeName] || SOUND_THEMES.classic;
 }
 
 function playTone(freq, type, duration, gainVal, startDelay) {
+  log('[sound] playTone()', { freq, type, duration, gainVal, startDelay });
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     const osc = ctx.createOscillator();
@@ -53,6 +55,7 @@ function playTone(freq, type, duration, gainVal, startDelay) {
 }
 
 function playSound(type) {
+  log('[sound] playSound()', { type, enabled: state.settings.soundEnabled });
   if (!state.settings.soundEnabled) return;
   const theme = getSoundTheme();
   try {

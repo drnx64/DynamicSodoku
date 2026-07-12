@@ -2,8 +2,10 @@
 // 12. Win Dialog & XP Awarding
 // ============================================================
 function fireConfetti() {
+  log('[win] fireConfetti()');
   const colors = ['#dc2626', '#f59e0b', '#16a34a', '#2563eb', '#8b5cf6', '#ec4899', '#06b6d4'];
   const container = document.getElementById('confettiContainer');
+  if (!container) { log('[win] WARN: #confettiContainer not found'); return; }
   container.innerHTML = '';
   for (let i = 0; i < 60; i++) {
     const piece = document.createElement('div');
@@ -38,6 +40,7 @@ function rankSvgTag(rankName, size) {
 }
 
 function showWinDialog() {
+  log('[win] showWinDialog()');
   const score = calcScore(state.difficulty, state.timer, state.mistakes, state.hintsUsed);
   const prevXp = stats.totalXp;
   const prevRank = getRank(prevXp);
@@ -65,13 +68,11 @@ function showWinDialog() {
     document.getElementById('winSubtitle').textContent = diffNames[state.difficulty] + ' puzzle solved!';
   }
 
-  // Level info
   const levelInfo = document.getElementById('winLevelInfo');
   const levelNum = document.getElementById('winLevelNum');
   if (!state.isDaily) {
     levelInfo.style.display = 'inline-block';
     levelNum.textContent = state.currentLevel;
-    // Track highest level
     const diff = state.difficulty;
     if (state.currentLevel > stats.highestLevel) stats.highestLevel = state.currentLevel;
     if (state.currentLevel > (stats.highestLevelByDifficulty[diff] || 0)) stats.highestLevelByDifficulty[diff] = state.currentLevel;
@@ -81,6 +82,7 @@ function showWinDialog() {
 
   if (!stats.firstGameDate) stats.firstGameDate = todayStr();
   stats.totalGames++;
+  trackBonusGame();
   stats.totalXp += totalEarned;
   stats.totalTime += state.timer;
   stats.gamesByDifficulty[state.difficulty] = (stats.gamesByDifficulty[state.difficulty] || 0) + 1;
@@ -93,6 +95,7 @@ function showWinDialog() {
 
   const newRank = getRank(stats.totalXp);
   const leveledUp = newRank.name !== prevRank.name;
+  log('[win] stats updated', { score, totalEarned, newTotalXp: stats.totalXp, prevRank: prevRank.name, newRank: newRank.name, leveledUp });
 
   document.getElementById('winXp').textContent = totalEarned;
   const levelUpEl = document.getElementById('winLevelUp');
@@ -103,7 +106,6 @@ function showWinDialog() {
     levelUpEl.style.display = 'none';
   }
 
-  // Set Next Puzzle button for level mode
   const nextBtn = document.getElementById('winNext');
   if (!state.isDaily) {
     nextBtn.textContent = 'Next Level';
@@ -117,12 +119,16 @@ function showWinDialog() {
   fireConfetti();
 
   function openWinDialog() {
-    document.getElementById('winOverlay').classList.add('open');
+    const winOverlay = document.getElementById('winOverlay');
+    if (!winOverlay) { log('[win] WARN: #winOverlay not found'); return; }
+    winOverlay.classList.add('open');
     updateMenuUI();
   }
 
   if (leveledUp) {
+    log('[win] showing rank-up animation');
     const overlay = document.getElementById('rankupOverlay');
+    if (!overlay) { log('[win] WARN: #rankupOverlay not found'); return; }
     document.getElementById('rankupBadge').innerHTML = rankSvgTag(newRank.name, 96);
     document.getElementById('rankupOldRank').textContent = prevRank.name;
     document.getElementById('rankupNewRank').textContent = newRank.name;
@@ -137,26 +143,29 @@ function showWinDialog() {
 }
 
 function updateStreak() {
+  log('[win] updateStreak()');
   const today = todayStr();
-  if (streak.lastDate === today) return;
+  if (streak.lastDate === today) { log('[win] updateStreak: already updated today'); return; }
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
   const yStr = yesterday.getFullYear() + '-' + String(yesterday.getMonth()+1).padStart(2,'0') + '-' + String(yesterday.getDate()).padStart(2,'0');
 
   if (streak.lastDate === yStr) {
     streak.count++;
+    log('[win] streak continued', { newCount: streak.count });
   } else if (streak.lastDate !== today) {
     streak.count = 1;
+    log('[win] new streak started');
   }
   streak.lastDate = today;
   saveStreak();
 
-  // Check streak milestone rewards
-  loadBonus(); // refresh
-  if (!dailyBonus._claimedMilestones) dailyBonus._claimedMilestones = [];
+  loadBonus();
+  if (!bonusChallenge._claimedMilestones) bonusChallenge._claimedMilestones = [];
   for (const m of STREAK_MILESTONES) {
-    if (streak.count >= m.days && !dailyBonus._claimedMilestones.includes(m.days)) {
-      dailyBonus._claimedMilestones.push(m.days);
+    if (streak.count >= m.days && !bonusChallenge._claimedMilestones.includes(m.days)) {
+      log('[win] streak milestone reached', { days: m.days, xp: m.xp });
+      bonusChallenge._claimedMilestones.push(m.days);
       stats.totalXp = (stats.totalXp || 0) + m.xp;
       saveStats();
       saveBonus();
@@ -166,13 +175,14 @@ function updateStreak() {
 }
 
 function showMilestoneRewardToast(m) {
-  // Unlock the 1-Year Streak achievement too
+  log('[win] showMilestoneRewardToast()', { label: m.label });
   if (m.days === 365) {
     if (!stats.achievements) stats.achievements = {};
     stats.achievements.yearStreak = { unlocked: true, date: todayStr() };
     saveStats();
   }
   const toast = document.getElementById('toast');
+  if (!toast) { log('[win] WARN: #toast not found'); return; }
   toast.innerHTML =
     '<div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border:2px solid var(--xp-gold);border-radius:12px;padding:14px 20px;text-align:center;box-shadow:0 8px 32px rgba(251,191,36,0.3);">' +
     '<div style="font-size:28px;margin-bottom:4px;">🎉</div>' +
@@ -182,4 +192,3 @@ function showMilestoneRewardToast(m) {
   toast.classList.add('open');
   setTimeout(() => toast.classList.remove('open'), 3000);
 }
-

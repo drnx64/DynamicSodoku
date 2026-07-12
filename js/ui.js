@@ -4,6 +4,7 @@
 function render(opts) {
   opts = opts || {};
   const boardEl = document.getElementById('board');
+  if (!boardEl) { log('[ui] render: WARN #board not found'); return; }
   boardEl.innerHTML = '';
   const conflicts = state.settings.highlightConflicts ? findConflicts(state.board) : new Set();
   const selectedVal = state.selectedCell ? state.board[state.selectedCell[0]][state.selectedCell[1]] : 0;
@@ -60,14 +61,17 @@ function render(opts) {
       boardEl.appendChild(cell);
     }
   }
-  document.getElementById('timer').textContent = formatTime(state.timer);
-  document.getElementById('mistakes').textContent = String(state.mistakes);
+  const timerEl = document.getElementById('timer');
+  if (timerEl) timerEl.textContent = formatTime(state.timer);
+  const mistakesEl = document.getElementById('mistakes');
+  if (mistakesEl) mistakesEl.textContent = String(state.mistakes);
   updateNumPad();
   updateNotesBtn();
   updateUndoRedo();
 }
 
 function selectCell(row, col) {
+  log('[ui] selectCell()', { row, col, prevSelected: state.selectedCell });
   state.selectedCell = [row, col];
   render();
   saveGame();
@@ -78,7 +82,9 @@ function updateNumPad() {
   for (let r = 0; r < 9; r++)
     for (let c = 0; c < 9; c++)
       if (state.board[r][c]) counts[state.board[r][c]]--;
-  document.getElementById('numPad').querySelectorAll('button').forEach((btn, i) => {
+  const numPad = document.getElementById('numPad');
+  if (!numPad) return;
+  numPad.querySelectorAll('button').forEach((btn, i) => {
     const n = i + 1;
     const rem = btn.querySelector('.remaining');
     if (rem) {
@@ -91,14 +97,17 @@ function updateNumPad() {
 }
 
 function updateNotesBtn() {
-  document.getElementById('notesBtn').classList.toggle('active', state.notesMode);
-  document.getElementById('autoBtn').classList.toggle('active', state.settings.autoCandidates);
+  const notesBtn = document.getElementById('notesBtn');
+  if (notesBtn) notesBtn.classList.toggle('active', state.notesMode);
+  const autoBtn = document.getElementById('autoBtn');
+  if (autoBtn) autoBtn.classList.toggle('active', state.settings.autoCandidates);
 }
 
 function updateUndoRedo() {
   const undo = document.getElementById('undoBtn');
   const redo = document.getElementById('redoBtn');
   const hint = document.getElementById('hintBtn');
+  if (!undo || !redo || !hint) return;
   const undoCount = state.historyIdx + 1;
   const redoCount = state.history.length - state.historyIdx - 1;
 
@@ -120,7 +129,6 @@ function updateUndoRedo() {
     redoBadge.style.display = '';
   } else if (redoBadge) { redoBadge.style.display = 'none'; }
 
-  // Hint badge shows hints used
   let hintBadge = hint.querySelector('.action-badge');
   if (state.hintsUsed > 0) {
     if (!hintBadge) { hintBadge = document.createElement('span'); hintBadge.className = 'action-badge'; hint.appendChild(hintBadge); }
@@ -133,7 +141,9 @@ function updateUndoRedo() {
 // 8. Input Handling
 // ============================================================
 function setupInput() {
+  log('[ui] setupInput()');
   const numPad = document.getElementById('numPad');
+  if (!numPad) { log('[ui] WARN: #numPad not found'); return; }
   for (let n = 1; n <= 9; n++) {
     const btn = document.createElement('button');
     btn.textContent = n;
@@ -141,7 +151,9 @@ function setupInput() {
     rem.className = 'remaining';
     btn.appendChild(rem);
     btn.addEventListener('click', () => {
+      log('[ui] numPad click', { n, selectedCell: state.selectedCell });
       if (state.selectedCell) placeNumber(state.selectedCell[0], state.selectedCell[1], n);
+      else log('[ui] numPad: no cell selected, ignoring');
     });
     numPad.appendChild(btn);
   }
@@ -153,7 +165,7 @@ function setupInput() {
     if ((e.key === 'Backspace' || e.key === 'Delete') && state.selectedCell)
       placeNumber(state.selectedCell[0], state.selectedCell[1], 0);
     if ((e.key === 'n' || e.key === 'N') && !e.ctrlKey && !e.metaKey)
-      { state.notesMode = !state.notesMode; updateNotesBtn(); }
+      { state.notesMode = !state.notesMode; log('[ui] keyboard: toggle notes mode', { notesMode: state.notesMode }); updateNotesBtn(); }
     if (e.key === 'ArrowUp' && state.selectedCell) { e.preventDefault(); selectCell(Math.max(0, state.selectedCell[0] - 1), state.selectedCell[1]); }
     if (e.key === 'ArrowDown' && state.selectedCell) { e.preventDefault(); selectCell(Math.min(8, state.selectedCell[0] + 1), state.selectedCell[1]); }
     if (e.key === 'ArrowLeft' && state.selectedCell) { e.preventDefault(); selectCell(state.selectedCell[0], Math.max(0, state.selectedCell[1] - 1)); }
@@ -171,40 +183,57 @@ function setupInput() {
         if (state.board[r][c] === 0) { selectCell(r, c); break; }
       }
     }
-    if ((e.key === 'z' || e.key === 'Z') && (e.ctrlKey || e.metaKey) && e.shiftKey) { e.preventDefault(); redo(); }
-    if ((e.key === 'z' || e.key === 'Z') && (e.ctrlKey || e.metaKey)) { e.preventDefault(); undo(); }
+    if ((e.key === 'z' || e.key === 'Z') && (e.ctrlKey || e.metaKey) && e.shiftKey) { e.preventDefault(); log('[ui] keyboard: redo'); redo(); }
+    if ((e.key === 'z' || e.key === 'Z') && (e.ctrlKey || e.metaKey)) { e.preventDefault(); log('[ui] keyboard: undo'); undo(); }
   });
 
-  document.getElementById('undoBtn').addEventListener('click', undo);
-  document.getElementById('redoBtn').addEventListener('click', redo);
-  document.getElementById('notesBtn').addEventListener('click', () => { state.notesMode = !state.notesMode; updateNotesBtn(); });
-  document.getElementById('hintBtn').addEventListener('click', giveHint);
-  document.getElementById('autoBtn').addEventListener('click', () => {
-    state.settings.autoCandidates = !state.settings.autoCandidates;
-    render();
-    saveSettings();
-  });
+  const undoBtn = document.getElementById('undoBtn');
+  if (undoBtn) undoBtn.addEventListener('click', () => { log('[ui] click: undoBtn'); undo(); });
+  const redoBtn = document.getElementById('redoBtn');
+  if (redoBtn) redoBtn.addEventListener('click', () => { log('[ui] click: redoBtn'); redo(); });
+  const notesBtn = document.getElementById('notesBtn');
+  if (notesBtn) {
+    notesBtn.addEventListener('click', () => { state.notesMode = !state.notesMode; log('[ui] click: notesBtn', { notesMode: state.notesMode }); updateNotesBtn(); });
+  }
+  const hintBtn = document.getElementById('hintBtn');
+  if (hintBtn) hintBtn.addEventListener('click', () => { log('[ui] click: hintBtn'); giveHint(); });
+  const autoBtn = document.getElementById('autoBtn');
+  if (autoBtn) {
+    autoBtn.addEventListener('click', () => {
+      state.settings.autoCandidates = !state.settings.autoCandidates;
+      log('[ui] click: autoBtn', { autoCandidates: state.settings.autoCandidates });
+      render();
+      saveSettings();
+    });
+  }
 
-  document.getElementById('timerWrap').addEventListener('click', () => {
-    if (!state.started || state.won || state.gameOver) return;
-    state.timerRunning = !state.timerRunning;
-    if (state.timerRunning) {
-      state.timerInterval = setInterval(() => {
-        state.timer++;
-        document.getElementById('timer').textContent = formatTime(state.timer);
-      }, 1000);
-    } else {
-      if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
-    }
-    document.getElementById('timerWrap').classList.toggle('paused', !state.timerRunning);
-    saveGame();
-  });
+  const timerWrap = document.getElementById('timerWrap');
+  if (timerWrap) {
+    timerWrap.addEventListener('click', () => {
+      if (!state.started || state.won || state.gameOver) { log('[ui] timer toggle: blocked', { started: state.started, won: state.won, gameOver: state.gameOver }); return; }
+      state.timerRunning = !state.timerRunning;
+      log('[ui] timer toggle', { running: state.timerRunning });
+      if (state.timerRunning) {
+        state.timerInterval = setInterval(() => {
+          state.timer++;
+          document.getElementById('timer').textContent = formatTime(state.timer);
+        }, 1000);
+      } else {
+        if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
+      }
+      document.getElementById('timerWrap').classList.toggle('paused', !state.timerRunning);
+      saveGame();
+    });
+  }
 
-  document.getElementById('gameMuteBtn').addEventListener('click', () => {
-    state.settings.soundEnabled = !state.settings.soundEnabled;
-    const icon = state.settings.soundEnabled ? 'ico-volume' : 'ico-volume-x';
-    document.getElementById('gameMuteBtn').innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24"><use href="#' + icon + '"/></svg>';
-    saveSettings();
-  });
+  const gameMuteBtn = document.getElementById('gameMuteBtn');
+  if (gameMuteBtn) {
+    gameMuteBtn.addEventListener('click', () => {
+      state.settings.soundEnabled = !state.settings.soundEnabled;
+      log('[ui] click: muteBtn', { soundEnabled: state.settings.soundEnabled });
+      const icon = state.settings.soundEnabled ? 'ico-volume' : 'ico-volume-x';
+      document.getElementById('gameMuteBtn').innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24"><use href="#' + icon + '"/></svg>';
+      saveSettings();
+    });
+  }
 }
-
