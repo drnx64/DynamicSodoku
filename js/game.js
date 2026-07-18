@@ -497,19 +497,18 @@ function showCombo(count) {
   void wrap.offsetWidth;
   wrap.classList.add('combo-pop');
 
-  const boardEl = document.getElementById('board');
-  if (!boardEl) return;
+  const boardWrap = document.getElementById('boardWrap');
+  if (!boardWrap) return;
   const floater = document.createElement('div');
   floater.className = 'combo-floater';
   floater.textContent = 'x' + count;
-  const rect = boardEl.getBoundingClientRect();
-  const left = 10 + Math.random() * (rect.width - 60);
-  const top = 10 + Math.random() * (rect.height - 50);
-  floater.style.left = left + 'px';
-  floater.style.top = top + 'px';
+  const left = 8 + Math.random() * 72;
+  const top = 8 + Math.random() * 72;
+  floater.style.left = left + '%';
+  floater.style.top = top + '%';
   const colors = ['#ff6b35','#ffd700','#ff6b9d','#a855f7','#4d96ff','#6bcb77'];
   floater.style.color = colors[count % colors.length];
-  boardEl.appendChild(floater);
+  boardWrap.appendChild(floater);
   setTimeout(() => { if (floater.parentNode) floater.remove(); }, 1200);
 }
 
