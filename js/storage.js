@@ -22,6 +22,12 @@ function loadSettings() {
 
 function clearGame() {
   log('[storage] clearGame()');
+  if (state.difficulty && state.currentLevel && state.currentLevel > 1) {
+    saveLevelProgress(state.difficulty, state.currentLevel);
+  }
+  if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
+  state.timerRunning = false;
+  state.timer = 0;
   try { localStorage.removeItem(LS.game); localStorage.removeItem(LS.dailyState); } catch(e) { log('[storage] clearGame error', e); }
 }
 
@@ -805,4 +811,26 @@ function requestNotificationPermission() {
   if ('Notification' in window && Notification.permission === 'default') {
     Notification.requestPermission();
   }
+}
+
+const LEVEL_PROGRESS_KEY = 'sudoku_level_progress';
+
+function saveLevelProgress(difficulty, level) {
+  try {
+    const raw = localStorage.getItem(LEVEL_PROGRESS_KEY);
+    const data = raw ? JSON.parse(raw) : {};
+    data[difficulty] = level;
+    localStorage.setItem(LEVEL_PROGRESS_KEY, JSON.stringify(data));
+  } catch(e) { log('[storage] saveLevelProgress error', e); }
+}
+
+function loadLevelProgress(difficulty) {
+  try {
+    const raw = localStorage.getItem(LEVEL_PROGRESS_KEY);
+    if (raw) {
+      const data = JSON.parse(raw);
+      return data[difficulty] || 1;
+    }
+  } catch(e) { log('[storage] loadLevelProgress error', e); }
+  return 1;
 }

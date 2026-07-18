@@ -2,8 +2,8 @@
   gap: 10px;
   justify-content: center;
 }
-#page-game.paused #boardWrap { filter: blur(6px); pointer-events: none; transition: filter 0.3s; }
-#page-game.paused #numPad { filter: blur(6px); pointer-events: none; transition: filter 0.3s; opacity: 0.4; }
+#page-game.paused #boardWrap { pointer-events: none; }
+#page-game.paused #numPad { pointer-events: none; opacity: 0.4; }
 #gameHeader.game-enter { animation: slideUp 0.4s ease forwards; }
 #boardWrap.game-enter { animation: slideUp 0.4s ease 0.05s both; }
 #numPad.game-enter { animation: slideUp 0.4s ease 0.1s both; }
@@ -83,10 +83,8 @@
   width: 100%;
   height: 100%;
   gap: 0;
-  transition: filter 0.4s ease;
 }
 #board.blurred {
-  filter: blur(6px);
   pointer-events: none;
 }
 

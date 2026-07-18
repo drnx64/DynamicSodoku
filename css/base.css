@@ -164,7 +164,11 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  .confetti-piece, .cell.entering, .cell.shake, .cell.pop, .cell.selected,
+  .cell.hint-cell, .cell.hint-peer, .rankup-card, .toast,
+  .streak-popup, .bonus-card, .menu-card, .diff-card, .rank-card,
+  .confetti-container, .float-star, .deco-star4-1, .deco-star4-2,
+  .deco-grid, .achievement-popup, .daily-toast {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

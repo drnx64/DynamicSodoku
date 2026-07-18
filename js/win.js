@@ -59,6 +59,7 @@ function showWinDialog() {
     const diff = state.difficulty;
     if (state.currentLevel > stats.highestLevel) stats.highestLevel = state.currentLevel;
     if (state.currentLevel > (stats.highestLevelByDifficulty[diff] || 0)) stats.highestLevelByDifficulty[diff] = state.currentLevel;
+    state.currentLevel++;
   } else {
     levelInfo.style.display = 'none';
   }

@@ -186,14 +186,14 @@ function setupNavigation() {
   const winNext = document.getElementById('winNext');
   if (winNext) {
     winNext.addEventListener('click', () => {
-      log('[nav] click: winNext', { isDaily: state.isDaily, nextLevel: state.currentLevel + 1 });
+      log('[nav] click: winNext', { isDaily: state.isDaily, nextLevel: state.currentLevel });
       document.getElementById('winOverlay').classList.remove('open');
       if (state.isDaily) {
         showPage('page-menu');
         updateMenuUI();
       } else {
-        const nextLevel = state.currentLevel + 1;
-        initNewGame(state.difficulty, false, nextLevel);
+        saveLevelProgress(state.difficulty, state.currentLevel);
+        initNewGame(state.difficulty, false, state.currentLevel);
       }
     });
   }

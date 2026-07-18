@@ -346,11 +346,14 @@ function formatTime(secs) {
 
 function initNewGame(difficulty, isDaily, startLevel) {
   log('[game] initNewGame()', { difficulty, isDaily, startLevel });
+  document.getElementById('page-game')?.classList.remove('paused');
+  document.getElementById('pauseOverlay')?.classList.remove('open');
+  document.getElementById('timerWrap')?.classList.remove('paused');
   if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
   state.difficulty = difficulty || 'easy';
   state.isDaily = !!isDaily;
   state.gameMode = isDaily ? 'daily' : 'normal';
-  state.currentLevel = startLevel || 1;
+  state.currentLevel = startLevel || loadLevelProgress(difficulty) || 1;
 
   const boardEl = document.getElementById('board');
   const levelOverlay = document.getElementById('levelOverlay');

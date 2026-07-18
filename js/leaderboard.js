@@ -18,6 +18,7 @@ function saveLeaderboard(data) {
 
 function addScoreToLeaderboard(name, score, difficulty) {
   log('[leaderboard] addScoreToLeaderboard()', { name, score, difficulty });
+  try { localStorage.removeItem(MOCK_CACHE_KEY); } catch(e) {}
   const board = getLeaderboard();
   board.push({
     name: name || 'Anonymous',
@@ -55,21 +56,36 @@ function getUserEntry() {
   };
 }
 
+const MOCK_CACHE_KEY = 'sudoku_mock_leaderboard';
+
 function getMockLeaderboard() {
+  const cached = (() => { try { return JSON.parse(localStorage.getItem(MOCK_CACHE_KEY)); } catch(e) { return null; } })();
+  if (cached && Array.isArray(cached) && cached.length > 0) return cached;
+
   const mockNames = ['SudokuMaster', 'LogicQueen', 'NumberNinja', 'GridWizard', 'CellKing', 'PuzzleWhiz', 'DigitDancer', 'RowRuler', 'BoxBoss', 'CageBreaker', 'SolverSam', 'BrainAce', 'PencilMark', 'XWingFox', 'Swordfish'];
   const userXp = stats.totalXp || 0;
   const userGames = stats.totalGames || 0;
-  const userAvgScore = userGames > 0 ? Math.round(userXp / userGames) : 20;
-  return mockNames.map((name, i) => {
-    const varScore = Math.round(userAvgScore * (0.5 + Math.random() * 1.0) + Math.random() * 30);
-    const games = Math.round(userGames * (0.2 + Math.random() * 1.5) + 1);
-    const xp = varScore * games + Math.round(Math.random() * 100);
+  const baseScore = userGames > 0 ? Math.round(userXp / userGames) : 20;
+  const today = todayStr().replace(/-/g, '');
+  const seed = parseInt(today, 10) || 20260718;
+  let r = seed;
+  const next = () => { r = (r * 1103515245 + 12345) & 0x7fffffff; return r / 0x7fffffff; };
+
+  const data = mockNames.map((name, i) => {
+    const s1 = next(), s2 = next(), s3 = next(), s4 = next();
+    const varScore = Math.round(baseScore * (0.5 + s1 * 0.5) + s2 * 30);
+    const games = Math.round(Math.max(1, userGames * (0.2 + s3 * 1.3)));
+    const xp = varScore * games + Math.round(s4 * 100);
+    const diffs = ['easy','medium','hard','impossible'];
     return {
-      name, score: varScore + Math.round(Math.random() * 15),
-      xp, games, difficulty: ['easy','medium','hard','impossible'][Math.floor(Math.random() * 4)],
-      date: todayStr(), id: Date.now() + i, isMock: true,
+      name, score: varScore + Math.round(next() * 15),
+      xp, games, difficulty: diffs[Math.floor(next() * 4)],
+      date: todayStr(), id: i + 1, isMock: true,
     };
   }).sort((a, b) => b.score - a.score);
+
+  try { localStorage.setItem(MOCK_CACHE_KEY, JSON.stringify(data)); } catch(e) {}
+  return data;
 }
 
 function renderLeaderboard(view) {
