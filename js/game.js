@@ -501,7 +501,7 @@ function showCombo(count) {
   if (!boardWrap) return;
   const floater = document.createElement('div');
   floater.className = 'combo-floater';
-  floater.textContent = 'x' + count;
+  floater.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24"><use href="#ico-fire"/></svg> x' + count + ' Combo!';
   const left = 8 + Math.random() * 72;
   const top = 8 + Math.random() * 72;
   floater.style.left = left + '%';
