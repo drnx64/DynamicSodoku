@@ -75,8 +75,8 @@ function setupNavigation() {
     gameBack.addEventListener('click', () => {
       log('[nav] click: gameBack', { started: state.started, won: state.won, gameOver: state.gameOver });
       if (state.started && !state.won && !state.gameOver) {
-        showConfirm('Leave the current game? Your progress will be saved.', () => {
-          saveGame();
+        showConfirm('Leave the current game? You will get a new puzzle next time.', () => {
+          clearGame();
           showPage('page-menu');
         });
       } else {
