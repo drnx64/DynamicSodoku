@@ -15,6 +15,7 @@ function showPage(id) {
   if (_prevPage === 'page-game' && id !== 'page-game' && state.timerRunning) {
     pauseTimer();
     document.getElementById('timerWrap')?.classList.toggle('paused', true);
+    document.getElementById('page-game')?.classList.add('paused');
   }
   log('[nav] page shown', { id });
 }

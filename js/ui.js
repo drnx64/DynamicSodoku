@@ -239,6 +239,7 @@ function setupInput() {
         startTimer();
       }
       document.getElementById('timerWrap').classList.toggle('paused', !state.timerRunning);
+      document.getElementById('page-game')?.classList.toggle('paused', !state.timerRunning);
       updateTimerIcon();
       saveGame();
     });
