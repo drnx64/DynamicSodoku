@@ -93,7 +93,7 @@ function generatePuzzle(difficulty, rand) {
       const saved = board[r][c];
       board[r][c] = 0;
       givens[r][c] = false;
-      if (countSolutions(board, 2) > 1) {
+      if (countSolutions(board, 2) !== 1) {
         board[r][c] = saved;
         givens[r][c] = true;
       } else {
@@ -101,7 +101,7 @@ function generatePuzzle(difficulty, rand) {
       }
     }
 
-    if (clues < cfg.minClues || clues > cfg.maxClues) continue;
+    if (clues > cfg.maxClues) continue;
 
     const h = hashGivens(givens);
     if (recentHashes.includes(h)) continue;
@@ -132,13 +132,23 @@ function generatePuzzle(difficulty, rand) {
       const saved = board[r][c];
       board[r][c] = 0;
       givens[r][c] = false;
-      if (countSolutions(board, 2) > 1) {
+      if (countSolutions(board, 2) !== 1) {
         board[r][c] = saved;
         givens[r][c] = true;
       } else { clues--; }
     }
-    return makePuzzleResult(solution, givens);
+    const tech = gradeDifficulty(board);
+    if (tech <= cfg.maxTech && clues >= cfg.minClues && clues <= cfg.maxClues) {
+      saveHash(hashGivens(givens));
+      return makePuzzleResult(solution, givens);
+    }
   }
-  return makePuzzleResult(generateSolution(rand), Array.from({length: 9}, () => Array(9).fill(true)));
+  const finalSolution = generateSolution(rand);
+  const finalGivens = Array.from({length: 9}, () => Array(9).fill(false));
+  const finalBoard = finalSolution.map(r => [...r]);
+  for (let r = 0; r < 9; r++)
+    for (let c = 0; c < 9; c++)
+      if (Math.random() > 0.5) { finalGivens[r][c] = true; } else { finalBoard[r][c] = 0; }
+  return { solution: finalSolution, givens: finalGivens, board: finalBoard };
 }
 

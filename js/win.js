@@ -146,7 +146,7 @@ function updateStreak() {
   log('[win] updateStreak()');
   const today = todayStr();
   if (streak.lastDate === today) { log('[win] updateStreak: already updated today'); return; }
-  const yesterday = new Date();
+  const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
   const yStr = yesterday.getFullYear() + '-' + String(yesterday.getMonth()+1).padStart(2,'0') + '-' + String(yesterday.getDate()).padStart(2,'0');
 
@@ -177,8 +177,8 @@ function updateStreak() {
 function showMilestoneRewardToast(m) {
   log('[win] showMilestoneRewardToast()', { label: m.label });
   if (m.days === 365) {
-    if (!stats.achievements) stats.achievements = {};
-    stats.achievements.yearStreak = { unlocked: true, date: todayStr() };
+    if (!stats.achievements) stats.achievements = [];
+    if (!stats.achievements.includes('yearStreak')) stats.achievements.push('yearStreak');
     saveStats();
   }
   const toast = document.getElementById('toast');

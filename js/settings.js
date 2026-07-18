@@ -1,6 +1,9 @@
 // ============================================================
 // 10. Settings
 // ============================================================
+const APP_VERSION = '1.0.0';
+const APP_VERSION_DATE = '2026-07-18';
+
 const DEFAULT_SETTINGS = {
   highlightSame: true, highlightPeers: true, highlightConflicts: true,
   autoCandidates: false, showRemaining: true, mistakeLimit: true,
@@ -148,6 +151,46 @@ function setupSettings() {
   dataRow.appendChild(importBtn);
   dataSection.appendChild(dataRow);
   container.appendChild(dataSection);
+
+  // Version & About section
+  const aboutSection = document.createElement('div');
+  aboutSection.className = 'settings-section';
+  const aboutHeader = document.createElement('div');
+  aboutHeader.className = 'settings-category-header';
+  aboutHeader.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24"><use href="#ico-star"/></svg> About';
+  aboutSection.appendChild(aboutHeader);
+
+  const versionRow = document.createElement('div');
+  versionRow.className = 'setting-row';
+  versionRow.innerHTML = '<span class="setting-label">Version</span><span style="color:var(--text-muted);font-size:13px;">' + APP_VERSION + ' (' + APP_VERSION_DATE + ')</span>';
+  aboutSection.appendChild(versionRow);
+
+  const devRow = document.createElement('div');
+  devRow.className = 'setting-row';
+  devRow.innerHTML = '<span class="setting-label">About the Dev</span>';
+  aboutSection.appendChild(devRow);
+
+  const devLinks = document.createElement('div');
+  devLinks.style.cssText = 'display:flex;flex-direction:column;gap:8px;padding:8px 0 4px;';
+  const links = [
+    { label: 'Telegram', url: 'https://t.me/drnx64', icon: '💬' },
+    { label: 'Facebook Messenger', url: 'https://m.me/drnx64', icon: '💙' },
+    { label: 'GitHub', url: 'https://github.com/drnx64', icon: '🐙' },
+  ];
+  for (const link of links) {
+    const a = document.createElement('a');
+    a.href = link.url;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--btn-bg);border-radius:var(--radius-sm);color:var(--text);text-decoration:none;font-size:13px;font-weight:500;transition:background 0.15s;';
+    a.innerHTML = '<span style="font-size:16px;">' + link.icon + '</span> @drnx64 <span style="margin-left:auto;color:var(--text-muted);font-size:11px;">' + link.label + '</span>';
+    a.addEventListener('mouseenter', () => a.style.background = 'var(--btn-hover)');
+    a.addEventListener('mouseleave', () => a.style.background = 'var(--btn-bg)');
+    devLinks.appendChild(a);
+  }
+  aboutSection.appendChild(devLinks);
+  container.appendChild(aboutSection);
+
   log('[settings] setupSettings complete');
 }
 
@@ -213,9 +256,27 @@ function importData() {
       try {
         const data = JSON.parse(e.target.result);
         log('[settings] import: data parsed', { hasStats: !!data.stats, hasStreak: !!data.streak, hasSettings: !!data.settings });
-        if (data.stats) { stats = data.stats; saveStats(); }
-        if (data.streak) { streak = data.streak; saveStreak(); }
-        if (data.settings) { Object.assign(state.settings, data.settings); saveSettings(); applySettings(); }
+        if (data.stats) {
+          if (typeof data.stats.totalGames === 'number' && typeof data.stats.totalXp === 'number') {
+            stats = Object.assign({}, stats, data.stats);
+            saveStats();
+          } else { throw new Error('Invalid stats data'); }
+        }
+        if (data.streak) {
+          if (typeof data.streak.count === 'number') {
+            streak = Object.assign({}, streak, data.streak);
+            saveStreak();
+          } else { throw new Error('Invalid streak data'); }
+        }
+        if (data.settings) {
+          if (typeof data.settings === 'object') {
+            for (const key of Object.keys(data.settings)) {
+              if (key in DEFAULT_SETTINGS) state.settings[key] = data.settings[key];
+            }
+            saveSettings();
+            applySettings();
+          }
+        }
         updateMenuUI();
         showPage('page-menu');
         alert('Data imported successfully!');

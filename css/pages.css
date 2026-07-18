@@ -95,13 +95,12 @@
   background: var(--accent);
   color: #fff;
   border-color: var(--accent);
-  box-shadow: 0 2px 8px rgba(99,102,241,0.25);
+  box-shadow: 0 2px 8px var(--accent-glow);
 }
 
 .achieve-grid {
   padding: 12px;
   flex: 1;
-  width: 100%;
   max-width: 640px;
   margin: 0 auto;
   width: calc(100% - 12px);
@@ -233,7 +232,6 @@
 
 .leaderboard-list {
   flex: 1;
-  width: 100%;
   max-width: 640px;
   margin: 8px auto;
   width: calc(100% - 12px);

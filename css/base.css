@@ -44,9 +44,11 @@
   --font-display: 'Playfair Display', Georgia, serif;
   --font-body: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --xp-gold: #f59e0b;
+  --mistake-color: #ef4444;
 }
 
 .dark {
+  --mistake-color: #ef4444;
   --bg: #0f0f1a;
   --surface: rgba(30,30,50,0.8);
   --surface-solid: #1a1a2e;

@@ -65,16 +65,16 @@ function gradeDifficulty(board) {
       let elim = false;
       for (let row = 0; row < 9 && !elim; row++) {
         const rowCells = []; for (let c = 0; c < 9; c++) if (g[row][c] === 0) rowCells.push([row, c]);
-        elim = elimPair(rowCells, cands, g) || elim;
+        elim = elimPair(rowCells, cands) || elim;
       }
       for (let col = 0; col < 9 && !elim; col++) {
         const colCells = []; for (let r = 0; r < 9; r++) if (g[r][col] === 0) colCells.push([r, col]);
-        elim = elimPair(colCells, cands, g) || elim;
+        elim = elimPair(colCells, cands) || elim;
       }
       for (let br = 0; br < 9 && !elim; br += 3)
         for (let bc = 0; bc < 9 && !elim; bc += 3) {
           const boxCells = []; for (let r = br; r < br+3; r++) for (let c = bc; c < bc+3; c++) if (g[r][c] === 0) boxCells.push([r, c]);
-          elim = elimPair(boxCells, cands, g) || elim;
+          elim = elimPair(boxCells, cands) || elim;
         }
       if (elim) { hardestTech = Math.max(hardestTech, 3); progress = true; }
     }
@@ -83,16 +83,16 @@ function gradeDifficulty(board) {
       let elim = false;
       for (let row = 0; row < 9 && !elim; row++) {
         const rowCells = []; for (let c = 0; c < 9; c++) if (g[row][c] === 0) rowCells.push([row, c]);
-        elim = elimTriple(rowCells, cands, g) || elim;
+        elim = elimTriple(rowCells, cands) || elim;
       }
       for (let col = 0; col < 9 && !elim; col++) {
         const colCells = []; for (let r = 0; r < 9; r++) if (g[r][col] === 0) colCells.push([r, col]);
-        elim = elimTriple(colCells, cands, g) || elim;
+        elim = elimTriple(colCells, cands) || elim;
       }
       for (let br = 0; br < 9 && !elim; br += 3)
         for (let bc = 0; bc < 9 && !elim; bc += 3) {
           const boxCells = []; for (let r = br; r < br+3; r++) for (let c = bc; c < bc+3; c++) if (g[r][c] === 0) boxCells.push([r, c]);
-          elim = elimTriple(boxCells, cands, g) || elim;
+          elim = elimTriple(boxCells, cands) || elim;
         }
       if (elim) { hardestTech = Math.max(hardestTech, 7); progress = true; }
     }

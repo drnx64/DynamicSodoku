@@ -38,10 +38,16 @@ function getSoundTheme() {
   return SOUND_THEMES[themeName] || SOUND_THEMES.classic;
 }
 
+let _audioCtx = null;
+function getAudioContext() {
+  if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return _audioCtx;
+}
+
 function playTone(freq, type, duration, gainVal, startDelay) {
   log('[sound] playTone()', { freq, type, duration, gainVal, startDelay });
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = getAudioContext();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.connect(gain); gain.connect(ctx.destination);

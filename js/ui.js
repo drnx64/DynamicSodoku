@@ -37,6 +37,7 @@ function render(opts) {
       }
       if (opts.popCell && opts.popCell[0] === r && opts.popCell[1] === c) cell.classList.add('pop');
       if (opts.shakeCell && opts.shakeCell[0] === r && opts.shakeCell[1] === c) cell.classList.add('shake');
+      if (opts.mistakeCell && opts.mistakeCell[0] === r && opts.mistakeCell[1] === c) cell.classList.add('mistake-cell');
 
       const valSpan = document.createElement('span');
       valSpan.className = 'cell-value';
@@ -73,6 +74,7 @@ function render(opts) {
 function selectCell(row, col) {
   log('[ui] selectCell()', { row, col, prevSelected: state.selectedCell });
   state.selectedCell = [row, col];
+  state._lastMistakeCell = null;
   render();
   saveGame();
 }
@@ -92,7 +94,7 @@ function updateNumPad() {
       rem.classList.toggle('zero', counts[n] <= 0);
     }
     btn.classList.toggle('placed', counts[n] <= 0);
-    if (!state.settings.showRemaining && rem) rem.remove();
+    if (rem) rem.style.display = state.settings.showRemaining ? '' : 'none';
   });
 }
 
@@ -211,15 +213,10 @@ function setupInput() {
   if (timerWrap) {
     timerWrap.addEventListener('click', () => {
       if (!state.started || state.won || state.gameOver) { log('[ui] timer toggle: blocked', { started: state.started, won: state.won, gameOver: state.gameOver }); return; }
-      state.timerRunning = !state.timerRunning;
-      log('[ui] timer toggle', { running: state.timerRunning });
       if (state.timerRunning) {
-        state.timerInterval = setInterval(() => {
-          state.timer++;
-          document.getElementById('timer').textContent = formatTime(state.timer);
-        }, 1000);
+        pauseTimer();
       } else {
-        if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
+        startTimer();
       }
       document.getElementById('timerWrap').classList.toggle('paused', !state.timerRunning);
       saveGame();

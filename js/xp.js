@@ -66,8 +66,8 @@ function calcScore(difficulty, timeSec, mistakes, hintsUsed) {
   if (timeSec < bm * 0.5) timeMod = 3;
   else if (timeSec < bm * 0.75) timeMod = 2;
   else if (timeSec < bm) timeMod = 1;
-  else if (timeSec > bm * 1.5) timeMod = -1;
   else if (timeSec > bm * 2) timeMod = -3;
+  else if (timeSec > bm * 1.5) timeMod = -1;
 
   const mistakeMod = Math.max(0, 3 - mistakes);
   const hintMod = Math.max(0, 3 - hintsUsed);

@@ -48,7 +48,8 @@ function updateMenuUI() {
   if (xpCurrent) xpCurrent.textContent = totalXp + ' XP';
 
   if (nextRank && nextRank.xp > rank.xp) {
-    const progress = ((totalXp - rank.xp) / (nextRank.xp - rank.xp)) * 100;
+    const denom = nextRank.xp - rank.xp || 1;
+    const progress = ((totalXp - rank.xp) / denom) * 100;
     const xpBarFill = document.getElementById('xpBarFill');
     if (xpBarFill) xpBarFill.style.width = Math.min(100, progress) + '%';
     const xpNext = document.getElementById('xpNext');
@@ -63,11 +64,13 @@ function updateMenuUI() {
   const s = streak.count || 0;
   const streakBadge = document.getElementById('streakBadge');
   if (streakBadge) {
-    document.getElementById('streakCount').textContent = s;
+    const sc = document.getElementById('streakCount');
+    if (sc) sc.textContent = s;
     streakBadge.classList.toggle('zero', s === 0);
     const fire = getStreakFire(s);
     streakBadge.className = 'streak-badge' + (s === 0 ? ' zero' : '') + ' level-' + fire.level;
-    streakBadge.querySelector('svg use').setAttribute('href', '#' + fire.icon);
+    const use = streakBadge.querySelector('svg use');
+    if (use) use.setAttribute('href', '#' + fire.icon);
   }
 
   const totalGamesCount = document.getElementById('totalGamesCount');
@@ -164,7 +167,7 @@ function showStats() {
   const timeGrid = document.createElement('div');
   timeGrid.className = 'stats-grid';
   diffs.forEach(d => {
-    const t = stats.bestTimes[d.key];
+    const t = (stats.bestTimes || {})[d.key];
     timeGrid.innerHTML += '<div class="stat-card"><div class="stat-value">' + (t < Infinity ? formatTime(t) : '--') + '</div><div class="stat-label">' + d.label + '</div></div>';
   });
   content.appendChild(timeGrid);
@@ -568,7 +571,8 @@ function showStreakJourney() {
   const fire = getStreakFire(s);
   const wrap = document.getElementById('streakFireWrap');
   if (!wrap) { log('[menu] WARN: #streakFireWrap not found'); return; }
-  wrap.querySelector('svg use').setAttribute('href', '#' + fire.icon);
+  const wrapUse = wrap.querySelector('svg use');
+  if (wrapUse) wrapUse.setAttribute('href', '#' + fire.icon);
   wrap.className = 'streak-fire-wrap level-' + fire.level;
   document.getElementById('streakHeaderFire').style.color = fire.color;
   document.getElementById('streakOverlay').style.setProperty('--streak-color', fire.color);

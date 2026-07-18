@@ -191,7 +191,6 @@ function showConfirm(msg, callback) {
   const confirmIcon = document.getElementById('confirmIcon');
   if (!confirmMsg || !confirmIcon) { log('[nav] WARN: confirm dialog elements missing'); return; }
   confirmMsg.textContent = msg;
-  confirmIcon.textContent = '\u26A0';
   overlay.classList.add('open');
   document.getElementById('confirmOk').onclick = () => { log('[nav] confirmOk clicked'); overlay.classList.remove('open'); callback(); };
   document.getElementById('confirmCancel').onclick = () => { log('[nav] confirmCancel clicked'); overlay.classList.remove('open'); };

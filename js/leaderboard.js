@@ -100,12 +100,13 @@ function renderLeaderboard(view) {
     const rankCls = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : '';
     const rankLabel = i === 0 ? '1' : i === 1 ? '2' : i === 2 ? '3' : '#' + (i + 1);
     const avatarUrl = 'https://api.dicebear.com/9.x/pixel-art/svg?seed=' + encodeURIComponent(e.name) + '&scale=120';
+    const fallbackAvatar = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30"><rect width="30" height="30" fill="%23e4e7ec" rx="15"/><text x="15" y="20" font-size="16" font-weight="700" fill="%23888" text-anchor="middle" font-family="sans-serif">' + (e.name ? e.name.charAt(0).toUpperCase() : '?') + '</text></svg>');
     const detail = view === 'recent'
       ? e.difficulty + ' \u00b7 ' + e.date
       : e.difficulty + ' \u00b7 ' + (e.games || 0) + ' games';
     return '<div class="leader-entry' + (topThree ? ' top-three' : '') + (e.isMe ? ' is-me' : '') + '">'
       + '<div class="leader-rank ' + rankCls + '">' + rankLabel + '</div>'
-      + '<img class="leader-avatar" src="' + avatarUrl + '" alt="" loading="lazy">'
+      + '<img class="leader-avatar" src="' + avatarUrl + '" alt="" loading="lazy" onerror="this.src=\'' + fallbackAvatar + '\'">'
       + '<div class="leader-info"><div class="leader-name">' + escapeHtml(e.name) + '</div><div class="leader-detail">' + detail + '</div></div>'
       + '<div class="leader-score">+' + e.score + '</div>'
       + '</div>';

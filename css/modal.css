@@ -742,7 +742,7 @@
 .confetti-container {
   position: fixed; inset: 0;
   pointer-events: none;
-  z-index: 1;
+  z-index: 100;
   overflow: hidden;
 }
 .confetti-piece {

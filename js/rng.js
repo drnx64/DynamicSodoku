@@ -26,7 +26,8 @@ function shuffle(arr, rand) {
   rand = rand || Math.random;
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(rand() * (i + 1));
+    const r = rand();
+    const j = Math.min(Math.floor(r * (i + 1)), i);
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;

@@ -572,7 +572,7 @@ function showAchievementToast(ids) {
 
   if ('Notification' in window && Notification.permission === 'granted') {
     const first = ACHIEVEMENTS.find(x => x.id === ids[0]);
-    if (first) new Notification('Achievement Unlocked!', { body: first.name + ' - ' + first.desc, icon: 'icon.svg' });
+    if (first) new Notification('Achievement Unlocked!', { body: first.name + ' - ' + first.desc, icon: 'assets/icon.svg' });
   }
 }
 
@@ -613,7 +613,8 @@ function isBonusChallengeActive() {
   if (!bonusChallenge.startDate) return false;
   const start = new Date(bonusChallenge.startDate);
   const now = new Date();
-  const diffDays = Math.floor((now - start) / 86400000);
+  const diffMs = now.getTime() - start.getTime();
+  const diffDays = Math.floor(diffMs / 86400000);
   return diffDays < 7 && !bonusChallenge.claimed;
 }
 
@@ -629,7 +630,7 @@ function getBonusHoursLeft() {
   if (!bonusChallenge.startDate) return 0;
   const start = new Date(bonusChallenge.startDate);
   const now = new Date();
-  const elapsed = (now - start) / 3600000;
+  const elapsed = (now.getTime() - start.getTime()) / 3600000;
   return Math.max(0, Math.floor(168 - elapsed));
 }
 
@@ -779,9 +780,9 @@ function checkStreak() {
   const today = todayStr();
   if (!streak.lastDate) { log('[storage] checkStreak: no lastDate'); return; }
   if (streak.lastDate === today) { log('[storage] checkStreak: already updated today'); return; }
-  const last = new Date(streak.lastDate);
-  const now = new Date(today);
-  const diffMs = now - last;
+  const last = new Date(streak.lastDate + 'T00:00:00');
+  const now = new Date(today + 'T00:00:00');
+  const diffMs = now.getTime() - last.getTime();
   const diffDays = Math.round(diffMs / 86400000);
   if (diffDays > 1) {
     const lostStreak = streak.count;

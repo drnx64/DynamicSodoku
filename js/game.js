@@ -82,6 +82,7 @@ function placeNumber(row, col, num) {
     const prevNotes = [...state.notes[row][col]];
     state.board[row][col] = 0;
     state.notes[row][col] = new Set();
+    state._lastMistakeCell = null;
     pushHistory('clear', row, col, prevVal, 0, prevNotes, []);
     if (!state.started) { state.started = true; startTimer(); }
     render(); saveGame(); playSound('place');
@@ -92,12 +93,13 @@ function placeNumber(row, col, num) {
   const prevNotes = [...state.notes[row][col]];
   state.notes[row][col] = new Set();
 
-  if (!isValidPlacement(state.board, row, col, num)) {
+  if (!isValidPlacement(state.board, row, col, num) || num !== state.solution[row][col]) {
     log('[game] placeNumber: invalid placement - mistake');
     state.mistakes++;
+    state._lastMistakeCell = [row, col];
     pushHistory('mistake', row, col, prevVal, num, prevNotes, []);
     if (!state.started) { state.started = true; startTimer(); }
-    render({ shakeCell: [row, col] }); saveGame(); playSound('error');
+    render({ shakeCell: [row, col], mistakeCell: [row, col] }); saveGame(); playSound('error');
     haptic([30, 50, 30]);
     if (state.mistakes >= 3) {
       log('[game] placeNumber: 3 mistakes reached, showing retry');
@@ -107,6 +109,7 @@ function placeNumber(row, col, num) {
   }
 
   log('[game] placeNumber: valid placement');
+  state._lastMistakeCell = null;
   pushHistory('place', row, col, prevVal, num, prevNotes, []);
   if (!state.started) { state.started = true; startTimer(); }
   render({ popCell: [row, col] }); saveGame(); playSound('place');
@@ -266,6 +269,16 @@ function startTimer() {
   }, 1000);
 }
 
+function pauseTimer() {
+  if (!state.timerRunning) { log('[game] pauseTimer: already paused'); return; }
+  log('[game] pauseTimer()');
+  state.timerRunning = false;
+  if (state.timerInterval) {
+    clearInterval(state.timerInterval);
+    state.timerInterval = null;
+  }
+}
+
 function showRetryOverlay() {
   log('[game] showRetryOverlay()');
   const retryOverlay = document.getElementById('retryOverlay');
@@ -286,10 +299,11 @@ function retryLevel() {
   state.notes = Array.from({length: 9}, () => Array.from({length: 9}, () => new Set()));
   state.history = []; state.historyIdx = -1;
   state.selectedCell = null; state.notesMode = false;
+  if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
   state.timer = 0; state.timerRunning = false;
   state.mistakes = 0; state.hintsUsed = 0; state.started = false;
   state.gameOver = false; state.won = false;
-  state._hintCell = null;
+  state._hintCell = null; state._lastMistakeCell = null;
   document.getElementById('timer').textContent = '00:00';
   document.getElementById('mistakes').textContent = '0';
   updateUndoRedo();
@@ -437,7 +451,7 @@ function initNewGame(difficulty, isDaily, startLevel) {
     state.timer = 0; state.timerRunning = false; state.timerPaused = false;
     state.mistakes = 0; state.hintsUsed = 0; state.started = false;
     state.gameOver = false; state.won = false; state.notesUsed = false;
-    state._retryData = null;
+    state._retryData = null; state._lastMistakeCell = null;
     document.getElementById('timer').textContent = '00:00';
     document.getElementById('mistakes').textContent = '0';
     document.getElementById('gameLabel').textContent = state.isDaily ? 'Daily Challenge' : capitalize(state.difficulty);

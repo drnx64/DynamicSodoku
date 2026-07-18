@@ -4,6 +4,7 @@
 const DEBUG = true;
 function log(...args) {
   if (DEBUG) console.log(...args);
+  if (typeof reportBreadcrumb === 'function') reportBreadcrumb(args[0], args[1] || '');
 }
 
 function isValidPlacement(board, row, col, val) {
@@ -39,7 +40,7 @@ function findConflicts(board) {
 }
 
 function getCandidates(board, row, col) {
-  log('[engine] getCandidates()', { row, col });
+  if (DEBUG) log('[engine] getCandidates()', { row, col });
   if (board[row][col]) return new Set();
   const cands = new Set([1,2,3,4,5,6,7,8,9]);
   for (let i = 0; i < 9; i++) {
@@ -93,7 +94,7 @@ function _solveDet(grid) {
 }
 
 function countSolutions(grid, cap) {
-  cap = cap || 2;
+  if (cap === undefined) cap = 2;
   let count = 0;
   const g = grid.map(r => [...r]);
   const rows = new Array(9).fill(0);
