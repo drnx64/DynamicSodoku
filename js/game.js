@@ -221,6 +221,9 @@ function giveHint() {
     }
     state._hintCell = null;
     if (!state.started) { state.started = true; startTimer(); }
+    state.combo++;
+    if (state.combo > state.maxCombo) state.maxCombo = state.combo;
+    if (state.combo >= 2) showCombo(state.combo);
     render({ popCell: [row, col] }); saveGame(); playSound('place');
     checkWin();
   } else {
@@ -493,6 +496,21 @@ function showCombo(count) {
   wrap.classList.remove('combo-pop');
   void wrap.offsetWidth;
   wrap.classList.add('combo-pop');
+
+  const boardEl = document.getElementById('board');
+  if (!boardEl) return;
+  const floater = document.createElement('div');
+  floater.className = 'combo-floater';
+  floater.textContent = 'x' + count;
+  const rect = boardEl.getBoundingClientRect();
+  const left = 10 + Math.random() * (rect.width - 60);
+  const top = 10 + Math.random() * (rect.height - 50);
+  floater.style.left = left + 'px';
+  floater.style.top = top + 'px';
+  const colors = ['#ff6b35','#ffd700','#ff6b9d','#a855f7','#4d96ff','#6bcb77'];
+  floater.style.color = colors[count % colors.length];
+  boardEl.appendChild(floater);
+  setTimeout(() => { if (floater.parentNode) floater.remove(); }, 1200);
 }
 
 function hideCombo() {
