@@ -243,7 +243,7 @@
       <svg class="deco-star4-3" width="22" height="22" viewBox="0 0 24 24"><use href="#ico-star-4pt"/></svg>
       <svg class="deco-star4-4" width="36" height="36" viewBox="0 0 24 24"><use href="#ico-star-4pt"/></svg>
     </div>
-    <div class="game-header">
+    <div class="game-header" id="gameHeader">
       <button class="back-btn" id="gameBack"><svg width="20" height="20" viewBox="0 0 24 24"><use href="#ico-chevron-left"/></svg></button>
       <div class="game-info">
         <span class="game-label" id="gameLabel">Medium</span>
@@ -253,6 +253,7 @@
           <span class="game-level" id="gameLevelBadge" style="display:none"><svg width="12" height="12" viewBox="0 0 24 24"><use href="#ico-target"/></svg> Lv. <span id="gameLevelNum">1</span></span>
         </div>
       </div>
+      <button class="game-settings-btn" id="gamePauseBtn" title="Pause"><svg width="18" height="18" viewBox="0 0 24 24"><use href="#ico-pause"/></svg></button>
       <button class="game-settings-btn" id="gameMuteBtn" title="Toggle sound"><svg width="18" height="18" viewBox="0 0 24 24"><use href="#ico-volume"/></svg></button>
       <button class="game-settings-btn" id="gameSettingsBtn"><svg width="20" height="20" viewBox="0 0 24 24"><use href="#ico-gear"/></svg></button>
     </div>
@@ -511,6 +512,19 @@
     <h2>3 Mistakes!</h2>
     <p>You made 3 mistakes. Retry this level with the same puzzle.</p>
     <button id="retryBtn">Retry Level</button>
+  </div>
+</div>
+
+<!-- ============ PAUSE OVERLAY ============ -->
+<div class="pause-overlay" id="pauseOverlay">
+  <div class="pause-card">
+    <div class="pause-icon"><svg width="48" height="48" viewBox="0 0 24 24"><use href="#ico-pause"/></svg></div>
+    <h2>Game Paused</h2>
+    <p>Take a break, you can resume anytime.</p>
+    <div class="pause-actions">
+      <button id="pauseResumeBtn">Resume</button>
+      <button id="pauseQuitBtn" class="pause-quit">Quit to Menu</button>
+    </div>
   </div>
 </div>
 

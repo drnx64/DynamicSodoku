@@ -2,10 +2,10 @@
   gap: 10px;
   justify-content: center;
 }
-#page-game.paused .board-wrap { filter: blur(6px); pointer-events: none; transition: filter 0.3s; }
+#page-game.paused #boardWrap { filter: blur(6px); pointer-events: none; transition: filter 0.3s; }
 #page-game.paused #numPad { filter: blur(6px); pointer-events: none; transition: filter 0.3s; opacity: 0.4; }
-.game-header.game-enter { animation: slideUp 0.4s ease forwards; }
-.board-wrap.game-enter { animation: slideUp 0.4s ease 0.05s both; }
+#gameHeader.game-enter { animation: slideUp 0.4s ease forwards; }
+#boardWrap.game-enter { animation: slideUp 0.4s ease 0.05s both; }
 #numPad.game-enter { animation: slideUp 0.4s ease 0.1s both; }
 
 .game-header {

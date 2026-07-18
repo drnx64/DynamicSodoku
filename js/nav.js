@@ -16,6 +16,7 @@ function showPage(id) {
     pauseTimer();
     document.getElementById('timerWrap')?.classList.toggle('paused', true);
     document.getElementById('page-game')?.classList.add('paused');
+    document.getElementById('pauseOverlay')?.classList.add('open');
   }
   log('[nav] page shown', { id });
 }

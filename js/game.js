@@ -398,30 +398,9 @@ function initNewGame(difficulty, isDaily, startLevel) {
 
   showPage('page-game');
   if (boardEl) boardEl.classList.add('blurred');
-  if (levelNum) levelNum.textContent = state.currentLevel;
-  if (levelOverlay) levelOverlay.classList.add('open');
+  render();
 
-  const cells = boardEl ? boardEl.querySelectorAll('.cell') : [];
-  let visualTimer = setInterval(() => {
-    if (cells.length === 0) return;
-    const idx = Math.floor(Math.random() * cells.length);
-    const cell = cells[idx];
-    if (cell && !cell.classList.contains('given')) {
-      const n = Math.floor(Math.random() * 9) + 1;
-      const oldText = cell.querySelector('.cell-value')?.textContent || '';
-      const valEl = cell.querySelector('.cell-value');
-      if (valEl) valEl.textContent = n;
-      cell.style.color = 'var(--text-muted)';
-      cell.style.opacity = '0.6';
-      setTimeout(() => {
-        if (valEl) valEl.textContent = oldText;
-        cell.style.color = '';
-        cell.style.opacity = '';
-      }, 300);
-    }
-  }, 80);
-
-  setTimeout(() => {
+  const puzzleReady = () => {
     let puzzle;
     if (isDaily) {
       const today = new Date();
@@ -435,7 +414,6 @@ function initNewGame(difficulty, isDaily, startLevel) {
 
     if (!puzzle || !puzzle.solution) {
       log('[game] ERROR: puzzle generation failed');
-      clearInterval(visualTimer);
       if (boardEl) boardEl.classList.remove('blurred');
       if (levelOverlay) levelOverlay.classList.remove('open');
       return;
@@ -449,7 +427,7 @@ function initNewGame(difficulty, isDaily, startLevel) {
     state.notes = Array.from({length: 9}, () => Array.from({length: 9}, () => new Set()));
     state.history = []; state.historyIdx = -1;
     state.selectedCell = null; state.notesMode = false;
-    state.timer = 0; state.timerRunning = false; state.timerPaused = false;
+    state.timer = 0; state.timerRunning = false;
     state.mistakes = 0; state.hintsUsed = 0; state.started = false;
     state.gameOver = false; state.won = false; state.notesUsed = false;
     state._retryData = null; state._lastMistakeCell = null;
@@ -463,7 +441,6 @@ function initNewGame(difficulty, isDaily, startLevel) {
     if (numBadge) numBadge.textContent = state.currentLevel;
     updateUndoRedo();
 
-    clearInterval(visualTimer);
     if (boardEl) boardEl.classList.remove('blurred');
     render({ entering: true });
     saveGame();
@@ -471,13 +448,17 @@ function initNewGame(difficulty, isDaily, startLevel) {
 
     setTimeout(() => {
       if (levelOverlay) levelOverlay.classList.remove('open');
-      document.querySelector('.game-header')?.classList.add('game-enter');
-      document.querySelector('.board-wrap')?.classList.add('game-enter');
+      document.getElementById('gameHeader')?.classList.add('game-enter');
+      document.getElementById('boardWrap')?.classList.add('game-enter');
       document.getElementById('numPad')?.classList.add('game-enter');
       state.started = true;
       startTimer();
-    }, 800);
-  }, 150);
+    }, 1200);
+  };
+
+  setTimeout(puzzleReady, 50);
+  if (levelNum) levelNum.textContent = state.currentLevel;
+  if (levelOverlay) levelOverlay.classList.add('open');
 }
 
 function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }

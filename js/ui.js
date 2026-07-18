@@ -229,19 +229,37 @@ function setupInput() {
     });
   }
 
+  function togglePause() {
+    if (state.timerRunning) {
+      pauseTimer();
+    } else {
+      startTimer();
+    }
+    document.getElementById('timerWrap').classList.toggle('paused', !state.timerRunning);
+    document.getElementById('page-game')?.classList.toggle('paused', !state.timerRunning);
+    document.getElementById('pauseOverlay')?.classList.toggle('open', !state.timerRunning);
+    updateTimerIcon();
+    saveGame();
+  }
+
   const timerWrap = document.getElementById('timerWrap');
   if (timerWrap) {
     timerWrap.addEventListener('click', () => {
       if (!state.started || state.won || state.gameOver) { log('[ui] timer toggle: blocked', { started: state.started, won: state.won, gameOver: state.gameOver }); return; }
-      if (state.timerRunning) {
-        pauseTimer();
-      } else {
-        startTimer();
+      togglePause();
+    });
+  }
+
+  const gamePauseBtn = document.getElementById('gamePauseBtn');
+  if (gamePauseBtn) {
+    gamePauseBtn.addEventListener('click', togglePause);
+    document.getElementById('pauseResumeBtn')?.addEventListener('click', togglePause);
+    document.getElementById('pauseQuitBtn')?.addEventListener('click', () => {
+      document.getElementById('pauseOverlay')?.classList.remove('open');
+      if (state.started && !state.won && !state.gameOver) {
+        clearGame();
       }
-      document.getElementById('timerWrap').classList.toggle('paused', !state.timerRunning);
-      document.getElementById('page-game')?.classList.toggle('paused', !state.timerRunning);
-      updateTimerIcon();
-      saveGame();
+      showPage('page-menu');
     });
   }
 

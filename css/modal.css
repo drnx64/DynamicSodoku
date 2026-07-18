@@ -900,4 +900,72 @@
   pointer-events: auto;
 }
 
+/* ============ PAUSE OVERLAY ============ */
+.pause-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  background: rgba(0,0,0,0.3);
+}
+.pause-overlay.open { display: flex; }
+
+.pause-card {
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 24px;
+  padding: 40px 36px;
+  text-align: center;
+  max-width: 320px;
+  width: 90%;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.25);
+}
+.pause-card .pause-icon svg {
+  width: 56px;
+  height: 56px;
+  color: #fff;
+  margin-bottom: 8px;
+}
+.pause-card h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 6px;
+}
+.pause-card p {
+  font-size: 14px;
+  color: rgba(255,255,255,0.7);
+  margin-bottom: 24px;
+}
+.pause-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pause-actions button {
+  padding: 12px;
+  border: none;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s, opacity 0.15s;
+}
+.pause-actions button:active { transform: scale(0.97); }
+.pause-actions button:first-child {
+  background: var(--accent);
+  color: #fff;
+}
+.pause-actions button.pause-quit {
+  background: rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.8);
+}
+.pause-actions button.pause-quit:hover { background: rgba(255,255,255,0.18); }
+
 
