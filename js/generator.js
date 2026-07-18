@@ -143,12 +143,36 @@ function generatePuzzle(difficulty, rand) {
       return makePuzzleResult(solution, givens);
     }
   }
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const solution = generateSolution(rand);
+    if (!isComplete(solution)) continue;
+    const allCells = shuffle(Array.from({length: 81}, (_, i) => [Math.floor(i / 9), i % 9]), rand);
+    const board = solution.map(r => [...r]);
+    const givens = Array.from({length: 9}, () => Array(9).fill(true));
+    let clues = 81;
+    for (const [r, c] of allCells) {
+      if (clues <= cfg.minClues) break;
+      const saved = board[r][c];
+      board[r][c] = 0;
+      givens[r][c] = false;
+      if (countSolutions(board, 2) !== 1) {
+        board[r][c] = saved;
+        givens[r][c] = true;
+      } else { clues--; }
+    }
+    if (clues >= cfg.minClues && clues <= cfg.maxClues) {
+      saveHash(hashGivens(givens));
+      return makePuzzleResult(solution, givens);
+    }
+  }
   const finalSolution = generateSolution(rand);
   const finalGivens = Array.from({length: 9}, () => Array(9).fill(false));
   const finalBoard = finalSolution.map(r => [...r]);
-  for (let r = 0; r < 9; r++)
-    for (let c = 0; c < 9; c++)
-      if (Math.random() > 0.5) { finalGivens[r][c] = true; } else { finalBoard[r][c] = 0; }
+  for (const [r, c] of shuffle(Array.from({length: 81}, (_, i) => [Math.floor(i / 9), i % 9]), rand)) {
+    if (countSolutions(finalBoard, 2) !== 1) break;
+    finalBoard[r][c] = 0;
+    finalGivens[r][c] = true;
+  }
   return { solution: finalSolution, givens: finalGivens, board: finalBoard };
 }
 

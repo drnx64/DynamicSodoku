@@ -49,6 +49,12 @@ function updateDiffBestTimes() {
   });
 }
 
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.open').forEach(el => el.classList.remove('open'));
+  }
+});
+
 function setupNavigation() {
   log('[nav] setupNavigation()');
   const playCard = document.getElementById('playCard');

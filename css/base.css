@@ -150,7 +150,7 @@ html, body {
 }
 
 body {
-  font-family: var(--font-body) !important;
+  font-family: var(--font-body);
   background: var(--bg);
   color: var(--text);
   display: flex;
@@ -162,3 +162,19 @@ body {
   transition: background 0.3s, color 0.3s;
   overflow-x: hidden;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.dev-links { display:flex; flex-direction:column; gap:8px; padding:8px 0 4px; }
+.dev-link {
+  display:flex; align-items:center; gap:8px; padding:8px 12px;
+  background:var(--btn-bg); border-radius:var(--radius-sm); color:var(--text);
+  text-decoration:none; font-size:13px; font-weight:500; transition:background 0.15s;
+}
+.dev-link:hover { background:var(--btn-hover); }

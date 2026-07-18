@@ -57,7 +57,7 @@ function playTone(freq, type, duration, gainVal, startDelay) {
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
     osc.start(ctx.currentTime + (startDelay || 0));
     osc.stop(ctx.currentTime + (startDelay || 0) + duration);
-  } catch(e) {}
+  } catch(e) { log('[sound] playTone error', e); }
 }
 
 function playSound(type) {
@@ -80,5 +80,5 @@ function playSound(type) {
         playTone(theme.winFifth.freq, theme.winFifth.type, theme.winFifth.duration, theme.winFifth.gain);
       }, 300);
     }
-  } catch(e) {}
+  } catch(e) { log('[sound] playSound error', e); }
 }

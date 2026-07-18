@@ -131,3 +131,29 @@ function countSolutions(grid, cap) {
   return count;
 }
 
+const RANK_SVG_MAP = {
+  wood: 'assets/rank-wood.svg',
+  bronze: 'assets/rank-bronze.svg',
+  silver: 'assets/rank-silver.svg',
+  gold: 'assets/rank-gold.svg',
+  platinum: 'assets/rank-platinum.svg',
+  emerald: 'assets/rank-emerald.svg',
+  diamond: 'assets/rank-diamond.svg',
+  master: 'assets/rank-master.svg',
+  grandmaster: 'assets/rank-grandmaster.svg',
+  elite: 'assets/rank-elite.svg',
+};
+
+function rankSvgSrc(rankName) {
+  const t = rankName.toLowerCase();
+  for (const [key, src] of Object.entries(RANK_SVG_MAP))
+    if (t.includes(key)) return src;
+  return '';
+}
+
+function rankSvgImg(rankName, size) {
+  const src = rankSvgSrc(rankName);
+  if (!src) return '';
+  return '<img src="' + src + '" width="' + size + '" height="' + size + '" class="rank-svg-icon" alt="' + rankName + '">';
+}
+

@@ -9,6 +9,13 @@ function render(opts) {
   const conflicts = state.settings.highlightConflicts ? findConflicts(state.board) : new Set();
   const selectedVal = state.selectedCell ? state.board[state.selectedCell[0]][state.selectedCell[1]] : 0;
 
+  const candidatesCache = state.settings.autoCandidates ? {} : null;
+  function getCachedCandidates(r, c) {
+    const key = r * 9 + c;
+    if (!candidatesCache[key]) candidatesCache[key] = getCandidates(state.board, r, c);
+    return candidatesCache[key];
+  }
+
   for (let r = 0; r < 9; r++) {
     for (let c = 0; c < 9; c++) {
       const cell = document.createElement('div');
@@ -47,14 +54,19 @@ function render(opts) {
       if (!state.board[r][c]) {
         const notesGrid = document.createElement('div');
         notesGrid.className = 'notes-grid';
-        for (let n = 1; n <= 9; n++) {
-          const span = document.createElement('span');
-          if (state.settings.autoCandidates && !state.givens[r][c]) {
-            if (getCandidates(state.board, r, c).has(n)) span.textContent = n;
-          } else {
-            if (state.notes[r][c].has(n)) span.textContent = n;
+        if (state.settings.autoCandidates && !state.givens[r][c]) {
+          const cands = getCachedCandidates(r, c);
+          for (let n = 1; n <= 9; n++) {
+            const span = document.createElement('span');
+            if (cands.has(n)) span.textContent = n;
+            notesGrid.appendChild(span);
           }
-          notesGrid.appendChild(span);
+        } else {
+          for (let n = 1; n <= 9; n++) {
+            const span = document.createElement('span');
+            if (state.notes[r][c].has(n)) span.textContent = n;
+            notesGrid.appendChild(span);
+          }
         }
         cell.appendChild(notesGrid);
       }

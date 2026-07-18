@@ -22,23 +22,6 @@ function fireConfetti() {
   setTimeout(() => container.innerHTML = '', 5000);
 }
 
-function rankSvgTag(rankName, size) {
-  const t = rankName.toLowerCase();
-  let src;
-  if (t.includes('wood')) src = 'assets/rank-wood.svg';
-  else if (t.includes('bronze')) src = 'assets/rank-bronze.svg';
-  else if (t.includes('silver')) src = 'assets/rank-silver.svg';
-  else if (t.includes('gold')) src = 'assets/rank-gold.svg';
-  else if (t.includes('platinum')) src = 'assets/rank-platinum.svg';
-  else if (t.includes('emerald')) src = 'assets/rank-emerald.svg';
-  else if (t.includes('diamond')) src = 'assets/rank-diamond.svg';
-  else if (t.includes('master')) src = 'assets/rank-master.svg';
-  else if (t.includes('grandmaster')) src = 'assets/rank-grandmaster.svg';
-  else if (t.includes('elite')) src = 'assets/rank-elite.svg';
-  else return '';
-  return '<img src="' + src + '" width="' + size + '" height="' + size + '" class="rank-svg-icon" alt="' + rankName + '">';
-}
-
 function showWinDialog() {
   log('[win] showWinDialog()');
   const score = calcScore(state.difficulty, state.timer, state.mistakes, state.hintsUsed);
@@ -101,7 +84,7 @@ function showWinDialog() {
   const levelUpEl = document.getElementById('winLevelUp');
   if (leveledUp) {
     levelUpEl.style.display = 'inline-block';
-    levelUpEl.innerHTML = rankSvgTag(newRank.name, 18) + '\u2002&#8593; ' + newRank.name + '!';
+    levelUpEl.innerHTML = rankSvgImg(newRank.name, 18) + '\u2002&#8593; ' + newRank.name + '!';
   } else {
     levelUpEl.style.display = 'none';
   }
@@ -129,7 +112,7 @@ function showWinDialog() {
     log('[win] showing rank-up animation');
     const overlay = document.getElementById('rankupOverlay');
     if (!overlay) { log('[win] WARN: #rankupOverlay not found'); return; }
-    document.getElementById('rankupBadge').innerHTML = rankSvgTag(newRank.name, 96);
+    document.getElementById('rankupBadge').innerHTML = rankSvgImg(newRank.name, 96);
     document.getElementById('rankupOldRank').textContent = prevRank.name;
     document.getElementById('rankupNewRank').textContent = newRank.name;
     overlay.classList.add('open');

@@ -1,24 +1,3 @@
-function rankSvgUrl(rankName) {
-  const t = rankName.toLowerCase();
-  if (t.includes('wood')) return 'assets/rank-wood.svg';
-  if (t.includes('bronze')) return 'assets/rank-bronze.svg';
-  if (t.includes('silver')) return 'assets/rank-silver.svg';
-  if (t.includes('gold')) return 'assets/rank-gold.svg';
-  if (t.includes('platinum')) return 'assets/rank-platinum.svg';
-  if (t.includes('emerald')) return 'assets/rank-emerald.svg';
-  if (t.includes('diamond')) return 'assets/rank-diamond.svg';
-  if (t.includes('master')) return 'assets/rank-master.svg';
-  if (t.includes('grandmaster')) return 'assets/rank-grandmaster.svg';
-  if (t.includes('elite')) return 'assets/rank-elite.svg';
-  return '';
-}
-
-function rankSvgImg(rankName, size) {
-  const src = rankSvgUrl(rankName);
-  if (!src) return '';
-  return '<img src="' + src + '" width="' + size + '" height="' + size + '" class="rank-svg-icon" alt="' + rankName + '">';
-}
-
 function getStreakFire(count) {
   if (count >= 30) return { level: 5, icon: 'ico-fire6', color: '#ec4899' };
   if (count >= 20) return { level: 4, icon: 'ico-fire5', color: '#f59e0b' };
