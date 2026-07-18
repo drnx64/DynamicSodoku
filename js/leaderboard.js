@@ -44,7 +44,7 @@ function getUserEntry() {
   const avgScore = totalGames > 0 ? Math.round(totalXp / totalGames) : 0;
   const lastDiff = stats.lastDifficulty || 'medium';
   return {
-    name: 'You',
+    name: state.settings.playerName || 'Player',
     score: avgScore || 10,
     xp: totalXp,
     games: totalGames,

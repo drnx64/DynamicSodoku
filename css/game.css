@@ -33,7 +33,10 @@
 .game-info .game-meta span { display: flex; align-items: center; gap: 4px; }
 .timer-wrap { cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
 .timer-wrap:hover { opacity: 0.8; }
-.timer-wrap.paused { opacity: 0.5; }
+.timer-wrap.paused { opacity: 0.6; }
+.timer-wrap.paused svg { color: var(--text-muted); }
+.timer-wrap.paused #timer { color: var(--text-muted); }
+.timer-wrap.paused #timer::after { content: ' (Paused)'; font-size: 11px; color: var(--text-dim); }
 
 .mistake-counter { color: var(--mistake-color); font-weight: 700; }
 .mistake-counter svg { color: var(--mistake-color); }

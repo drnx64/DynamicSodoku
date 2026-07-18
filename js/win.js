@@ -98,7 +98,7 @@ function showWinDialog() {
 
   clearGame();
   checkAchievements(state.difficulty, state.mistakes, state.hintsUsed, state.notesUsed, totalEarned, state.settings.autoCandidates);
-  addScoreToLeaderboard('Player', Math.round(totalEarned), state.difficulty);
+  addScoreToLeaderboard(state.settings.playerName || 'Player', Math.round(totalEarned), state.difficulty);
   fireConfetti();
 
   function openWinDialog() {

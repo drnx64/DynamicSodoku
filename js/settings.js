@@ -1,15 +1,15 @@
 // ============================================================
 // 10. Settings
 // ============================================================
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.2.0';
 const APP_VERSION_DATE = '2026-07-18';
 
 const DEFAULT_SETTINGS = {
   highlightSame: true, highlightPeers: true, highlightConflicts: true,
   autoCandidates: false, showRemaining: true, mistakeLimit: true,
   timerVisible: true, darkTheme: false, soundEnabled: true, autoClearNotes: true,
-  hapticFeedback: true,   autoDarkMode: true, keyboardShortcuts: true,
-  colorTheme: 'default', soundTheme: 'classic',
+  hapticFeedback: true, autoDarkMode: true, keyboardShortcuts: true,
+  colorTheme: 'default', soundTheme: 'classic', playerName: 'Player',
 };
 
 const SETTINGS_CATEGORIES = [
@@ -25,6 +25,7 @@ const SETTINGS_CATEGORIES = [
       { key: 'mistakeLimit', label: 'Mistake limit (3)' },
       { key: 'autoClearNotes', label: 'Auto-clear notes' },
       { key: 'keyboardShortcuts', label: 'Keyboard shortcuts' },
+      { key: 'playerName', label: 'Player name', type: 'text' },
     ],
   },
   {
@@ -106,6 +107,23 @@ function setupSettings() {
           saveSettings();
         });
         row.appendChild(label); row.appendChild(select);
+        section.appendChild(row);
+      } else if (def.type === 'text') {
+        const row = document.createElement('div');
+        row.className = 'setting-row';
+        const label = document.createElement('span');
+        label.className = 'setting-label';
+        label.textContent = def.label;
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'setting-input';
+        input.value = state.settings[def.key] || '';
+        input.addEventListener('input', () => {
+          state.settings[def.key] = input.value || DEFAULT_SETTINGS[def.key];
+          saveSettings();
+          updateMenuUI();
+        });
+        row.appendChild(label); row.appendChild(input);
         section.appendChild(row);
       } else {
         const row = document.createElement('div');

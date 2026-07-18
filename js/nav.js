@@ -12,6 +12,10 @@ function showPage(id) {
     p.classList.remove('active');
   });
   target.classList.add('active');
+  if (_prevPage === 'page-game' && id !== 'page-game' && state.timerRunning) {
+    pauseTimer();
+    document.getElementById('timerWrap')?.classList.toggle('paused', true);
+  }
   log('[nav] page shown', { id });
 }
 
@@ -70,8 +74,10 @@ function setupNavigation() {
     gameBack.addEventListener('click', () => {
       log('[nav] click: gameBack', { started: state.started, won: state.won, gameOver: state.gameOver });
       if (state.started && !state.won && !state.gameOver) {
-        saveGame();
-        showPage('page-menu');
+        showConfirm('Leave the current game? Your progress will be saved.', () => {
+          saveGame();
+          showPage('page-menu');
+        });
       } else {
         clearGame();
         showPage('page-menu');

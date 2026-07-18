@@ -465,3 +465,17 @@
   font-family: var(--font-body);
 }
 .setting-select:focus { outline: none; border-color: var(--accent); }
+
+.setting-input {
+  padding: 6px 10px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--btn-bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  width: 140px;
+  text-align: right;
+}
+.setting-input:focus { outline: none; border-color: var(--accent); }

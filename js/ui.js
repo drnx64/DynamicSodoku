@@ -81,6 +81,7 @@ function render(opts) {
   updateNumPad();
   updateNotesBtn();
   updateUndoRedo();
+  updateTimerIcon();
 }
 
 function selectCell(row, col) {
@@ -221,6 +222,13 @@ function setupInput() {
     });
   }
 
+  function updateTimerIcon() {
+    const wrap = document.getElementById('timerWrap');
+    if (!wrap) return;
+    const icon = wrap.querySelector('svg use');
+    if (icon) icon.setAttribute('href', state.timerRunning ? '#ico-clock' : '#ico-pause');
+  }
+
   const timerWrap = document.getElementById('timerWrap');
   if (timerWrap) {
     timerWrap.addEventListener('click', () => {
@@ -231,6 +239,7 @@ function setupInput() {
         startTimer();
       }
       document.getElementById('timerWrap').classList.toggle('paused', !state.timerRunning);
+      updateTimerIcon();
       saveGame();
     });
   }
