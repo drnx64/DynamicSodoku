@@ -111,6 +111,13 @@ function updateNumPad() {
   });
 }
 
+function updateTimerIcon() {
+  const wrap = document.getElementById('timerWrap');
+  if (!wrap) return;
+  const icon = wrap.querySelector('svg use');
+  if (icon) icon.setAttribute('href', state.timerRunning ? '#ico-clock' : '#ico-pause');
+}
+
 function updateNotesBtn() {
   const notesBtn = document.getElementById('notesBtn');
   if (notesBtn) notesBtn.classList.toggle('active', state.notesMode);
@@ -220,13 +227,6 @@ function setupInput() {
       render();
       saveSettings();
     });
-  }
-
-  function updateTimerIcon() {
-    const wrap = document.getElementById('timerWrap');
-    if (!wrap) return;
-    const icon = wrap.querySelector('svg use');
-    if (icon) icon.setAttribute('href', state.timerRunning ? '#ico-clock' : '#ico-pause');
   }
 
   const timerWrap = document.getElementById('timerWrap');

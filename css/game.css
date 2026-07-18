@@ -2,6 +2,9 @@
   gap: 10px;
   justify-content: center;
 }
+.game-header.game-enter { animation: slideUp 0.4s ease forwards; }
+.board-wrap.game-enter { animation: slideUp 0.4s ease 0.05s both; }
+#numPad.game-enter { animation: slideUp 0.4s ease 0.1s both; }
 
 .game-header {
   display: flex;

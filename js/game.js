@@ -102,7 +102,7 @@ function placeNumber(row, col, num) {
     haptic([30, 50, 30]);
     const toast = document.getElementById('toast');
     if (toast) {
-      toast.innerHTML = '<span style="color:#ef4444;font-weight:700;">✗ Wrongly placed!</span><br><span style="font-size:13px;color:#aaa;">Correct answer: <strong style="color:#22c55e;">' + state.solution[row][col] + '</strong></span>';
+      toast.innerHTML = '<span style="color:#ef4444;font-weight:700;">✗ Wrongly placed!</span>';
       toast.classList.add('open');
       setTimeout(() => toast.classList.remove('open'), 2000);
     }
@@ -471,6 +471,11 @@ function initNewGame(difficulty, isDaily, startLevel) {
 
     setTimeout(() => {
       if (levelOverlay) levelOverlay.classList.remove('open');
+      document.querySelector('.game-header')?.classList.add('game-enter');
+      document.querySelector('.board-wrap')?.classList.add('game-enter');
+      document.getElementById('numPad')?.classList.add('game-enter');
+      state.started = true;
+      startTimer();
     }, 800);
   }, 150);
 }
