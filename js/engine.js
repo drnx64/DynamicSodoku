@@ -1,7 +1,7 @@
 // ============================================================
 // 1. Sudoku Engine
 // ============================================================
-const DEBUG = true;
+const DEBUG = false;
 function log(...args) {
   if (DEBUG) console.log(...args);
   if (typeof reportBreadcrumb === 'function') reportBreadcrumb(args[0], args[1] || '');

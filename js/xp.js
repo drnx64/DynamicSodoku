@@ -50,12 +50,8 @@ function getNextRank(totalXp) {
 
 function calcScore(difficulty, timeSec, mistakes, hintsUsed) {
   log('[xp] calcScore()', { difficulty, timeSec, mistakes, hintsUsed });
-  const roll = Math.floor(Math.random() * 10000) + 1;
-  let base;
-  if (roll <= 8000)       base = 5 + Math.floor(Math.random() * 4);      // 5-8
-  else if (roll <= 9200)  base = 20 + Math.floor(Math.random() * 9);     // 20-28
-  else if (roll <= 9999)  base = 35 + Math.floor(Math.random() * 16);    // 35-50
-  else                    base = 60;                                      // perfect
+  const baseMap = { easy: 6, medium: 10, hard: 15, impossible: 20 };
+  const base = baseMap[difficulty] || 10;
 
   const diffMult = { easy: 0.5, medium: 0.7, hard: 0.9, impossible: 1.1 };
   const perf = diffMult[difficulty] || 0.7;

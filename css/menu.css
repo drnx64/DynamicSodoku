@@ -176,7 +176,7 @@
 
 .bonus-circle {
   position: fixed;
-  bottom: 80%;
+  bottom: 20px;
   right: 16px;
   z-index: 100;
   width: 52px;

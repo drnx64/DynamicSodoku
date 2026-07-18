@@ -166,12 +166,16 @@ function generatePuzzle(difficulty, rand) {
     }
   }
   const finalSolution = generateSolution(rand);
-  const finalGivens = Array.from({length: 9}, () => Array(9).fill(false));
+  const finalGivens = Array.from({length: 9}, () => Array(9).fill(true));
   const finalBoard = finalSolution.map(r => [...r]);
   for (const [r, c] of shuffle(Array.from({length: 81}, (_, i) => [Math.floor(i / 9), i % 9]), rand)) {
-    if (countSolutions(finalBoard, 2) !== 1) break;
+    const saved = finalBoard[r][c];
     finalBoard[r][c] = 0;
-    finalGivens[r][c] = true;
+    finalGivens[r][c] = false;
+    if (countSolutions(finalBoard, 2) !== 1) {
+      finalBoard[r][c] = saved;
+      finalGivens[r][c] = true;
+    }
   }
   return { solution: finalSolution, givens: finalGivens, board: finalBoard };
 }

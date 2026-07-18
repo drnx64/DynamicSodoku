@@ -93,7 +93,7 @@ function showWinDialog() {
   if (!state.isDaily) {
     nextBtn.textContent = 'Next Level';
   } else {
-    nextBtn.textContent = 'Next Puzzle';
+    nextBtn.textContent = 'Back to Menu';
   }
 
   clearGame();

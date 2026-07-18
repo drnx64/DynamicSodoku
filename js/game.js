@@ -93,8 +93,9 @@ function placeNumber(row, col, num) {
   const prevNotes = [...state.notes[row][col]];
   state.notes[row][col] = new Set();
 
-  if (!isValidPlacement(state.board, row, col, num) || num !== state.solution[row][col]) {
-    log('[game] placeNumber: invalid placement');
+  if (num !== state.solution[row][col]) {
+    log('[game] placeNumber: invalid placement - mistake');
+    state.mistakes++;
     state._lastMistakeCell = [row, col];
     pushHistory('mistake', row, col, prevVal, num, prevNotes, []);
     if (!state.started) { state.started = true; startTimer(); }
@@ -105,6 +106,11 @@ function placeNumber(row, col, num) {
       toast.innerHTML = '<span style="color:#ef4444;font-weight:700;">✗ Wrongly placed!</span>';
       toast.classList.add('open');
       setTimeout(() => toast.classList.remove('open'), 2000);
+    }
+    if (state.mistakes >= 3) {
+      log('[game] placeNumber: 3 mistakes reached');
+      gameOver();
+      showRetryOverlay();
     }
     return;
   }

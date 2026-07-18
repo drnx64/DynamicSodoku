@@ -68,7 +68,7 @@ function getBreadcrumbs() {
 function setupErrorReporting() {
   window.onerror = function (msg, url, line, col, err) {
     reportError(`window.onerror: ${msg}`, err);
-    return false;
+    return true;
   };
   window.addEventListener('unhandledrejection', function (e) {
     reportError('Unhandled Promise rejection', e.reason);
