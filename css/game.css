@@ -416,11 +416,11 @@ body.body-shake { animation:bodyShake 0.6s ease; }
 }
 .combo-floater svg { width:22px; height:22px; flex-shrink:0; filter:drop-shadow(0 0 6px currentColor); }
 @keyframes comboFloat {
-  0%{opacity:1;transform:scale(0.5) translateY(0)}
-  20%{opacity:1;transform:scale(1.15) translateY(-8px)}
-  40%{opacity:1;transform:scale(1) translateY(-18px)}
-  70%{opacity:0.7;transform:scale(0.9) translateY(-40px)}
-  100%{opacity:0;transform:scale(0.7) translateY(-70px)}
+  0%{opacity:1;transform:translateY(0) scale(1)}
+  15%{opacity:1;transform:translateY(-8px) scale(1.08)}
+  30%{opacity:0.9;transform:translateY(-18px) scale(1)}
+  60%{opacity:0.6;transform:translateY(-40px) scale(1)}
+  100%{opacity:0;transform:translateY(-70px) scale(1)}
 }
 
 /* ============ WIN COMBO BONUS ============ */
