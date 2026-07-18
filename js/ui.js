@@ -76,6 +76,8 @@ function render(opts) {
   }
   const timerEl = document.getElementById('timer');
   if (timerEl) timerEl.textContent = formatTime(state.timer);
+  const tw = document.getElementById('timerWrap');
+  if (tw) tw.classList.toggle('timer-warn', state.timer >= 300);
   const mistakesEl = document.getElementById('mistakes');
   if (mistakesEl) mistakesEl.textContent = String(state.mistakes);
   updateNumPad();
@@ -99,6 +101,24 @@ function updateNumPad() {
       if (state.board[r][c]) counts[state.board[r][c]]--;
   const numPad = document.getElementById('numPad');
   if (!numPad) return;
+
+  const valid = new Set();
+  if (state.selectedCell && !state.won && !state.gameOver) {
+    const [sr, sc] = state.selectedCell;
+    if (!state.board[sr][sc] || state.givens[sr]?.[sc]) {
+      const used = new Set();
+      for (let i = 0; i < 9; i++) {
+        if (state.board[sr][i]) used.add(state.board[sr][i]);
+        if (state.board[i][sc]) used.add(state.board[i][sc]);
+      }
+      const br = Math.floor(sr / 3) * 3, bc = Math.floor(sc / 3) * 3;
+      for (let r = br; r < br + 3; r++)
+        for (let c2 = bc; c2 < bc + 3; c2++)
+          if (state.board[r][c2]) used.add(state.board[r][c2]);
+      for (let n = 1; n <= 9; n++) { if (!used.has(n) && counts[n] > 0) valid.add(n); }
+    }
+  }
+
   numPad.querySelectorAll('button').forEach((btn, i) => {
     const n = i + 1;
     const rem = btn.querySelector('.remaining');
@@ -107,6 +127,7 @@ function updateNumPad() {
       rem.classList.toggle('zero', counts[n] <= 0);
     }
     btn.classList.toggle('placed', counts[n] <= 0);
+    btn.classList.toggle('numpad-valid', valid.has(n));
     if (rem) rem.style.display = state.settings.showRemaining ? '' : 'none';
   });
 }

@@ -99,8 +99,11 @@ function placeNumber(row, col, num) {
     state._lastMistakeCell = [row, col];
     pushHistory('mistake', row, col, prevVal, num, prevNotes, []);
     if (!state.started) { state.started = true; startTimer(); }
-    render({ shakeCell: [row, col], mistakeCell: [row, col] }); saveGame(); playSound('error');
+    render({ shakeCell: [row, col], mistakeCell: [row, col] });
+    saveGame(); playSound('error');
     haptic([30, 50, 30]);
+    const boardWrap = document.getElementById('boardWrap');
+    if (boardWrap) { boardWrap.classList.remove('mistake-shake'); void boardWrap.offsetWidth; boardWrap.classList.add('mistake-shake'); }
     const toast = document.getElementById('toast');
     if (toast) {
       toast.innerHTML = '<span style="color:#ef4444;font-weight:700;">✗ Wrongly placed!</span>';
@@ -254,7 +257,13 @@ function checkWin() {
   state.timerRunning = false;
   if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
   render(); playSound('win');
-  showWinDialog();
+  const burst = document.getElementById('winBurst');
+  if (burst) {
+    burst.classList.add('open');
+    setTimeout(() => { burst.classList.remove('open'); showWinDialog(); }, 800);
+  } else {
+    showWinDialog();
+  }
 }
 
 function gameOver() {
@@ -273,6 +282,8 @@ function startTimer() {
   state.timerInterval = setInterval(() => {
     state.timer++;
     document.getElementById('timer').textContent = formatTime(state.timer);
+    const tw = document.getElementById('timerWrap');
+    if (tw) tw.classList.toggle('timer-warn', state.timer >= 300);
   }, 1000);
 }
 
