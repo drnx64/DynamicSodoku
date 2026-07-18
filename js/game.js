@@ -94,8 +94,7 @@ function placeNumber(row, col, num) {
   state.notes[row][col] = new Set();
 
   if (!isValidPlacement(state.board, row, col, num) || num !== state.solution[row][col]) {
-    log('[game] placeNumber: invalid placement - mistake');
-    state.mistakes++;
+    log('[game] placeNumber: invalid placement');
     state._lastMistakeCell = [row, col];
     pushHistory('mistake', row, col, prevVal, num, prevNotes, []);
     if (!state.started) { state.started = true; startTimer(); }
@@ -103,13 +102,9 @@ function placeNumber(row, col, num) {
     haptic([30, 50, 30]);
     const toast = document.getElementById('toast');
     if (toast) {
-      toast.innerHTML = '<span style="color:#ef4444;font-weight:700;">✗ Wrongly placed!</span>';
+      toast.innerHTML = '<span style="color:#ef4444;font-weight:700;">✗ Wrongly placed!</span><br><span style="font-size:13px;color:#aaa;">Correct answer: <strong style="color:#22c55e;">' + state.solution[row][col] + '</strong></span>';
       toast.classList.add('open');
       setTimeout(() => toast.classList.remove('open'), 2000);
-    }
-    if (state.mistakes >= 3) {
-      log('[game] placeNumber: 3 mistakes reached, showing retry');
-      showRetryOverlay();
     }
     return;
   }
