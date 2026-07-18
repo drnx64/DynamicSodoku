@@ -250,6 +250,7 @@
         <div class="game-meta">
           <span class="timer-wrap" id="timerWrap"><svg width="14" height="14" viewBox="0 0 24 24"><use href="#ico-clock"/></svg> <span id="timer">00:00</span></span>
           <span class="mistake-counter" id="mistakeWrap"><svg width="14" height="14" viewBox="0 0 24 24"><use href="#ico-x"/></svg> <span id="mistakes">0</span></span>
+          <span class="combo-wrap" id="comboWrap" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24"><use href="#ico-fire"/></svg> <span class="combo-text" id="comboText">x2</span></span>
           <span class="game-level" id="gameLevelBadge" style="display:none"><svg width="12" height="12" viewBox="0 0 24 24"><use href="#ico-target"/></svg> Lv. <span id="gameLevelNum">1</span></span>
         </div>
       </div>
@@ -259,7 +260,6 @@
     </div>
 
     <div id="boardWrap">
-      <div class="win-burst" id="winBurst"></div>
       <div id="board"></div>
     </div>
 
@@ -308,7 +308,7 @@
       <div class="win-stat"><div class="val" id="winMistakes">0</div><div class="lbl">Mistakes</div></div>
       <div class="win-stat"><div class="val" id="winHints">0</div><div class="lbl">Hints</div></div>
     </div>
-    <div class="win-xp">+<span id="winXp">0</span> XP</div>
+    <div class="win-xp">+<span id="winXp">0</span> XP <span class="win-combo" id="winComboBonus"></span></div>
     <div class="win-level-up" id="winLevelUp" style="display:none"></div>
     <div class="win-actions">
       <button class="win-secondary" id="winMenu">Main Menu</button>
@@ -456,6 +456,14 @@
     <div class="level-label">LEVEL</div>
     <div class="level-number" id="levelNumber">1</div>
   </div>
+</div>
+
+<!-- ============ WIN EXPLOSION ============ -->
+<div class="explosion-overlay" id="explosionOverlay">
+  <div class="explosion-flash"></div>
+  <div class="explosion-ring r1"></div>
+  <div class="explosion-ring r2"></div>
+  <div class="explosion-ring r3"></div>
 </div>
 
 <!-- ============ BONUS MODAL ============ -->

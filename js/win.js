@@ -25,9 +25,11 @@ function fireConfetti() {
 function showWinDialog() {
   log('[win] showWinDialog()');
   const score = calcScore(state.difficulty, state.timer, state.mistakes, state.hintsUsed);
+  const comboMult = Math.min(state.maxCombo || 0, 9) / 10;
+  const comboBonus = Math.round(score * comboMult);
+  let totalEarned = score + comboBonus;
   const prevXp = stats.totalXp;
   const prevRank = getRank(prevXp);
-  let totalEarned = score;
 
   document.getElementById('winTime').textContent = formatTime(state.timer);
   document.getElementById('winMistakes').textContent = String(state.mistakes);
@@ -79,9 +81,14 @@ function showWinDialog() {
 
   const newRank = getRank(stats.totalXp);
   const leveledUp = newRank.name !== prevRank.name;
-  log('[win] stats updated', { score, totalEarned, newTotalXp: stats.totalXp, prevRank: prevRank.name, newRank: newRank.name, leveledUp });
+  log('[win] stats updated', { score, comboMult, comboBonus, totalEarned, newTotalXp: stats.totalXp, prevRank: prevRank.name, newRank: newRank.name, leveledUp });
 
   document.getElementById('winXp').textContent = totalEarned;
+  const comboEl = document.getElementById('winComboBonus');
+  if (comboEl) {
+    comboEl.style.display = state.maxCombo >= 2 ? 'inline' : 'none';
+    if (state.maxCombo >= 2) comboEl.textContent = ' (incl. x' + (state.maxCombo > 9 ? 9 : state.maxCombo) + ' combo +' + comboBonus + ')';
+  }
   const levelUpEl = document.getElementById('winLevelUp');
   if (leveledUp) {
     levelUpEl.style.display = 'inline-block';

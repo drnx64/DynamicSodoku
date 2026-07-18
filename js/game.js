@@ -18,6 +18,7 @@ const state = {
   isDaily: false, gameMode: 'normal',
   currentLevel: 1,
   notesUsed: false,
+  combo: 0, maxCombo: 0,
   _retryData: null,
 };
 state.settings = {};
@@ -95,6 +96,8 @@ function placeNumber(row, col, num) {
 
   if (num !== state.solution[row][col]) {
     log('[game] placeNumber: invalid placement - mistake');
+    state.combo = 0;
+    hideCombo();
     state.mistakes++;
     state._lastMistakeCell = [row, col];
     pushHistory('mistake', row, col, prevVal, num, prevNotes, []);
@@ -120,6 +123,9 @@ function placeNumber(row, col, num) {
 
   log('[game] placeNumber: valid placement');
   state._lastMistakeCell = null;
+  state.combo++;
+  if (state.combo > state.maxCombo) state.maxCombo = state.combo;
+  if (state.combo >= 2) showCombo(state.combo);
   pushHistory('place', row, col, prevVal, num, prevNotes, []);
   if (!state.started) { state.started = true; startTimer(); }
   render({ popCell: [row, col] }); saveGame(); playSound('place');
@@ -257,13 +263,7 @@ function checkWin() {
   state.timerRunning = false;
   if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
   render(); playSound('win');
-  const burst = document.getElementById('winBurst');
-  if (burst) {
-    burst.classList.add('open');
-    setTimeout(() => { burst.classList.remove('open'); showWinDialog(); }, 800);
-  } else {
-    showWinDialog();
-  }
+  triggerWinExplosion(() => showWinDialog());
 }
 
 function gameOver() {
@@ -450,6 +450,7 @@ function initNewGame(difficulty, isDaily, startLevel) {
     state.timer = 0; state.timerRunning = false;
     state.mistakes = 0; state.hintsUsed = 0; state.started = false;
     state.gameOver = false; state.won = false; state.notesUsed = false;
+    state.combo = 0; state.maxCombo = 0;
     state._retryData = null; state._lastMistakeCell = null;
     document.getElementById('timer').textContent = '00:00';
     document.getElementById('mistakes').textContent = '0';
@@ -482,3 +483,31 @@ function initNewGame(difficulty, isDaily, startLevel) {
 }
 
 function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+function showCombo(count) {
+  const wrap = document.getElementById('comboWrap');
+  const text = document.getElementById('comboText');
+  if (!wrap || !text) return;
+  text.textContent = 'x' + count;
+  wrap.style.display = 'inline-flex';
+  wrap.classList.remove('combo-pop');
+  void wrap.offsetWidth;
+  wrap.classList.add('combo-pop');
+}
+
+function hideCombo() {
+  const wrap = document.getElementById('comboWrap');
+  if (wrap) wrap.style.display = 'none';
+}
+
+function triggerWinExplosion(callback) {
+  const overlay = document.getElementById('explosionOverlay');
+  if (!overlay) { callback(); return; }
+  overlay.classList.add('open');
+  document.body.classList.add('body-shake');
+  setTimeout(() => {
+    overlay.classList.remove('open');
+    document.body.classList.remove('body-shake');
+    callback();
+  }, 1000);
+}
