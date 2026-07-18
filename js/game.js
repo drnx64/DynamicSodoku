@@ -509,7 +509,7 @@ function showCombo(count) {
   const colors = ['#ff6b35','#ffd700','#ff6b9d','#a855f7','#4d96ff','#6bcb77'];
   floater.style.color = colors[count % colors.length];
   boardWrap.appendChild(floater);
-  setTimeout(() => { if (floater.parentNode) floater.remove(); }, 3000);
+  setTimeout(() => { if (floater.parentNode) floater.remove(); }, 4200);
 }
 
 function hideCombo() {
