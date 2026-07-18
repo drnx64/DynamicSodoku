@@ -101,6 +101,12 @@ function placeNumber(row, col, num) {
     if (!state.started) { state.started = true; startTimer(); }
     render({ shakeCell: [row, col], mistakeCell: [row, col] }); saveGame(); playSound('error');
     haptic([30, 50, 30]);
+    const toast = document.getElementById('toast');
+    if (toast) {
+      toast.innerHTML = '<span style="color:#ef4444;font-weight:700;">✗ Wrongly placed!</span>';
+      toast.classList.add('open');
+      setTimeout(() => toast.classList.remove('open'), 2000);
+    }
     if (state.mistakes >= 3) {
       log('[game] placeNumber: 3 mistakes reached, showing retry');
       showRetryOverlay();
