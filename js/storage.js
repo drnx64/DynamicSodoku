@@ -11,6 +11,37 @@ const LS = {
   dailyState: 'sudoku_daily_state',
 };
 
+function _xorKey() {
+  try { return APP_VERSION.split('').reduce((a, c) => a + c.charCodeAt(0), 17); } catch(e) { return 17; }
+}
+
+function encodeField(val) {
+  if (val === undefined || val === null) return val;
+  try {
+    const json = JSON.stringify(val);
+    const key = _xorKey();
+    const buf = [];
+    for (let i = 0; i < json.length; i++) {
+      buf.push(json.charCodeAt(i) ^ (key + i) & 0xff);
+    }
+    return btoa(String.fromCharCode(...buf));
+  } catch(e) { return val; }
+}
+
+function decodeField(encoded) {
+  if (typeof encoded !== 'string') return encoded;
+  if (!/^[A-Za-z0-9+/=]+$/.test(encoded)) return encoded;
+  try {
+    const raw = atob(encoded);
+    const key = _xorKey();
+    const buf = [];
+    for (let i = 0; i < raw.length; i++) {
+      buf.push(raw.charCodeAt(i) ^ (key + i) & 0xff);
+    }
+    return JSON.parse(String.fromCharCode(...buf));
+  } catch(e) { return encoded; }
+}
+
 function saveSettings() {
   log('[storage] saveSettings()');
   saveWithVault(LS.settings, state.settings, 'settings');
@@ -37,9 +68,12 @@ function saveGame() {
   log('[storage] saveGame()', { isDaily: state.isDaily, started: state.started, timer: state.timer });
   try {
     const data = {
-      solution: state.solution, givens: state.givens, board: state.board,
-      notes: state.notes.map(r => r.map(s => [...s])),
-      history: state.history, historyIdx: state.historyIdx,
+      solution: encodeField(state.solution),
+      givens: encodeField(state.givens),
+      board: encodeField(state.board),
+      notes: encodeField(state.notes.map(r => r.map(s => [...s]))),
+      history: encodeField(state.history),
+      historyIdx: state.historyIdx,
       timer: state.timer, mistakes: state.mistakes, hintsUsed: state.hintsUsed,
       hintsRemaining: state.hintsRemaining,
       difficulty: state.difficulty, gameOver: state.gameOver, won: state.won,
@@ -56,12 +90,14 @@ function saveGame() {
 function loadGame() {
   log('[storage] loadGame()');
   try {
-    const raw = localStorage.getItem(LS.game);
-    if (!raw) { log('[storage] no saved game found'); return false; }
-    const data = JSON.parse(raw);
-    state.solution = data.solution; state.givens = data.givens; state.board = data.board;
-    state.notes = data.notes.map(r => r.map(s => new Set(s)));
-    state.history = data.history; state.historyIdx = data.historyIdx;
+    const data = loadWithVault(LS.game, 'game', null);
+    if (!data) { log('[storage] no saved game found'); return false; }
+    state.solution = decodeField(data.solution);
+    state.givens = decodeField(data.givens);
+    state.board = decodeField(data.board);
+    state.notes = decodeField(data.notes).map(r => r.map(s => new Set(s)));
+    state.history = decodeField(data.history);
+    state.historyIdx = data.historyIdx;
     state.timer = data.timer; state.mistakes = data.mistakes || 0;
     state.hintsUsed = data.hintsUsed || 0; state.hintsRemaining = (data.hintsRemaining ?? 3); state.difficulty = data.difficulty || 'easy';
     state.gameOver = data.gameOver || false; state.won = data.won || false;
@@ -82,9 +118,12 @@ function saveDailyGame() {
   try {
     const data = {
       date: todayStr(),
-      solution: state.solution, givens: state.givens, board: state.board,
-      notes: state.notes.map(r => r.map(s => [...s])),
-      history: state.history, historyIdx: state.historyIdx,
+      solution: encodeField(state.solution),
+      givens: encodeField(state.givens),
+      board: encodeField(state.board),
+      notes: encodeField(state.notes.map(r => r.map(s => [...s]))),
+      history: encodeField(state.history),
+      historyIdx: state.historyIdx,
       timer: state.timer, mistakes: state.mistakes, hintsUsed: state.hintsUsed,
       difficulty: state.difficulty, gameOver: state.gameOver, won: state.won,
       started: state.started, selectedCell: state.selectedCell,
@@ -99,9 +138,12 @@ function loadDailyGame() {
     const data = loadWithVault(LS.dailyState, 'dailyState', null);
     if (!data) { log('[storage] no daily game found'); return false; }
     if (data.date !== todayStr()) { log('[storage] daily game is from a different date', { saved: data.date, today: todayStr() }); return false; }
-    state.solution = data.solution; state.givens = data.givens; state.board = data.board;
-    state.notes = data.notes.map(r => r.map(s => new Set(s)));
-    state.history = data.history; state.historyIdx = data.historyIdx;
+    state.solution = decodeField(data.solution);
+    state.givens = decodeField(data.givens);
+    state.board = decodeField(data.board);
+    state.notes = decodeField(data.notes).map(r => r.map(s => new Set(s)));
+    state.history = decodeField(data.history);
+    state.historyIdx = data.historyIdx;
     state.timer = data.timer; state.mistakes = data.mistakes || 0;
     state.hintsUsed = data.hintsUsed || 0; state.difficulty = data.difficulty || 'medium';
     state.gameOver = data.gameOver || false; state.won = data.won || false;
