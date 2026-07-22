@@ -473,30 +473,27 @@ function initNewGame(difficulty, isDaily, startLevel) {
   }
 
   if (!isDaily) {
-    const raw = localStorage.getItem(LS.game);
-    if (raw) {
-      try {
-        const saved = JSON.parse(raw);
-        if (saved.difficulty === difficulty && !saved.won && !saved.gameOver && saved.mistakes < 3) {
-          log('[game] restoring saved game', { difficulty, mistakes: saved.mistakes });
-          loadGame();
-          state.isDaily = false;
-          state.gameMode = 'normal';
-          document.getElementById('gameLabel').textContent = capitalize(difficulty);
-          document.getElementById('winOverlay').classList.remove('open');
-          const gameBadge = document.getElementById('gameLevelBadge');
-          if (gameBadge) gameBadge.style.display = 'inline-flex';
-          const numBadge = document.getElementById('gameLevelNum');
-          if (numBadge) numBadge.textContent = state.currentLevel;
-          updateUndoRedo();
-          render({ entering: true });
-          if (state.timer > 0 && !state.won && !state.gameOver) startTimer();
-          showPage('page-game');
-          return;
-        } else {
-          log('[game] saved game does not match or is finished, generating new', { savedDiff: saved.difficulty, savedWon: saved.won, savedGameOver: saved.gameOver });
-        }
-      } catch(e) { log('[game] error parsing saved game', e); }
+    const saved = loadWithVault(LS.game, 'game', null);
+    if (saved) {
+      if (saved.difficulty === difficulty && !saved.won && !saved.gameOver && saved.mistakes < 3) {
+        log('[game] restoring saved game', { difficulty, mistakes: saved.mistakes });
+        loadGame();
+        state.isDaily = false;
+        state.gameMode = 'normal';
+        document.getElementById('gameLabel').textContent = capitalize(difficulty);
+        document.getElementById('winOverlay').classList.remove('open');
+        const gameBadge = document.getElementById('gameLevelBadge');
+        if (gameBadge) gameBadge.style.display = 'inline-flex';
+        const numBadge = document.getElementById('gameLevelNum');
+        if (numBadge) numBadge.textContent = state.currentLevel;
+        updateUndoRedo();
+        render({ entering: true });
+        if (state.timer > 0 && !state.won && !state.gameOver) startTimer();
+        showPage('page-game');
+        return;
+      } else {
+        log('[game] saved game does not match or is finished, generating new', { savedDiff: saved.difficulty, savedWon: saved.won, savedGameOver: saved.gameOver });
+      }
     }
   }
 

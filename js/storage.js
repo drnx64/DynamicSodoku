@@ -158,17 +158,23 @@ function loadDailyGame() {
 function saveHash(h) {
   log('[storage] saveHash()', { h });
   try {
-    let hashes = [];
     const raw = localStorage.getItem(LS.hashes);
-    if (raw) hashes = JSON.parse(raw);
+    let hashes = raw ? decodeField(raw) : [];
+    if (!Array.isArray(hashes)) hashes = [];
     hashes.push(h);
     if (hashes.length > 100) hashes = hashes.slice(-100);
-    localStorage.setItem(LS.hashes, JSON.stringify(hashes));
+    localStorage.setItem(LS.hashes, encodeField(hashes));
   } catch(e) { log('[storage] saveHash error', e); }
 }
 function loadHashes() {
   log('[storage] loadHashes()');
-  try { const raw = localStorage.getItem(LS.hashes); if (raw) { const h = JSON.parse(raw); log('[storage] hashes loaded', { count: h.length }); return h; } } catch(e) { log('[storage] loadHashes error', e); }
+  try {
+    const raw = localStorage.getItem(LS.hashes);
+    if (raw) {
+      const h = decodeField(raw);
+      if (Array.isArray(h)) { log('[storage] hashes loaded', { count: h.length }); return h; }
+    }
+  } catch(e) { log('[storage] loadHashes error', e); }
   return [];
 }
 
@@ -732,7 +738,13 @@ function verifyStatsIntegrity() {
   const raw = localStorage.getItem(LS.stats);
   if (!raw) return;
   try {
-    const data = JSON.parse(raw);
+    let data;
+    if (/^[A-Za-z0-9+/=]+$/.test(raw)) {
+      data = decodeField(raw);
+      if (!data || typeof data !== 'object') return;
+    } else {
+      data = JSON.parse(raw);
+    }
     const vault = data._vault;
     if (!vault) return;
     const decoded = decodeVault(vault);
@@ -747,7 +759,7 @@ function verifyStatsIntegrity() {
     }
     if (tampered) {
       data._vault = encodeVault(data, 'stats');
-      localStorage.setItem(LS.stats, JSON.stringify(data));
+      localStorage.setItem(LS.stats, encodeField(data));
       Object.assign(stats, data);
     }
   } catch(e) { log('[storage] verifyStatsIntegrity error', e); }
@@ -772,7 +784,7 @@ function decodeVault(encoded) {
 function saveWithVault(key, data, type) {
   try {
     data._vault = encodeVault(data, type);
-    localStorage.setItem(key, JSON.stringify(data));
+    localStorage.setItem(key, encodeField(data));
   } catch(e) { log('[storage] saveWithVault error', e, { key, type }); }
 }
 
@@ -780,7 +792,13 @@ function loadWithVault(key, type, defaults) {
   try {
     const raw = localStorage.getItem(key);
     if (!raw) return defaults;
-    const data = JSON.parse(raw);
+    let data;
+    if (/^[A-Za-z0-9+/=]+$/.test(raw)) {
+      data = decodeField(raw);
+      if (!data || typeof data !== 'object') return defaults;
+    } else {
+      data = JSON.parse(raw);
+    }
     const vault = data._vault;
     if (!vault) { log('[storage] no vault found for', { key, type }); return data; }
     const decoded = decodeVault(vault);
@@ -795,7 +813,7 @@ function loadWithVault(key, type, defaults) {
     }
     if (tampered) {
       data._vault = encodeVault(data, type);
-      localStorage.setItem(key, JSON.stringify(data));
+      localStorage.setItem(key, encodeField(data));
     }
     return data;
   } catch(e) { log('[storage] loadWithVault error', e, { key, type }); return defaults; }
