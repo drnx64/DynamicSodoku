@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://drnx64.github.io/DynamicSodoku/sitemap.xml
