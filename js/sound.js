@@ -8,6 +8,11 @@ const SOUND_THEMES = {
     winBase: { freq: 523, type: 'sine', duration: 0.15, gain: 0.08 },
     winThird: { freq: 659, type: 'sine', duration: 0.15, gain: 0.08 },
     winFifth: { freq: 784, type: 'sine', duration: 0.2, gain: 0.08 },
+    combo: [
+      { freq: 523, type: 'sine', duration: 0.12, gain: 0.07, delay: 0 },
+      { freq: 659, type: 'sine', duration: 0.12, gain: 0.07, delay: 0.1 },
+      { freq: 784, type: 'sine', duration: 0.18, gain: 0.08, delay: 0.2 },
+    ],
   },
   piano: {
     place: { freq: 440, type: 'sine', duration: 0.3, gain: 0.06 },
@@ -15,6 +20,11 @@ const SOUND_THEMES = {
     winBase: { freq: 262, type: 'sine', duration: 0.4, gain: 0.06 },
     winThird: { freq: 330, type: 'sine', duration: 0.4, gain: 0.06 },
     winFifth: { freq: 392, type: 'sine', duration: 0.5, gain: 0.06 },
+    combo: [
+      { freq: 262, type: 'sine', duration: 0.3, gain: 0.05, delay: 0 },
+      { freq: 330, type: 'sine', duration: 0.3, gain: 0.05, delay: 0.12 },
+      { freq: 392, type: 'sine', duration: 0.4, gain: 0.06, delay: 0.24 },
+    ],
   },
   digital: {
     place: { freq: 800, type: 'square', duration: 0.05, gain: 0.04 },
@@ -22,6 +32,11 @@ const SOUND_THEMES = {
     winBase: { freq: 880, type: 'square', duration: 0.1, gain: 0.04 },
     winThird: { freq: 1108, type: 'square', duration: 0.1, gain: 0.04 },
     winFifth: { freq: 1318, type: 'square', duration: 0.15, gain: 0.04 },
+    combo: [
+      { freq: 880, type: 'square', duration: 0.06, gain: 0.03, delay: 0 },
+      { freq: 1108, type: 'square', duration: 0.06, gain: 0.03, delay: 0.08 },
+      { freq: 1318, type: 'square', duration: 0.1, gain: 0.04, delay: 0.16 },
+    ],
   },
   retro: {
     place: { freq: 600, type: 'triangle', duration: 0.08, gain: 0.07 },
@@ -29,6 +44,11 @@ const SOUND_THEMES = {
     winBase: { freq: 500, type: 'triangle', duration: 0.12, gain: 0.07 },
     winThird: { freq: 630, type: 'triangle', duration: 0.12, gain: 0.07 },
     winFifth: { freq: 750, type: 'triangle', duration: 0.18, gain: 0.07 },
+    combo: [
+      { freq: 500, type: 'triangle', duration: 0.1, gain: 0.06, delay: 0 },
+      { freq: 630, type: 'triangle', duration: 0.1, gain: 0.06, delay: 0.1 },
+      { freq: 750, type: 'triangle', duration: 0.14, gain: 0.07, delay: 0.2 },
+    ],
   },
 };
 
@@ -79,6 +99,10 @@ function playSound(type) {
       setTimeout(() => {
         playTone(theme.winFifth.freq, theme.winFifth.type, theme.winFifth.duration, theme.winFifth.gain);
       }, 300);
+    } else if (type === 'combo' && theme.combo) {
+      for (const note of theme.combo) {
+        playTone(note.freq, note.type, note.duration, note.gain, note.delay);
+      }
     }
   } catch(e) { log('[sound] playSound error', e); }
 }

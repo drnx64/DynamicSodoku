@@ -601,6 +601,7 @@ function showCombo(count) {
   wrap.classList.remove('combo-pop');
   void wrap.offsetWidth;
   wrap.classList.add('combo-pop');
+  if (count % 5 === 0) playSound('combo');
 
   const boardWrap = document.getElementById('boardWrap');
   if (!boardWrap) return;
