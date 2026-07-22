@@ -207,43 +207,31 @@ function giveHint() {
   if (!hint) { log('[game] giveHint: no hint found'); return; }
   const { row, col, technique, desc } = hint;
 
-  if (state._hintCell && state._hintCell[0] === row && state._hintCell[1] === col) {
-    log('[game] giveHint: second ask - revealing answer', { row, col, technique });
-    const prevVal = state.board[row][col];
-    const correctVal = state.solution[row][col];
-    const prevNotes = [...state.notes[row][col]];
-    state.board[row][col] = correctVal;
-    state.notes[row][col] = new Set();
-    pushHistory('hint', row, col, prevVal, correctVal, prevNotes, []);
-    if ((bonusChallenge.bonusHints || 0) > 0) {
-      bonusChallenge.bonusHints--;
-      saveBonus();
-      log('[game] giveHint: used bonus hint', { remaining: bonusChallenge.bonusHints });
-    } else {
-      state.hintsUsed++;
-      stats.totalHintsUsedAll = (stats.totalHintsUsedAll || 0) + 1;
-      saveStats();
-      log('[game] giveHint: hint counted', { totalHints: state.hintsUsed });
-    }
-    state._hintCell = null;
-    state.hintsRemaining--;
-    updateBadges();
-    if (!state.started) { state.started = true; startTimer(); }
-    state.combo++;
-    if (state.combo > state.maxCombo) state.maxCombo = state.combo;
-    if (state.combo >= 2) showCombo(state.combo);
-    render({ popCell: [row, col] }); saveGame(); playSound('place');
-    checkWin();
+  log('[game] giveHint: revealing answer', { row, col, technique });
+  const prevVal = state.board[row][col];
+  const correctVal = state.solution[row][col];
+  const prevNotes = [...state.notes[row][col]];
+  state.board[row][col] = correctVal;
+  state.notes[row][col] = new Set();
+  pushHistory('hint', row, col, prevVal, correctVal, prevNotes, []);
+  if ((bonusChallenge.bonusHints || 0) > 0) {
+    bonusChallenge.bonusHints--;
+    saveBonus();
+    log('[game] giveHint: used bonus hint', { remaining: bonusChallenge.bonusHints });
   } else {
-    log('[game] giveHint: first ask - showing technique', { technique, row, col });
-    state._hintCell = [row, col];
-    if (!state.selectedCell || state.selectedCell[0] !== row || state.selectedCell[1] !== col) {
-      selectCell(row, col);
-    }
-    render({ hintHighlight: { row, col } });
-    showHintToast(technique, desc);
-    playSound('place');
+    state.hintsUsed++;
+    stats.totalHintsUsedAll = (stats.totalHintsUsedAll || 0) + 1;
+    saveStats();
+    log('[game] giveHint: hint counted', { totalHints: state.hintsUsed });
   }
+  state.hintsRemaining--;
+  updateBadges();
+  if (!state.started) { state.started = true; startTimer(); }
+  state.combo++;
+  if (state.combo > state.maxCombo) state.maxCombo = state.combo;
+  if (state.combo >= 2) showCombo(state.combo);
+  render({ popCell: [row, col] }); saveGame(); playSound('place');
+  checkWin();
 }
 
 function showHintShopModal() {
@@ -275,25 +263,6 @@ function showHintShopModal() {
     };
   }
   if (cancelBtn) cancelBtn.onclick = () => modal.classList.remove('open');
-}
-
-function showHintToast(technique, desc) {
-  const existing = document.getElementById('hintToast');
-  if (existing) existing.remove();
-  const toast = document.createElement('div');
-  toast.id = 'hintToast';
-  toast.style.cssText = `
-    position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
-    background: var(--card-bg); color: var(--text);
-    padding: 12px 20px; border-radius: 10px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-    z-index: 200; font-size: 13px; font-weight: 500;
-    text-align: center; max-width: 320px;
-    animation: slideUp 0.25s ease;
-    border: 1.5px solid var(--accent);`;
-  toast.innerHTML = `<strong>${technique}</strong>: ${desc}`;
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 4000);
 }
 
 function checkWin() {
