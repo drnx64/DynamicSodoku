@@ -371,25 +371,6 @@ body.body-shake { animation:bodyShake 0.6s ease; }
 }
 
 /* ============ NUMPAD VALID GLOW ============ */
-#numPad button.numpad-valid {
-  animation: numpadGlow 1.2s ease-in-out infinite;
-  position: relative;
-  z-index: 1;
-}
-#numPad button.numpad-valid::after {
-  content:''; position:absolute; inset:-3px; border-radius:inherit;
-  border:2px solid rgba(99,102,241,0.35);
-  animation: numpadRingPulse 1.2s ease-in-out infinite;
-  pointer-events:none;
-}
-@keyframes numpadGlow {
-  0%,100% { box-shadow:0 0 6px rgba(99,102,241,0.2),0 0 12px rgba(99,102,241,0.1); transform:scale(1); }
-  50% { box-shadow:0 0 12px rgba(99,102,241,0.45),0 0 28px rgba(99,102,241,0.25); transform:scale(1.06); background:rgba(99,102,241,0.07); }
-}
-@keyframes numpadRingPulse {
-  0%,100% { opacity:0.2; transform:scale(1); }
-  50% { opacity:0.9; transform:scale(1.1); }
-}
 
 /* ============ COMBO INDICATOR ============ */
 .combo-wrap {

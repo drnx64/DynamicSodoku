@@ -102,23 +102,6 @@ function updateNumPad() {
   const numPad = document.getElementById('numPad');
   if (!numPad) return;
 
-  const valid = new Set();
-  if (state.selectedCell && !state.won && !state.gameOver) {
-    const [sr, sc] = state.selectedCell;
-    if (!state.board[sr][sc] || state.givens[sr]?.[sc]) {
-      const used = new Set();
-      for (let i = 0; i < 9; i++) {
-        if (state.board[sr][i]) used.add(state.board[sr][i]);
-        if (state.board[i][sc]) used.add(state.board[i][sc]);
-      }
-      const br = Math.floor(sr / 3) * 3, bc = Math.floor(sc / 3) * 3;
-      for (let r = br; r < br + 3; r++)
-        for (let c2 = bc; c2 < bc + 3; c2++)
-          if (state.board[r][c2]) used.add(state.board[r][c2]);
-      for (let n = 1; n <= 9; n++) { if (!used.has(n) && counts[n] > 0) valid.add(n); }
-    }
-  }
-
   numPad.querySelectorAll('button').forEach((btn, i) => {
     const n = i + 1;
     const rem = btn.querySelector('.remaining');
@@ -127,7 +110,6 @@ function updateNumPad() {
       rem.classList.toggle('zero', counts[n] <= 0);
     }
     btn.classList.toggle('placed', counts[n] <= 0);
-    btn.classList.toggle('numpad-valid', valid.has(n));
     if (rem) rem.style.display = state.settings.showRemaining ? '' : 'none';
   });
 }
@@ -150,12 +132,18 @@ function updateUndoRedo() {
   const undo = document.getElementById('undoBtn');
   const redo = document.getElementById('redoBtn');
   const hint = document.getElementById('hintBtn');
+  const erase = document.getElementById('eraseBtn');
   if (!undo || !redo || !hint) return;
   const undoCount = state.historyIdx + 1;
   const redoCount = state.history.length - state.historyIdx - 1;
 
   undo.disabled = state.historyIdx < 0;
   redo.disabled = state.historyIdx >= state.history.length - 1;
+
+  if (erase) {
+    const sc = state.selectedCell;
+    erase.disabled = !sc || (state.givens[sc[0]]?.[sc[1]] ?? false);
+  }
 
   let undoBadge = undo.querySelector('.action-badge');
   let redoBadge = redo.querySelector('.action-badge');
@@ -234,6 +222,12 @@ function setupInput() {
   if (undoBtn) undoBtn.addEventListener('click', () => { log('[ui] click: undoBtn'); undo(); });
   const redoBtn = document.getElementById('redoBtn');
   if (redoBtn) redoBtn.addEventListener('click', () => { log('[ui] click: redoBtn'); redo(); });
+  const eraseBtn = document.getElementById('eraseBtn');
+  if (eraseBtn) eraseBtn.addEventListener('click', () => {
+    log('[ui] click: eraseBtn');
+    if (!state.selectedCell) return;
+    placeNumber(state.selectedCell[0], state.selectedCell[1], 0);
+  });
   const notesBtn = document.getElementById('notesBtn');
   if (notesBtn) {
     notesBtn.addEventListener('click', () => { state.notesMode = !state.notesMode; log('[ui] click: notesBtn', { notesMode: state.notesMode }); updateNotesBtn(); });
