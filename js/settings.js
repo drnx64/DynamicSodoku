@@ -75,6 +75,44 @@ function setupSettings() {
   if (!container) { log('[settings] WARN: #settingsPageContent not found'); return; }
   container.innerHTML = '';
 
+  // Theme selector section
+  const themeSection = document.createElement('div');
+  themeSection.className = 'settings-section';
+  const themeHeader = document.createElement('div');
+  themeHeader.className = 'settings-category-header';
+  themeHeader.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24"><use href="#ico-palette"/></svg> Theme';
+  themeSection.appendChild(themeHeader);
+  const themeRow = document.createElement('div');
+  themeRow.className = 'setting-row';
+  const themeOptions = document.createElement('div');
+  themeOptions.className = 'theme-options';
+  const themes = [
+    { id: 'default', label: 'Default', style: 'linear-gradient(135deg,#f0f2f5,#fff)' },
+    { id: 'ocean', label: 'Ocean', style: 'linear-gradient(135deg,#e8f4f8,#fff)' },
+    { id: 'forest', label: 'Forest', style: 'linear-gradient(135deg,#ecfdf5,#fff)' },
+    { id: 'sunset', label: 'Sunset', style: 'linear-gradient(135deg,#fff1f2,#fff)' },
+    { id: 'midnight', label: 'Midnight', style: 'linear-gradient(135deg,#1e293b,#0f172a);color:#e2e8f0' },
+  ];
+  const currentTheme = state.settings.colorTheme || 'default';
+  for (const t of themes) {
+    const btn = document.createElement('button');
+    btn.className = 'theme-option' + (t.id === currentTheme ? ' active' : '');
+    btn.dataset.theme = t.id;
+    btn.style.cssText = 'background:' + t.style;
+    btn.textContent = t.label;
+    btn.addEventListener('click', () => {
+      themeOptions.querySelectorAll('.theme-option').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.settings.colorTheme = t.id;
+      applySettings();
+      saveSettings();
+    });
+    themeOptions.appendChild(btn);
+  }
+  themeRow.appendChild(themeOptions);
+  themeSection.appendChild(themeRow);
+  container.appendChild(themeSection);
+
   for (const cat of SETTINGS_CATEGORIES) {
     const section = document.createElement('div');
     section.className = 'settings-section';
@@ -186,9 +224,9 @@ function setupSettings() {
   const devLinks = document.createElement('div');
   devLinks.className = 'dev-links';
   const links = [
-    { label: 'Telegram', url: 'https://t.me/drnx64', icon: '💬' },
-    { label: 'Facebook Messenger', url: 'https://m.me/drnx64', icon: '💙' },
-    { label: 'GitHub', url: 'https://github.com/drnx64', icon: '🐙' },
+    { label: 'Telegram', url: 'https://t.me/drnx64', icon: 'ico-send' },
+    { label: 'Facebook Messenger', url: 'https://m.me/drnx64', icon: 'ico-message' },
+    { label: 'GitHub', url: 'https://github.com/drnx64', icon: 'ico-code' },
   ];
   for (const link of links) {
     const a = document.createElement('a');
@@ -196,7 +234,7 @@ function setupSettings() {
     a.target = '_blank';
     a.rel = 'noopener';
     a.className = 'dev-link';
-    a.innerHTML = '<span style="font-size:16px;">' + link.icon + '</span> @drnx64 <span style="margin-left:auto;color:var(--text-muted);font-size:11px;">' + link.label + '</span>';
+    a.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" style="vertical-align:middle;"><use href="#' + link.icon + '"/></svg> @drnx64 <span style="margin-left:auto;color:var(--text-muted);font-size:11px;">' + link.label + '</span>';
     devLinks.appendChild(a);
   }
   aboutSection.appendChild(devLinks);

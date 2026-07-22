@@ -13,12 +13,14 @@ const state = {
   history: [], historyIdx: -1,
   selectedCell: null, notesMode: false,
   timer: 0, timerRunning: false, timerInterval: null,
-  mistakes: 0, hintsUsed: 0, started: false,
+  mistakes: 0, hintsUsed: 0, hintsRemaining: 3, started: false,
   difficulty: 'easy', gameOver: false, won: false,
   isDaily: false, gameMode: 'normal',
   currentLevel: 1,
   notesUsed: false,
   combo: 0, maxCombo: 0,
+  countdownMode: false, countdownTime: 0,
+  secondChanceUsed: false,
   _retryData: null,
 };
 state.settings = {};
@@ -109,7 +111,7 @@ function placeNumber(row, col, num) {
     if (boardWrap) { boardWrap.classList.remove('mistake-shake'); void boardWrap.offsetWidth; boardWrap.classList.add('mistake-shake'); }
     const toast = document.getElementById('toast');
     if (toast) {
-      toast.innerHTML = '<span style="color:#ef4444;font-weight:700;">✗ Wrongly placed!</span>';
+      toast.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><use href="#ico-x"/></svg><span style="color:#ef4444;font-weight:700;">Wrongly placed!</span>';
       toast.classList.add('open');
       setTimeout(() => toast.classList.remove('open'), 2000);
     }
@@ -197,6 +199,10 @@ function giveHint() {
   log('[game] giveHint() called', { gameOver: state.gameOver, won: state.won });
   if (state.gameOver) { log('[game] giveHint: blocked - game over'); return; }
   if (state.won) { log('[game] giveHint: blocked - already won'); return; }
+  if (state.hintsRemaining <= 0) {
+    showHintShopModal();
+    return;
+  }
   const hint = findHint();
   if (!hint) { log('[game] giveHint: no hint found'); return; }
   const { row, col, technique, desc } = hint;
@@ -220,6 +226,8 @@ function giveHint() {
       log('[game] giveHint: hint counted', { totalHints: state.hintsUsed });
     }
     state._hintCell = null;
+    state.hintsRemaining--;
+    updateBadges();
     if (!state.started) { state.started = true; startTimer(); }
     state.combo++;
     if (state.combo > state.maxCombo) state.maxCombo = state.combo;
@@ -236,6 +244,37 @@ function giveHint() {
     showHintToast(technique, desc);
     playSound('place');
   }
+}
+
+function showHintShopModal() {
+  log('[game] showHintShopModal()');
+  const modal = document.getElementById('hintShopOverlay');
+  if (!modal) return;
+  const buyBtn = document.getElementById('hintShopBuy');
+  const cancelBtn = document.getElementById('hintShopCancel');
+  const xpDisplay = document.getElementById('hintShopXp');
+  const buyCost = 50;
+  if (xpDisplay) xpDisplay.textContent = String(stats.totalXp);
+  modal.classList.add('open');
+  if (buyBtn) {
+    buyBtn.onclick = () => {
+      if (stats.totalXp >= buyCost) {
+        const prevXp = stats.totalXp;
+        stats.totalXp -= buyCost;
+        state.hintsRemaining += 3;
+        stats.hintsBought = (stats.hintsBought || 0) + 3;
+        saveStats();
+        checkRankDown(prevXp);
+        modal.classList.remove('open');
+        updateBadges();
+        playSound('place');
+        giveHint();
+      } else {
+        showToast('Not enough XP!');
+      }
+    };
+  }
+  if (cancelBtn) cancelBtn.onclick = () => modal.classList.remove('open');
 }
 
 function showHintToast(technique, desc) {
@@ -275,7 +314,54 @@ function gameOver() {
   state.timerRunning = false;
   if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
   render();
-  clearGame();
+}
+
+function useSecondChance() {
+  log('[game] useSecondChance()');
+  state.mistakes = 0;
+  state.gameOver = false;
+  state.secondChanceUsed = true;
+  document.getElementById('mistakes').textContent = '0';
+  document.getElementById('retryOverlay')?.classList.remove('open');
+  if (state.countdownMode && state.timer <= 0) {
+    state.timer = state.countdownTime;
+  }
+  if (state.countdownMode && state.timer <= 0) return;
+  document.getElementById('timer').textContent = formatTime(state.timer);
+  render();
+  startTimer();
+}
+
+function getSecondChancesLeft() {
+  const today = todayStr();
+  try {
+    const raw = localStorage.getItem('sudoku_second_chances');
+    const data = raw ? JSON.parse(raw) : {};
+    if (data.date !== today) return 3;
+    return Math.max(0, 3 - (data.used || 0));
+  } catch(e) { return 3; }
+}
+
+function useSecondChanceSlot() {
+  const today = todayStr();
+  try {
+    const raw = localStorage.getItem('sudoku_second_chances');
+    const data = raw ? JSON.parse(raw) : { date: today, used: 0 };
+    if (data.date !== today) { data.date = today; data.used = 0; }
+    data.used = (data.used || 0) + 1;
+    localStorage.setItem('sudoku_second_chances', JSON.stringify(data));
+  } catch(e) {}
+}
+
+function earnSecondChance() {
+  const today = todayStr();
+  try {
+    const raw = localStorage.getItem('sudoku_second_chances');
+    const data = raw ? JSON.parse(raw) : { date: today, used: 0 };
+    if (data.date !== today) { data.date = today; data.used = 0; }
+    data.used = Math.max(0, (data.used || 0) - 1);
+    localStorage.setItem('sudoku_second_chances', JSON.stringify(data));
+  } catch(e) {}
 }
 
 function startTimer() {
@@ -283,10 +369,23 @@ function startTimer() {
   log('[game] startTimer()');
   state.timerRunning = true;
   state.timerInterval = setInterval(() => {
-    state.timer++;
+    if (state.countdownMode) {
+      state.timer--;
+      if (state.timer <= 0) {
+        state.timer = 0;
+        document.getElementById('timer').textContent = formatTime(0);
+        clearInterval(state.timerInterval); state.timerInterval = null;
+        state.timerRunning = false;
+        gameOver();
+        showRetryOverlay();
+        return;
+      }
+    } else {
+      state.timer++;
+    }
     document.getElementById('timer').textContent = formatTime(state.timer);
     const tw = document.getElementById('timerWrap');
-    if (tw) tw.classList.toggle('timer-warn', state.timer >= 300);
+    if (tw) tw.classList.toggle('timer-warn', state.countdownMode ? state.timer <= 300 : state.timer >= 300);
   }, 1000);
 }
 
@@ -310,8 +409,42 @@ function showRetryOverlay() {
   retryBtn.onclick = () => {
     log('[game] retryBtn clicked');
     retryOverlay.classList.remove('open');
+    clearGame();
     retryLevel();
   };
+
+  const scBtn = document.getElementById('retrySecondChance');
+  const scInfo = document.getElementById('retrySecondChanceInfo');
+  if (scBtn && scInfo) {
+    const left = getSecondChancesLeft();
+    if (left > 0) {
+      scBtn.disabled = false;
+      scBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><use href="#ico-refresh"/></svg> Use Second Chance (' + left + ' left)';
+      scInfo.textContent = 'Continue playing without losing progress';
+      scBtn.onclick = () => {
+        log('[game] second chance clicked');
+        useSecondChanceSlot();
+        useSecondChance();
+      };
+    } else {
+      const cost = 150;
+      scBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><use href="#ico-gift"/></svg> Buy 3 for ' + cost + ' XP (' + stats.totalXp + ' XP)';
+      scInfo.textContent = 'No daily second chances left';
+      scBtn.disabled = stats.totalXp < cost;
+      scBtn.onclick = () => {
+        log('[game] buy second chance clicked');
+        if (stats.totalXp >= cost) {
+          const prevXp = stats.totalXp;
+          stats.totalXp -= cost;
+          saveStats();
+          checkRankDown(prevXp);
+          useSecondChance();
+        } else {
+          showToast('Not enough XP!');
+        }
+      };
+    }
+  }
 }
 
 function retryLevel() {
@@ -321,11 +454,13 @@ function retryLevel() {
   state.history = []; state.historyIdx = -1;
   state.selectedCell = null; state.notesMode = false;
   if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
-  state.timer = 0; state.timerRunning = false;
-  state.mistakes = 0; state.hintsUsed = 0; state.started = false;
+  state.timer = state.countdownMode ? state.countdownTime : 0; state.timerRunning = false;
+  state.mistakes = 0; state.hintsUsed = 0; state.hintsRemaining = 3; state.started = false;
   state.gameOver = false; state.won = false;
+  state.combo = 0; state.maxCombo = 0;
+  state.secondChanceUsed = false;
   state._hintCell = null; state._lastMistakeCell = null;
-  document.getElementById('timer').textContent = '00:00';
+  document.getElementById('timer').textContent = formatTime(state.timer);
   document.getElementById('mistakes').textContent = '0';
   updateUndoRedo();
   render({ entering: true });
@@ -450,12 +585,13 @@ function initNewGame(difficulty, isDaily, startLevel) {
     state.notes = Array.from({length: 9}, () => Array.from({length: 9}, () => new Set()));
     state.history = []; state.historyIdx = -1;
     state.selectedCell = null; state.notesMode = false;
-    state.timer = 0; state.timerRunning = false;
-    state.mistakes = 0; state.hintsUsed = 0; state.started = false;
+    state.timer = state.countdownMode ? state.countdownTime : 0; state.timerRunning = false;
+    state.mistakes = 0; state.hintsUsed = 0; state.hintsRemaining = 3; state.started = false;
     state.gameOver = false; state.won = false; state.notesUsed = false;
     state.combo = 0; state.maxCombo = 0;
+    state.secondChanceUsed = false;
     state._retryData = null; state._lastMistakeCell = null;
-    document.getElementById('timer').textContent = '00:00';
+    document.getElementById('timer').textContent = formatTime(state.countdownMode ? state.countdownTime : 0);
     document.getElementById('mistakes').textContent = '0';
     document.getElementById('gameLabel').textContent = state.isDaily ? 'Daily Challenge' : capitalize(state.difficulty);
     document.getElementById('winOverlay').classList.remove('open');
@@ -517,6 +653,27 @@ function hideCombo() {
   if (wrap) wrap.style.display = 'none';
 }
 
+function checkRankDown(prevXp) {
+  const prevRank = getRank(prevXp);
+  const newRank = getRank(stats.totalXp);
+  if (newRank.name !== prevRank.name) {
+    showRankDownNotification(prevRank.name, newRank.name);
+  }
+}
+
+function showRankDownNotification(oldRank, newRank) {
+  const overlay = document.createElement('div');
+  overlay.className = 'rank-down-overlay';
+  overlay.innerHTML =
+    '<div class="rank-down-card">' +
+      '<div class="rank-down-icon"><svg width="48" height="48" viewBox="0 0 24 24"><use href="#ico-sad"/></svg></div>' +
+      '<h2>Rank Down!</h2>' +
+      '<p>You dropped from <strong>' + oldRank + '</strong> to <strong>' + newRank + '</strong></p>' +
+      '<button class="rank-down-ok" onclick="this.parentElement.parentElement.remove()">OK</button>' +
+    '</div>';
+  document.body.appendChild(overlay);
+}
+
 function triggerWinExplosion(callback) {
   const overlay = document.getElementById('explosionOverlay');
   if (!overlay) { callback(); return; }
@@ -527,4 +684,12 @@ function triggerWinExplosion(callback) {
     document.body.classList.remove('body-shake');
     callback();
   }, 1000);
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  if (!toast) return;
+  toast.textContent = msg;
+  toast.classList.add('open');
+  setTimeout(() => toast.classList.remove('open'), 2000);
 }

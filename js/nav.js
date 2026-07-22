@@ -115,6 +115,10 @@ function setupNavigation() {
         log('[nav] click: diffCard', { diff });
         if (!diff) { log('[nav] WARN: diff card missing data-diff'); return; }
         state.difficulty = diff;
+        const sel = document.querySelector('#countdownOptions .countdown-option.active');
+        const cdTime = sel ? parseInt(sel.dataset.time, 10) : 0;
+        state.countdownMode = cdTime > 0;
+        state.countdownTime = cdTime;
         initNewGame(diff, false);
       });
     });
@@ -197,6 +201,15 @@ function setupNavigation() {
       }
     });
   }
+
+  const cdOptions = document.querySelectorAll('#countdownOptions .countdown-option');
+  cdOptions.forEach(opt => {
+    opt.addEventListener('click', () => {
+      cdOptions.forEach(o => o.classList.remove('active'));
+      opt.classList.add('active');
+      opt.querySelector('input').checked = true;
+    });
+  });
 }
 
 function showConfirm(msg, callback) {

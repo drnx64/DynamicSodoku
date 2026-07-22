@@ -621,6 +621,10 @@
   border-radius: var(--radius-sm);
   cursor: pointer;
 }
+.retry-second-chance { width:100%; padding:10px; margin-top:6px; border:2px solid var(--success); border-radius:var(--radius-sm); font-size:13px; font-weight:700; cursor:pointer; background:transparent; color:var(--success); transition:all 0.15s; display:flex; align-items:center; justify-content:center; gap:4px; }
+.retry-second-chance:hover { background:rgba(22,163,74,0.08); }
+.retry-second-chance:disabled { opacity:0.4; cursor:not-allowed; border-color:var(--text-muted); color:var(--text-muted); }
+.retry-second-chance-info { font-size:11px; color:var(--text-muted); margin-top:4px; text-align:center; }
 
 .level-overlay {
   display: none;

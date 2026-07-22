@@ -76,6 +76,9 @@ function showWinDialog() {
   if (state.timer < stats.bestTimes[state.difficulty]) stats.bestTimes[state.difficulty] = state.timer;
   if (streak.count > stats.bestStreak) stats.bestStreak = streak.count;
   if (state.mistakes === 0) stats.flawlessCount = (stats.flawlessCount || 0) + 1;
+  if (state.mistakes === 0) earnSecondChance();
+  if (state.isDaily) earnSecondChance();
+  if (state.currentLevel % 5 === 0 && !state.isDaily) earnSecondChance();
   if (state.hintsUsed === 0) stats.puzzlesNoHints = (stats.puzzlesNoHints || 0) + 1;
   saveStats();
 
@@ -176,7 +179,7 @@ function showMilestoneRewardToast(m) {
   if (!toast) { log('[win] WARN: #toast not found'); return; }
   toast.innerHTML =
     '<div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border:2px solid var(--xp-gold);border-radius:12px;padding:14px 20px;text-align:center;box-shadow:0 8px 32px rgba(251,191,36,0.3);">' +
-    '<div style="font-size:28px;margin-bottom:4px;">🎉</div>' +
+    '<div style="font-size:28px;margin-bottom:4px;"><svg width="28" height="28" viewBox="0 0 24 24"><use href="#ico-party"/></svg></div>' +
     '<div style="font-size:15px;font-weight:800;color:var(--xp-gold);">' + m.label + '</div>' +
     '<div style="font-size:13px;color:#ccc;margin-top:2px;">+' + m.xp + ' XP Bonus!</div>' +
     '</div>';

@@ -39,9 +39,12 @@ function saveGame() {
       notes: state.notes.map(r => r.map(s => [...s])),
       history: state.history, historyIdx: state.historyIdx,
       timer: state.timer, mistakes: state.mistakes, hintsUsed: state.hintsUsed,
+      hintsRemaining: state.hintsRemaining,
       difficulty: state.difficulty, gameOver: state.gameOver, won: state.won,
       started: state.started, selectedCell: state.selectedCell, isDaily: state.isDaily,
       notesUsed: state.notesUsed, currentLevel: state.currentLevel,
+      countdownMode: state.countdownMode, countdownTime: state.countdownTime,
+      secondChanceUsed: state.secondChanceUsed,
     };
     localStorage.setItem(LS.game, JSON.stringify(data));
     if (state.isDaily) saveDailyGame();
@@ -58,11 +61,13 @@ function loadGame() {
     state.notes = data.notes.map(r => r.map(s => new Set(s)));
     state.history = data.history; state.historyIdx = data.historyIdx;
     state.timer = data.timer; state.mistakes = data.mistakes || 0;
-    state.hintsUsed = data.hintsUsed || 0; state.difficulty = data.difficulty || 'easy';
+    state.hintsUsed = data.hintsUsed || 0; state.hintsRemaining = (data.hintsRemaining ?? 3); state.difficulty = data.difficulty || 'easy';
     state.gameOver = data.gameOver || false; state.won = data.won || false;
     state.started = data.started || false; state.selectedCell = data.selectedCell || null;
     state.isDaily = data.isDaily || false; state.notesUsed = data.notesUsed || false;
     state.currentLevel = data.currentLevel || 1;
+    state.countdownMode = data.countdownMode || false; state.countdownTime = data.countdownTime || 0;
+    state.secondChanceUsed = data.secondChanceUsed || false;
     state.gameMode = data.isDaily ? 'daily' : 'normal';
     log('[storage] game loaded', { difficulty: state.difficulty, timer: state.timer, mistakes: state.mistakes, won: state.won });
     return true;

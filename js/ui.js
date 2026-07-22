@@ -161,11 +161,15 @@ function updateUndoRedo() {
   } else if (redoBadge) { redoBadge.style.display = 'none'; }
 
   let hintBadge = hint.querySelector('.action-badge');
-  if (state.hintsUsed > 0) {
+  if (state.hintsRemaining > 0) {
     if (!hintBadge) { hintBadge = document.createElement('span'); hintBadge.className = 'action-badge'; hint.appendChild(hintBadge); }
-    hintBadge.textContent = state.hintsUsed;
+    hintBadge.textContent = state.hintsRemaining;
     hintBadge.style.display = '';
   } else if (hintBadge) { hintBadge.style.display = 'none'; }
+}
+
+function updateBadges() {
+  updateUndoRedo();
 }
 
 // ============================================================
@@ -245,10 +249,13 @@ function setupInput() {
   }
 
   function togglePause() {
+    if (!state.started || state.won || state.gameOver) { log('[ui] togglePause: blocked', { started: state.started, won: state.won, gameOver: state.gameOver }); return; }
     if (state.timerRunning) {
       pauseTimer();
-    } else {
+    } else if (!state.timerInterval) {
       startTimer();
+    } else {
+      return;
     }
     document.getElementById('timerWrap').classList.toggle('paused', !state.timerRunning);
     document.getElementById('page-game')?.classList.toggle('paused', !state.timerRunning);
@@ -270,11 +277,18 @@ function setupInput() {
     gamePauseBtn.addEventListener('click', togglePause);
     document.getElementById('pauseResumeBtn')?.addEventListener('click', togglePause);
     document.getElementById('pauseQuitBtn')?.addEventListener('click', () => {
+      log('[ui] click: pauseQuitBtn');
       document.getElementById('pauseOverlay')?.classList.remove('open');
+      document.getElementById('page-game')?.classList.remove('paused');
+      document.getElementById('timerWrap')?.classList.remove('paused');
+      if (state.timerRunning && !state.won && !state.gameOver) {
+        pauseTimer();
+      }
       if (state.started && !state.won && !state.gameOver) {
         clearGame();
       }
       showPage('page-menu');
+      updateMenuUI();
     });
   }
 
