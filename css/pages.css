@@ -436,9 +436,27 @@
   overflow-y: auto;
   padding-bottom: 20px;
 }
-.settings-section {
-  margin-bottom: 16px;
+.settings-section { margin-bottom: 16px; }
+.settings-section-primary { margin-bottom: 20px; }
+.settings-section-primary .settings-category-header {
+  font-size: 14px; padding: 16px 0 8px;
 }
+.settings-section-primary .setting-label { font-size: 15px; }
+.settings-section-primary .toggle { width: 52px; height: 28px; }
+.settings-section-primary .toggle::after { width: 22px; height: 22px; }
+.settings-section-secondary { margin-bottom: 14px; }
+.settings-section-secondary .settings-category-header {
+  font-size: 12px; padding: 10px 0 4px;
+}
+.settings-section-tertiary { margin-bottom: 10px; opacity: 0.75; }
+.settings-section-tertiary .settings-category-header {
+  font-size: 11px; padding: 8px 0 2px;
+  border-bottom-width: 0;
+}
+.settings-section-tertiary .setting-label { font-size: 12px; }
+.settings-section-tertiary .toggle { width: 36px; height: 20px; }
+.settings-section-tertiary .toggle::after { width: 16px; height: 16px; }
+.settings-section-tertiary .setting-row { padding: 4px 0; }
 .settings-category-header {
   display: flex;
   align-items: center;
@@ -468,12 +486,16 @@
 
 .countdown-section { padding: 12px 16px 16px; }
 .countdown-label { font-size:13px; font-weight:600; color:var(--text-muted); margin-bottom:8px; }
-.countdown-options { display:flex; gap:6px; }
-.countdown-option { flex:1; cursor:pointer; }
+.countdown-options { display:flex; gap:6px; flex-wrap:wrap; }
+.countdown-option { flex:1; cursor:pointer; min-width:54px; }
 .countdown-option input { display:none; }
 .countdown-option span { display:flex; align-items:center; justify-content:center; padding:8px 6px; font-size:12px; font-weight:600; border-radius:var(--radius-sm); background:var(--btn-bg); color:var(--text-muted); transition:all 0.15s; text-align:center; border:2px solid transparent; }
 .countdown-option.active span { border-color:var(--accent); color:var(--accent); background:var(--accent-glow); }
 .countdown-option:hover span { background:var(--btn-hover); }
+.countdown-custom { display:flex; align-items:center; gap:8px; margin-top:8px; }
+.countdown-custom-input { width:80px; padding:8px 10px; font-size:14px; font-weight:600; border:2px solid var(--border); border-radius:var(--radius-sm); background:var(--card-bg); color:var(--text); outline:none; font-variant-numeric:tabular-nums; }
+.countdown-custom-input:focus { border-color:var(--accent); }
+.countdown-custom-label { font-size:13px; color:var(--text-muted); font-weight:500; }
 
 .theme-options { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
 .theme-option { padding:8px 4px; border:2px solid var(--border); border-radius:var(--radius-sm); font-size:11px; font-weight:600; cursor:pointer; transition:all 0.15s; color:var(--text); }
@@ -532,3 +554,114 @@
   cursor: pointer;
 }
 .rank-down-ok:hover { opacity: 0.85; }
+
+/* daily entry animation - matches level overlay style */
+.daily-entry-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 300;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.daily-entry-overlay.open { display: flex; }
+
+.daily-entry-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(251,191,36,0.12) 0%, rgba(245,158,11,0.05) 40%, transparent 70%);
+  animation: glowPulse 1.2s ease;
+  pointer-events: none;
+}
+
+.daily-entry-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(2px 2px at 15% 25%, rgba(255,255,255,0.5), transparent),
+    radial-gradient(2px 2px at 35% 65%, rgba(251,191,36,0.5), transparent),
+    radial-gradient(2px 2px at 55% 8%, rgba(255,255,255,0.4), transparent),
+    radial-gradient(2px 2px at 75% 75%, rgba(236,72,153,0.4), transparent),
+    radial-gradient(2px 2px at 92% 35%, rgba(251,191,36,0.5), transparent),
+    radial-gradient(2px 2px at 8% 85%, rgba(255,255,255,0.4), transparent),
+    radial-gradient(2px 2px at 68% 15%, rgba(245,158,11,0.4), transparent),
+    radial-gradient(2px 2px at 45% 92%, rgba(236,72,153,0.3), transparent),
+    radial-gradient(3px 3px at 85% 55%, rgba(251,191,36,0.3), transparent),
+    radial-gradient(3px 3px at 22% 45%, rgba(255,255,255,0.3), transparent),
+    radial-gradient(2px 2px at 60% 40%, rgba(251,191,36,0.5), transparent),
+    radial-gradient(2px 2px at 40% 30%, rgba(236,72,153,0.4), transparent);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  animation: particleDrift 1.2s ease;
+  pointer-events: none;
+}
+
+.daily-entry-card {
+  position: relative;
+  text-align: center;
+  animation: cardMain 1.2s ease forwards;
+  transform-origin: center center;
+}
+
+.daily-entry-card::before,
+.daily-entry-card::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 160px; height: 160px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.daily-entry-card::before {
+  border: 1px solid rgba(251,191,36,0.15);
+  animation: ringExpand 1.2s ease;
+}
+
+.daily-entry-card::after {
+  background: radial-gradient(circle, rgba(251,191,36,0.06) 0%, transparent 70%);
+  animation: glowRing 1.2s ease;
+}
+
+.daily-entry-label {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 10px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 2px;
+  animation: labelReveal 0.7s ease;
+  transform-origin: center;
+}
+
+.daily-entry-day {
+  font-size: 120px;
+  font-weight: 900;
+  line-height: 1;
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 40%, #fbbf24 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: numberBurst 0.9s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-origin: center;
+  filter: drop-shadow(0 0 50px rgba(251,191,36,0.4)) drop-shadow(0 0 100px rgba(245,158,11,0.2));
+}
+
+/* settings premium section */
+.settings-premium {
+  border: 1.5px solid var(--xp-gold) !important;
+  background: linear-gradient(135deg, var(--card-bg), rgba(251,191,36,0.06));
+}
+.settings-premium .settings-category-header { color: var(--xp-gold); }
+.premium-badge {
+  font-size: 11px; font-weight: 700;
+  color: #fff; background: var(--xp-gold);
+  padding: 4px 10px; border-radius: 12px;
+  letter-spacing: 0.3px;
+}

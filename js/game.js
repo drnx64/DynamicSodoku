@@ -7,6 +7,13 @@ function emptyGrid() {
 function emptyNotes() {
   return Array.from({length: 9}, () => Array.from({length: 9}, () => new Set()));
 }
+function toRoman(n) {
+  const vals = [1000,900,500,400,100,90,50,40,10,9,5,4,1];
+  const romans = ['M','CM','D','CD','C','XC','L','XL','X','IX','V','IV','I'];
+  let r = '';
+  for (let i = 0; i < vals.length; i++) while (n >= vals[i]) { r += romans[i]; n -= vals[i]; }
+  return r;
+}
 
 const state = {
   solution: emptyGrid(), givens: emptyGrid(), board: emptyGrid(), notes: emptyNotes(),
@@ -92,15 +99,12 @@ function placeNumber(row, col, num) {
     if (!state.started) { state.started = true; startTimer(); }
     render({ shakeCell: [row, col], mistakeCell: [row, col] });
     saveGame(); playSound('error');
-    haptic([30, 50, 30]);
+    haptic([30, 50, 30, 60, 40]);
     const boardWrap = document.getElementById('boardWrap');
     if (boardWrap) { boardWrap.classList.remove('mistake-shake'); void boardWrap.offsetWidth; boardWrap.classList.add('mistake-shake'); }
-    const toast = document.getElementById('toast');
-    if (toast) {
-      toast.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><use href="#ico-x"/></svg><span style="color:#ef4444;font-weight:700;">Wrongly placed!</span>';
-      toast.classList.add('open');
-      setTimeout(() => toast.classList.remove('open'), 2000);
-    }
+    document.body.classList.remove('body-shake'); void document.body.offsetWidth; document.body.classList.add('body-shake');
+    const mo = document.getElementById('mistakeOverlay');
+    if (mo) { mo.classList.remove('open'); void mo.offsetWidth; mo.classList.add('open'); setTimeout(() => { mo.classList.remove('open'); document.body.classList.remove('body-shake'); }, 1200); }
     if (state.mistakes >= 3) {
       log('[game] placeNumber: 3 mistakes reached');
       gameOver();
@@ -549,8 +553,19 @@ function initNewGame(difficulty, isDaily, startLevel) {
     saveGame();
     playSound('place');
 
+    if (isDaily) {
+      const dailyOverlay = document.getElementById('dailyEntryOverlay');
+      const dayEl = document.getElementById('dailyEntryDay');
+      if (dayEl) {
+        const dailiesDone = stats.gamesByMode?.daily || 0;
+        dayEl.textContent = 'DAY ' + toRoman(dailiesDone + 1);
+      }
+      if (dailyOverlay) dailyOverlay.classList.add('open');
+    }
+
     setTimeout(() => {
       if (levelOverlay) levelOverlay.classList.remove('open');
+      document.getElementById('dailyEntryOverlay')?.classList.remove('open');
       document.getElementById('gameHeader')?.classList.add('game-enter');
       document.getElementById('boardWrap')?.classList.add('game-enter');
       document.getElementById('numPad')?.classList.add('game-enter');
@@ -561,7 +576,7 @@ function initNewGame(difficulty, isDaily, startLevel) {
 
   setTimeout(puzzleReady, 50);
   if (levelNum) levelNum.textContent = state.currentLevel;
-  if (levelOverlay) levelOverlay.classList.add('open');
+  if (!state.isDaily && levelOverlay) levelOverlay.classList.add('open');
 }
 
 function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }

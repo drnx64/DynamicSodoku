@@ -124,7 +124,7 @@ function updateTimerIcon() {
 function updateNotesBtn() {
   const notesBtn = document.getElementById('notesBtn');
   if (notesBtn) notesBtn.classList.toggle('active', state.notesMode);
-  const autoBtn = document.getElementById('autoBtn');
+  const autoBtn = document.getElementById('gameAutoBtn');
   if (autoBtn) autoBtn.classList.toggle('active', state.settings.autoCandidates);
 }
 
@@ -226,13 +226,26 @@ function setupInput() {
   }
   const hintBtn = document.getElementById('hintBtn');
   if (hintBtn) hintBtn.addEventListener('click', () => { log('[ui] click: hintBtn'); giveHint(); });
-  const autoBtn = document.getElementById('autoBtn');
-  if (autoBtn) {
-    autoBtn.addEventListener('click', () => {
-      state.settings.autoCandidates = !state.settings.autoCandidates;
-      log('[ui] click: autoBtn', { autoCandidates: state.settings.autoCandidates });
+
+  const AUTO_COST = 10;
+  const gameAutoBtn = document.getElementById('gameAutoBtn');
+  if (gameAutoBtn) {
+    gameAutoBtn.addEventListener('click', () => {
+      const wantsOn = !state.settings.autoCandidates;
+      if (wantsOn) {
+        if ((stats.totalXp || 0) < AUTO_COST) {
+          showToast('Not enough XP! (' + AUTO_COST + ' XP required)');
+          return;
+        }
+        stats.totalXp = (stats.totalXp || 0) - AUTO_COST;
+        saveStats();
+        updateMenuUI();
+      }
+      state.settings.autoCandidates = wantsOn;
+      log('[ui] click: gameAutoBtn', { autoCandidates: state.settings.autoCandidates });
       render();
       saveSettings();
+      updateNotesBtn();
     });
   }
 

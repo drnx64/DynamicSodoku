@@ -7,10 +7,18 @@ function showPage(id) {
   log('[nav] showPage()', { id, prevPage: _prevPage });
   const target = document.getElementById(id);
   if (!target) { log('[nav] WARN: page element not found', { id }); return; }
-  document.querySelectorAll('.page').forEach(p => {
-    if (p.classList.contains('active')) _prevPage = p.id;
-    p.classList.remove('active');
-  });
+  const current = document.querySelector('.page.active');
+  if (current && current.id === id) return;
+  document.querySelectorAll('.page.exit').forEach(p => p.classList.remove('exit'));
+  if (!current) {
+    _prevPage = id;
+    target.classList.add('active');
+    log('[nav] page shown (no previous)', { id });
+    return;
+  }
+  _prevPage = current.id;
+  current.classList.remove('active');
+  current.classList.add('exit');
   target.classList.add('active');
   if (_prevPage === 'page-game' && id !== 'page-game' && state.timerRunning) {
     pauseTimer();
@@ -20,7 +28,7 @@ function showPage(id) {
       document.getElementById('pauseOverlay')?.classList.add('open');
     }
   }
-  log('[nav] page shown', { id });
+  log('[nav] page transition', { from: _prevPage, to: id });
 }
 
 function goBack() {
@@ -116,7 +124,15 @@ function setupNavigation() {
         if (!diff) { log('[nav] WARN: diff card missing data-diff'); return; }
         state.difficulty = diff;
         const sel = document.querySelector('#countdownOptions .countdown-option.active');
-        const cdTime = sel ? parseInt(sel.dataset.time, 10) : 0;
+        let cdTime = 0;
+        if (sel) {
+          if (sel.dataset.time === 'custom') {
+            const inp = document.getElementById('countdownCustomInput');
+            cdTime = (parseInt(inp?.value, 10) || 1) * 60;
+          } else {
+            cdTime = parseInt(sel.dataset.time, 10);
+          }
+        }
         state.countdownMode = cdTime > 0;
         state.countdownTime = cdTime;
         initNewGame(diff, false);
@@ -208,7 +224,15 @@ function setupNavigation() {
       cdOptions.forEach(o => o.classList.remove('active'));
       opt.classList.add('active');
       opt.querySelector('input').checked = true;
+      const customWrap = document.getElementById('countdownCustom');
+      if (customWrap) customWrap.style.display = opt.dataset.time === 'custom' ? 'flex' : 'none';
     });
+  });
+
+  document.getElementById('countdownCustomInput')?.addEventListener('input', function () {
+    const v = parseInt(this.value, 10);
+    if (v < 1) this.value = 1;
+    if (v > 180) this.value = 180;
   });
 }
 

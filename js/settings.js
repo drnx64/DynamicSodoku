@@ -14,21 +14,6 @@ const DEFAULT_SETTINGS = {
 
 const SETTINGS_CATEGORIES = [
   {
-    name: 'Gameplay',
-    icon: 'ico-target',
-    settings: [
-      { key: 'highlightSame', label: 'Highlight same number' },
-      { key: 'highlightPeers', label: 'Highlight row/column/box' },
-      { key: 'highlightConflicts', label: 'Highlight conflicts' },
-      { key: 'autoCandidates', label: 'Auto-show candidates' },
-      { key: 'showRemaining', label: 'Show remaining counts' },
-      { key: 'mistakeLimit', label: 'Mistake limit (3)' },
-      { key: 'autoClearNotes', label: 'Auto-clear notes' },
-      { key: 'keyboardShortcuts', label: 'Keyboard shortcuts' },
-      { key: 'playerName', label: 'Player name', type: 'text' },
-    ],
-  },
-  {
     name: 'Visuals',
     icon: 'ico-star',
     settings: [
@@ -58,6 +43,20 @@ const SETTINGS_CATEGORIES = [
       ]},
     ],
   },
+  {
+    name: 'Gameplay',
+    icon: 'ico-target',
+    settings: [
+      { key: 'highlightSame', label: 'Highlight same number' },
+      { key: 'highlightPeers', label: 'Highlight row/column/box' },
+      { key: 'highlightConflicts', label: 'Highlight conflicts' },
+      { key: 'showRemaining', label: 'Show remaining counts' },
+      { key: 'mistakeLimit', label: 'Mistake limit (3)' },
+      { key: 'autoClearNotes', label: 'Auto-clear notes' },
+      { key: 'keyboardShortcuts', label: 'Keyboard shortcuts' },
+      { key: 'playerName', label: 'Player name', type: 'text' },
+    ],
+  },
 ];
 
 function haptic(pattern) {
@@ -75,9 +74,9 @@ function setupSettings() {
   if (!container) { log('[settings] WARN: #settingsPageContent not found'); return; }
   container.innerHTML = '';
 
-  // Theme selector section
+  // Theme selector section - primary
   const themeSection = document.createElement('div');
-  themeSection.className = 'settings-section';
+  themeSection.className = 'settings-section settings-section-primary';
   const themeHeader = document.createElement('div');
   themeHeader.className = 'settings-category-header';
   themeHeader.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24"><use href="#ico-palette"/></svg> Theme';
@@ -113,9 +112,11 @@ function setupSettings() {
   themeSection.appendChild(themeRow);
   container.appendChild(themeSection);
 
-  for (const cat of SETTINGS_CATEGORIES) {
+  const tiers = ['settings-section-primary', 'settings-section-secondary', 'settings-section-secondary'];
+  for (let ci = 0; ci < SETTINGS_CATEGORIES.length; ci++) {
+    const cat = SETTINGS_CATEGORIES[ci];
     const section = document.createElement('div');
-    section.className = 'settings-section';
+    section.className = 'settings-section ' + (tiers[ci] || 'settings-section-secondary');
 
     const header = document.createElement('div');
     header.className = 'settings-category-header';
@@ -186,9 +187,60 @@ function setupSettings() {
     container.appendChild(section);
   }
 
-  // Data Management section
+  // Auto-Candidates premium section
+  const autoSection = document.createElement('div');
+  autoSection.className = 'settings-section settings-premium';
+  const autoHeader = document.createElement('div');
+  autoHeader.className = 'settings-category-header';
+  autoHeader.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24"><use href="#ico-zap"/></svg> Auto-Candidates';
+  autoSection.appendChild(autoHeader);
+  const autoDesc = document.createElement('div');
+  autoDesc.className = 'setting-row';
+  autoDesc.innerHTML = '<span class="setting-label">Auto-show candidates</span><span class="premium-badge">10 XP / use</span>';
+  autoSection.appendChild(autoDesc);
+  const autoStatus = document.createElement('div');
+  autoStatus.className = 'setting-row';
+  const currentXp = stats.totalXp || 0;
+  autoStatus.innerHTML =
+    '<span class="setting-label">Your XP</span>' +
+    '<span style="font-weight:700;color:var(--xp-gold);font-size:14px;">' + currentXp + ' XP</span>';
+  autoSection.appendChild(autoStatus);
+  const autoToggleRow = document.createElement('div');
+  autoToggleRow.className = 'setting-row';
+  const autoToggleLabel = document.createElement('span');
+  autoToggleLabel.className = 'setting-label';
+  autoToggleLabel.textContent = 'Active now';
+  const autoToggle = document.createElement('div');
+  autoToggle.className = 'toggle';
+  if (state.settings.autoCandidates) autoToggle.classList.add('on');
+  autoToggle.addEventListener('click', () => {
+    const wantsOn = !state.settings.autoCandidates;
+    if (wantsOn) {
+      if ((stats.totalXp || 0) < 10) {
+        showToast('Not enough XP! (10 XP required)');
+        return;
+      }
+      stats.totalXp = (stats.totalXp || 0) - 10;
+      saveStats();
+      updateMenuUI();
+    }
+    state.settings.autoCandidates = wantsOn;
+    autoToggle.classList.toggle('on', wantsOn);
+    applySettings();
+    saveSettings();
+    render();
+    updateNotesBtn();
+    const xpSpan = autoStatus.querySelector('span:last-child');
+    if (xpSpan) xpSpan.textContent = (stats.totalXp || 0) + ' XP';
+  });
+  autoToggleRow.appendChild(autoToggleLabel);
+  autoToggleRow.appendChild(autoToggle);
+  autoSection.appendChild(autoToggleRow);
+  container.appendChild(autoSection);
+
+  // Data Management section - tertiary
   const dataSection = document.createElement('div');
-  dataSection.className = 'settings-section';
+  dataSection.className = 'settings-section settings-section-tertiary';
   const dataHeader = document.createElement('div');
   dataHeader.className = 'settings-category-header';
   dataHeader.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24"><use href="#ico-download"/></svg> Data';
@@ -208,9 +260,9 @@ function setupSettings() {
   dataSection.appendChild(dataRow);
   container.appendChild(dataSection);
 
-  // Version & About section
+  // Version & About section - tertiary
   const aboutSection = document.createElement('div');
-  aboutSection.className = 'settings-section';
+  aboutSection.className = 'settings-section settings-section-tertiary';
   const aboutHeader = document.createElement('div');
   aboutHeader.className = 'settings-category-header';
   aboutHeader.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24"><use href="#ico-star"/></svg> About';
