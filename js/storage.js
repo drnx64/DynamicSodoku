@@ -13,11 +13,13 @@ const LS = {
 
 function saveSettings() {
   log('[storage] saveSettings()');
-  try { localStorage.setItem(LS.settings, JSON.stringify(state.settings)); } catch(e) { log('[storage] saveSettings error', e); }
+  saveWithVault(LS.settings, state.settings, 'settings');
 }
 function loadSettings() {
   log('[storage] loadSettings()');
-  try { const raw = localStorage.getItem(LS.settings); if (raw) Object.assign(state.settings, JSON.parse(raw)); else log('[storage] no settings found'); } catch(e) { log('[storage] loadSettings error', e); }
+  const data = loadWithVault(LS.settings, 'settings', null);
+  if (data) Object.assign(state.settings, data);
+  else log('[storage] no settings found');
 }
 
 function clearGame() {
@@ -46,7 +48,7 @@ function saveGame() {
       countdownMode: state.countdownMode, countdownTime: state.countdownTime,
       secondChanceUsed: state.secondChanceUsed,
     };
-    localStorage.setItem(LS.game, JSON.stringify(data));
+    saveWithVault(LS.game, data, 'game');
     if (state.isDaily) saveDailyGame();
   } catch(e) { log('[storage] saveGame error', e); }
 }
@@ -88,15 +90,14 @@ function saveDailyGame() {
       started: state.started, selectedCell: state.selectedCell,
       notesUsed: state.notesUsed, currentLevel: state.currentLevel,
     };
-    localStorage.setItem(LS.dailyState, JSON.stringify(data));
+    saveWithVault(LS.dailyState, data, 'dailyState');
   } catch(e) { log('[storage] saveDailyGame error', e); }
 }
 function loadDailyGame() {
   log('[storage] loadDailyGame()');
   try {
-    const raw = localStorage.getItem(LS.dailyState);
-    if (!raw) { log('[storage] no daily game found'); return false; }
-    const data = JSON.parse(raw);
+    const data = loadWithVault(LS.dailyState, 'dailyState', null);
+    if (!data) { log('[storage] no daily game found'); return false; }
     if (data.date !== todayStr()) { log('[storage] daily game is from a different date', { saved: data.date, today: todayStr() }); return false; }
     state.solution = data.solution; state.givens = data.givens; state.board = data.board;
     state.notes = data.notes.map(r => r.map(s => new Set(s)));
@@ -612,12 +613,12 @@ let bonusChallenge = { startDate: null, gamesPlayed: 0, claimed: false, _claimed
 
 function loadBonus() {
   log('[storage] loadBonus()');
-  try { const r = localStorage.getItem(BONUS_KEY); if (r) bonusChallenge = JSON.parse(r); } catch(e) { log('[storage] loadBonus error', e); }
+  bonusChallenge = loadWithVault(BONUS_KEY, 'bonus', bonusChallenge);
   if (!bonusChallenge._claimedMilestones) bonusChallenge._claimedMilestones = [];
 }
 function saveBonus() {
   log('[storage] saveBonus()', { gamesPlayed: bonusChallenge.gamesPlayed, claimed: bonusChallenge.claimed });
-  try { localStorage.setItem(BONUS_KEY, JSON.stringify(bonusChallenge)); } catch(e) { log('[storage] saveBonus error', e); }
+  saveWithVault(BONUS_KEY, bonusChallenge, 'bonus');
 }
 
 function isBonusChallengeActive() {
@@ -677,75 +678,85 @@ function claimBonusReward() {
 
 function loadStats() {
   log('[storage] loadStats()');
-  try {
-    const raw = localStorage.getItem(LS.stats);
-    if (raw) {
-      stats = JSON.parse(raw);
-      const decoded = decodeVault(stats._vault || '');
-      if (decoded) {
-        let tampered = false;
-        const checks = ['totalHintsUsedAll', 'totalUndosUsed', 'totalGames', 'totalXp'];
-        for (const key of checks) {
-          if (decoded[key] !== undefined && decoded[key] !== stats[key]) {
-            log('[storage] stats tampered for', { key, decoded: decoded[key], stored: stats[key] });
-            stats[key] = decoded[key];
-            tampered = true;
-          }
-        }
-        if (tampered) saveStats();
-      }
-      log('[storage] stats loaded', { totalGames: stats.totalGames, totalXp: stats.totalXp });
-    } else {
-      log('[storage] no stats found, using defaults');
-    }
-  } catch(e) { log('[storage] loadStats error', e); }
+  stats = loadWithVault(LS.stats, 'stats', stats);
+  log('[storage] stats loaded', { totalGames: stats.totalGames, totalXp: stats.totalXp });
 }
 function saveStats() {
   log('[storage] saveStats()', { totalGames: stats.totalGames, totalXp: stats.totalXp });
-  try {
-    verifyStatsIntegrity();
-    stats._vault = encodeVault({
-      totalHintsUsedAll: stats.totalHintsUsedAll,
-      totalUndosUsed: stats.totalUndosUsed,
-      totalGames: stats.totalGames,
-      totalXp: stats.totalXp,
-    });
-    localStorage.setItem(LS.stats, JSON.stringify(stats));
-  } catch(e) { log('[storage] saveStats error', e); }
+  saveWithVault(LS.stats, stats, 'stats');
 }
 
 function verifyStatsIntegrity() {
-  const vault = stats._vault;
-  if (!vault) return;
-  const decoded = decodeVault(vault);
-  if (!decoded) return;
-  const checks = ['totalHintsUsedAll', 'totalUndosUsed', 'totalGames', 'totalXp'];
-  let tampered = false;
-  for (const key of checks) {
-    if (decoded[key] !== undefined && decoded[key] !== stats[key]) {
-      log('[storage] integrity violation detected for', { key, decoded: decoded[key], stored: stats[key] });
-      stats[key] = decoded[key];
-      tampered = true;
+  const raw = localStorage.getItem(LS.stats);
+  if (!raw) return;
+  try {
+    const data = JSON.parse(raw);
+    const vault = data._vault;
+    if (!vault) return;
+    const decoded = decodeVault(vault);
+    if (!decoded) return;
+    let tampered = false;
+    for (const k of Object.keys(decoded)) {
+      if (decoded[k] !== undefined && JSON.stringify(decoded[k]) !== JSON.stringify(data[k])) {
+        log('[storage] integrity violation for', { field: k, vault: decoded[k], stored: data[k] });
+        data[k] = decoded[k];
+        tampered = true;
+      }
     }
-  }
-  if (tampered) {
-    localStorage.setItem(LS.stats, JSON.stringify(stats));
-    log('[storage] stats restored from vault after tamper detection');
-  }
+    if (tampered) {
+      data._vault = encodeVault(data, 'stats');
+      localStorage.setItem(LS.stats, JSON.stringify(data));
+      Object.assign(stats, data);
+    }
+  } catch(e) { log('[storage] verifyStatsIntegrity error', e); }
 }
 
-function encodeVault(obj) {
-  const salt = 'sd_v2';
+function encodeVault(obj, type) {
+  const salt = type + '_sd_v3';
   const raw = salt + ':' + JSON.stringify(obj);
-  return btoa(raw.split('').reverse().join(''));
+  return btoa(btoa(raw).split('').reverse().join(''));
 }
 function decodeVault(encoded) {
   try {
-    const raw = atob(encoded).split('').reverse().join('');
+    const raw = atob(atob(encoded).split('').reverse().join(''));
     const idx = raw.indexOf(':');
-    if (idx === -1 || raw.slice(0, idx) !== 'sd_v2') return null;
+    if (idx === -1) return null;
+    const type = raw.slice(0, idx);
+    if (!type.endsWith('_sd_v3')) return null;
     return JSON.parse(raw.slice(idx + 1));
   } catch(e) { return null; }
+}
+
+function saveWithVault(key, data, type) {
+  try {
+    data._vault = encodeVault(data, type);
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch(e) { log('[storage] saveWithVault error', e, { key, type }); }
+}
+
+function loadWithVault(key, type, defaults) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return defaults;
+    const data = JSON.parse(raw);
+    const vault = data._vault;
+    if (!vault) { log('[storage] no vault found for', { key, type }); return data; }
+    const decoded = decodeVault(vault);
+    if (!decoded) { log('[storage] vault decode failed for', { key, type }); return data; }
+    let tampered = false;
+    for (const k of Object.keys(decoded)) {
+      if (decoded[k] !== undefined && JSON.stringify(decoded[k]) !== JSON.stringify(data[k])) {
+        log('[storage] tamper detected for', { key, field: k, vault: decoded[k], stored: data[k] });
+        data[k] = decoded[k];
+        tampered = true;
+      }
+    }
+    if (tampered) {
+      data._vault = encodeVault(data, type);
+      localStorage.setItem(key, JSON.stringify(data));
+    }
+    return data;
+  } catch(e) { log('[storage] loadWithVault error', e, { key, type }); return defaults; }
 }
 
 let streak = { count: 0, lastDate: null, _vault: '', _milestones: [] };
@@ -761,29 +772,12 @@ const STREAK_MILESTONES = [
 
 function loadStreak() {
   log('[storage] loadStreak()');
-  try {
-    const raw = localStorage.getItem(LS.streak);
-    if (raw) {
-      streak = JSON.parse(raw);
-      const decoded = decodeVault(streak._vault || '');
-      if (decoded && (decoded.count !== streak.count || decoded.lastDate !== streak.lastDate)) {
-        log('[storage] streak tampered, restoring', { decoded: decoded.count, stored: streak.count });
-        streak.count = decoded.count;
-        streak.lastDate = decoded.lastDate;
-        saveStreak();
-      }
-      log('[storage] streak loaded', { count: streak.count, lastDate: streak.lastDate });
-    } else {
-      log('[storage] no streak found');
-    }
-  } catch(e) { log('[storage] loadStreak error', e); }
+  streak = loadWithVault(LS.streak, 'streak', streak);
+  log('[storage] streak loaded', { count: streak.count, lastDate: streak.lastDate });
 }
 function saveStreak() {
   log('[storage] saveStreak()', { count: streak.count, lastDate: streak.lastDate });
-  try {
-    streak._vault = encodeVault({ count: streak.count, lastDate: streak.lastDate });
-    localStorage.setItem(LS.streak, JSON.stringify(streak));
-  } catch(e) { log('[storage] saveStreak error', e); }
+  saveWithVault(LS.streak, streak, 'streak');
 }
 
 function todayStr() {
@@ -792,19 +786,14 @@ function todayStr() {
 }
 
 function isDailyDoneToday() {
-  try {
-    const raw = localStorage.getItem(LS.daily);
-    if (raw) { const d = JSON.parse(raw); return d.date === todayStr() && d.done; }
-  } catch(e) {}
-  return false;
+  const data = loadWithVault(LS.daily, 'daily', null);
+  return data ? data.date === todayStr() && data.done === true : false;
 }
 
 function markDailyDone() {
   log('[storage] markDailyDone()');
-  try {
-    localStorage.setItem(LS.daily, JSON.stringify({ date: todayStr(), done: true }));
-    localStorage.removeItem(LS.dailyState);
-  } catch(e) {}
+  saveWithVault(LS.daily, { date: todayStr(), done: true }, 'daily');
+  localStorage.removeItem(LS.dailyState);
 }
 
 function checkStreak() {
@@ -843,20 +832,16 @@ const LEVEL_PROGRESS_KEY = 'sudoku_level_progress';
 
 function saveLevelProgress(difficulty, level) {
   try {
-    const raw = localStorage.getItem(LEVEL_PROGRESS_KEY);
-    const data = raw ? JSON.parse(raw) : {};
+    const data = loadWithVault(LEVEL_PROGRESS_KEY, 'levelProgress', {});
     data[difficulty] = level;
-    localStorage.setItem(LEVEL_PROGRESS_KEY, JSON.stringify(data));
+    saveWithVault(LEVEL_PROGRESS_KEY, data, 'levelProgress');
   } catch(e) { log('[storage] saveLevelProgress error', e); }
 }
 
 function loadLevelProgress(difficulty) {
   try {
-    const raw = localStorage.getItem(LEVEL_PROGRESS_KEY);
-    if (raw) {
-      const data = JSON.parse(raw);
-      return data[difficulty] || 1;
-    }
+    const data = loadWithVault(LEVEL_PROGRESS_KEY, 'levelProgress', {});
+    return data[difficulty] || 1;
   } catch(e) { log('[storage] loadLevelProgress error', e); }
   return 1;
 }

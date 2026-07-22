@@ -289,34 +289,25 @@ function useSecondChance() {
 
 function getSecondChancesLeft() {
   const today = todayStr();
-  try {
-    const raw = localStorage.getItem('sudoku_second_chances');
-    const data = raw ? JSON.parse(raw) : {};
-    if (data.date !== today) return 3;
-    return Math.max(0, 3 - (data.used || 0));
-  } catch(e) { return 3; }
+  const data = loadWithVault('sudoku_second_chances', 'secondChances', { date: today, used: 0 });
+  if (data.date !== today) return 3;
+  return Math.max(0, 3 - (data.used || 0));
 }
 
 function useSecondChanceSlot() {
   const today = todayStr();
-  try {
-    const raw = localStorage.getItem('sudoku_second_chances');
-    const data = raw ? JSON.parse(raw) : { date: today, used: 0 };
-    if (data.date !== today) { data.date = today; data.used = 0; }
-    data.used = (data.used || 0) + 1;
-    localStorage.setItem('sudoku_second_chances', JSON.stringify(data));
-  } catch(e) {}
+  const data = loadWithVault('sudoku_second_chances', 'secondChances', { date: today, used: 0 });
+  if (data.date !== today) { data.date = today; data.used = 0; }
+  data.used = (data.used || 0) + 1;
+  saveWithVault('sudoku_second_chances', data, 'secondChances');
 }
 
 function earnSecondChance() {
   const today = todayStr();
-  try {
-    const raw = localStorage.getItem('sudoku_second_chances');
-    const data = raw ? JSON.parse(raw) : { date: today, used: 0 };
-    if (data.date !== today) { data.date = today; data.used = 0; }
-    data.used = Math.max(0, (data.used || 0) - 1);
-    localStorage.setItem('sudoku_second_chances', JSON.stringify(data));
-  } catch(e) {}
+  const data = loadWithVault('sudoku_second_chances', 'secondChances', { date: today, used: 0 });
+  if (data.date !== today) { data.date = today; data.used = 0; }
+  data.used = Math.max(0, (data.used || 0) - 1);
+  saveWithVault('sudoku_second_chances', data, 'secondChances');
 }
 
 function startTimer() {

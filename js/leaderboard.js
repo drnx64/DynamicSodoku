@@ -4,21 +4,17 @@
 const LB_KEY = 'sudoku_leaderboard';
 
 function getLeaderboard() {
-  try {
-    const raw = localStorage.getItem(LB_KEY);
-    const data = raw ? JSON.parse(raw) : [];
-    return data;
-  } catch(e) { log('[leaderboard] getLeaderboard error', e); return []; }
+  return loadWithVault(LB_KEY, 'leaderboard', []);
 }
 
 function saveLeaderboard(data) {
   log('[leaderboard] saveLeaderboard()', { count: data.length });
-  try { localStorage.setItem(LB_KEY, JSON.stringify(data)); } catch(e) { log('[leaderboard] saveLeaderboard error', e); }
+  saveWithVault(LB_KEY, data, 'leaderboard');
 }
 
 function addScoreToLeaderboard(name, score, difficulty) {
   log('[leaderboard] addScoreToLeaderboard()', { name, score, difficulty });
-  try { localStorage.removeItem(MOCK_CACHE_KEY); } catch(e) {}
+  saveWithVault(MOCK_CACHE_KEY, [], 'mockLeaderboard');
   const board = getLeaderboard();
   board.push({
     name: name || 'Anonymous',
@@ -59,7 +55,7 @@ function getUserEntry() {
 const MOCK_CACHE_KEY = 'sudoku_mock_leaderboard';
 
 function getMockLeaderboard() {
-  const cached = (() => { try { return JSON.parse(localStorage.getItem(MOCK_CACHE_KEY)); } catch(e) { return null; } })();
+  const cached = loadWithVault(MOCK_CACHE_KEY, 'mockLeaderboard', null);
   if (cached && Array.isArray(cached) && cached.length > 0) return cached;
 
   const mockNames = ['SudokuMaster', 'LogicQueen', 'NumberNinja', 'GridWizard', 'CellKing', 'PuzzleWhiz', 'DigitDancer', 'RowRuler', 'BoxBoss', 'CageBreaker', 'SolverSam', 'BrainAce', 'PencilMark', 'XWingFox', 'Swordfish'];
@@ -84,7 +80,7 @@ function getMockLeaderboard() {
     };
   }).sort((a, b) => b.score - a.score);
 
-  try { localStorage.setItem(MOCK_CACHE_KEY, JSON.stringify(data)); } catch(e) {}
+  saveWithVault(MOCK_CACHE_KEY, data, 'mockLeaderboard');
   return data;
 }
 

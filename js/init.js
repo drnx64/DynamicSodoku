@@ -31,7 +31,12 @@ function init() {
 }
 
 setInterval(() => {
-  if (stats && stats._vault) verifyStatsIntegrity();
+  verifyStatsIntegrity();
+  loadWithVault(LS.settings, 'settings', {});
+  loadWithVault(LS.streak, 'streak', {});
+  loadWithVault(BONUS_KEY, 'bonus', {});
+  loadWithVault(LS.daily, 'daily', {});
+  loadWithVault(LEVEL_PROGRESS_KEY, 'levelProgress', {});
 }, 30000);
 
 document.addEventListener('DOMContentLoaded', () => {
