@@ -703,6 +703,7 @@ function loadStats() {
 function saveStats() {
   log('[storage] saveStats()', { totalGames: stats.totalGames, totalXp: stats.totalXp });
   try {
+    verifyStatsIntegrity();
     stats._vault = encodeVault({
       totalHintsUsedAll: stats.totalHintsUsedAll,
       totalUndosUsed: stats.totalUndosUsed,
@@ -711,6 +712,26 @@ function saveStats() {
     });
     localStorage.setItem(LS.stats, JSON.stringify(stats));
   } catch(e) { log('[storage] saveStats error', e); }
+}
+
+function verifyStatsIntegrity() {
+  const vault = stats._vault;
+  if (!vault) return;
+  const decoded = decodeVault(vault);
+  if (!decoded) return;
+  const checks = ['totalHintsUsedAll', 'totalUndosUsed', 'totalGames', 'totalXp'];
+  let tampered = false;
+  for (const key of checks) {
+    if (decoded[key] !== undefined && decoded[key] !== stats[key]) {
+      log('[storage] integrity violation detected for', { key, decoded: decoded[key], stored: stats[key] });
+      stats[key] = decoded[key];
+      tampered = true;
+    }
+  }
+  if (tampered) {
+    localStorage.setItem(LS.stats, JSON.stringify(stats));
+    log('[storage] stats restored from vault after tamper detection');
+  }
 }
 
 function encodeVault(obj) {

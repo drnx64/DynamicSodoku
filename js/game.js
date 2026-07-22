@@ -38,6 +38,9 @@ function undo() {
   if (state.historyIdx < 0) { log('[game] undo: nothing to undo'); return; }
   if (state.gameOver) { log('[game] undo: game over'); return; }
   if (state.won) { log('[game] undo: already won'); return; }
+  const cost = 5;
+  if (stats.totalXp < cost) { showToast('Not enough XP to undo!'); return; }
+  stats.totalXp -= cost;
   const move = state.history[state.historyIdx];
   state.historyIdx--;
   const { row, col, prevVal, newVal, prevNotes, newNotes } = move;
@@ -47,23 +50,6 @@ function undo() {
   if (move.type === 'mistake') state.mistakes--;
   stats.totalUndosUsed = (stats.totalUndosUsed || 0) + 1;
   saveStats();
-  updateUndoRedo();
-  render();
-  saveGame();
-}
-
-function redo() {
-  log('[game] redo() called', { historyIdx: state.historyIdx, totalHistory: state.history.length, gameOver: state.gameOver, won: state.won });
-  if (state.historyIdx >= state.history.length - 1) { log('[game] redo: nothing to redo'); return; }
-  if (state.gameOver) { log('[game] redo: game over'); return; }
-  if (state.won) { log('[game] redo: already won'); return; }
-  state.historyIdx++;
-  const move = state.history[state.historyIdx];
-  const { row, col, prevVal, newVal, prevNotes, newNotes } = move;
-  log('[game] redo: applying', { row, col, newVal, prevVal, moveType: move.type });
-  state.board[row][col] = newVal;
-  state.notes[row][col] = new Set(newNotes);
-  if (move.type === 'mistake') state.mistakes++;
   updateUndoRedo();
   render();
   saveGame();

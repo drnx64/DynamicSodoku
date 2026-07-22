@@ -30,6 +30,10 @@ function init() {
   log('[init] init() complete');
 }
 
+setInterval(() => {
+  if (stats && stats._vault) verifyStatsIntegrity();
+}, 30000);
+
 document.addEventListener('DOMContentLoaded', () => {
   log('[init] DOMContentLoaded fired');
   init();

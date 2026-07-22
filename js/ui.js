@@ -130,15 +130,12 @@ function updateNotesBtn() {
 
 function updateUndoRedo() {
   const undo = document.getElementById('undoBtn');
-  const redo = document.getElementById('redoBtn');
   const hint = document.getElementById('hintBtn');
   const erase = document.getElementById('eraseBtn');
-  if (!undo || !redo || !hint) return;
+  if (!undo || !hint) return;
   const undoCount = state.historyIdx + 1;
-  const redoCount = state.history.length - state.historyIdx - 1;
 
   undo.disabled = state.historyIdx < 0;
-  redo.disabled = state.historyIdx >= state.history.length - 1;
 
   if (erase) {
     const sc = state.selectedCell;
@@ -146,19 +143,12 @@ function updateUndoRedo() {
   }
 
   let undoBadge = undo.querySelector('.action-badge');
-  let redoBadge = redo.querySelector('.action-badge');
 
   if (undoCount > 0 && !undo.disabled) {
     if (!undoBadge) { undoBadge = document.createElement('span'); undoBadge.className = 'action-badge'; undo.appendChild(undoBadge); }
-    undoBadge.textContent = undoCount;
+    undoBadge.textContent = '5 XP';
     undoBadge.style.display = '';
   } else if (undoBadge) { undoBadge.style.display = 'none'; }
-
-  if (redoCount > 0 && !redo.disabled) {
-    if (!redoBadge) { redoBadge = document.createElement('span'); redoBadge.className = 'action-badge'; redo.appendChild(redoBadge); }
-    redoBadge.textContent = redoCount;
-    redoBadge.style.display = '';
-  } else if (redoBadge) { redoBadge.style.display = 'none'; }
 
   let hintBadge = hint.querySelector('.action-badge');
   if (state.hintsRemaining > 0) {
@@ -224,8 +214,6 @@ function setupInput() {
 
   const undoBtn = document.getElementById('undoBtn');
   if (undoBtn) undoBtn.addEventListener('click', () => { log('[ui] click: undoBtn'); undo(); });
-  const redoBtn = document.getElementById('redoBtn');
-  if (redoBtn) redoBtn.addEventListener('click', () => { log('[ui] click: redoBtn'); redo(); });
   const eraseBtn = document.getElementById('eraseBtn');
   if (eraseBtn) eraseBtn.addEventListener('click', () => {
     log('[ui] click: eraseBtn');
