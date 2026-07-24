@@ -13,7 +13,14 @@
   display: flex;
   align-items: center;
   width: 100%;
-  gap: 8px;
+  gap: 6px;
+}
+.game-header-left { flex-shrink: 0; }
+.game-header-right {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
 }
 .game-header .back-btn { flex-shrink: 0; }
 
@@ -48,8 +55,8 @@
 .mistake-counter svg { color: var(--mistake-color); }
 
 .game-settings-btn {
-  width: 36px;
-  height: 36px;
+  width: clamp(32px, 5vw, 40px);
+  height: clamp(32px, 5vw, 40px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -62,7 +69,12 @@
   transition: background 0.15s;
   flex-shrink: 0;
 }
+.game-settings-btn svg { width: clamp(16px, 2.5vw, 20px); height: clamp(16px, 2.5vw, 20px); }
 .game-settings-btn:hover { background: var(--btn-bg); }
+
+.game-header .back-btn svg { width: clamp(18px, 2.8vw, 22px); height: clamp(18px, 2.8vw, 22px); }
+
+.game-info .game-meta svg { width: clamp(12px, 1.8vw, 15px); height: clamp(12px, 1.8vw, 15px); }
 
 /* ============ BOARD AREA WITH COORDINATES ============ */
 .board-area {
