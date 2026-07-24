@@ -398,18 +398,16 @@
   100%{opacity:0;transform:scale(1.5)}
 }
 
-body.body-shake { animation:bodyShake 0.4s ease; }
+body.body-shake { animation:bodyShake 0.5s ease; }
 @keyframes bodyShake {
   0%,100%{transform:translateX(0)}
-  5%{transform:translateX(-12px) rotate(-1deg)}
-  12%{transform:translateX(10px) rotate(.8deg)}
-  20%{transform:translateX(-8px) rotate(-.5deg)}
-  28%{transform:translateX(6px) rotate(.3deg)}
-  38%{transform:translateX(-4px) rotate(-.2deg)}
-  48%{transform:translateX(3px) rotate(.1deg)}
-  60%{transform:translateX(-2px)}
-  75%{transform:translateX(1px)}
-  90%{transform:translateX(0)}
+  8%{transform:translateX(-14px) rotate(-1.2deg)}
+  18%{transform:translateX(12px) rotate(1deg)}
+  30%{transform:translateX(-9px) rotate(-0.6deg)}
+  42%{transform:translateX(7px) rotate(0.4deg)}
+  55%{transform:translateX(-4px) rotate(-0.2deg)}
+  70%{transform:translateX(3px)}
+  85%{transform:translateX(-1px)}
 }
 
 /* ============ TIMER WARNING PULSE ============ */
@@ -457,16 +455,17 @@ body.body-shake { animation:bodyShake 0.4s ease; }
 
 /* ============ MISTAKE BOARD SHAKE ============ */
 #boardWrap.mistake-shake {
-  animation: boardShake 0.5s ease;
+  animation: boardShake 0.45s ease;
 }
 
 @keyframes boardShake {
   0%, 100% { transform: translateX(0); }
-  15% { transform: translateX(-7px) rotate(-0.6deg); }
-  30% { transform: translateX(6px) rotate(0.4deg); }
-  50% { transform: translateX(-4px) rotate(-0.2deg); }
-  70% { transform: translateX(3px); }
-  85% { transform: translateX(-1px); }
+  12% { transform: translateX(-10px) rotate(-1deg); }
+  25% { transform: translateX(8px) rotate(0.7deg); }
+  40% { transform: translateX(-6px) rotate(-0.4deg); }
+  55% { transform: translateX(4px) rotate(0.2deg); }
+  70% { transform: translateX(-2px); }
+  85% { transform: translateX(1px); }
 }
 
 /* ============ MISTAKE OVERLAY ============ */
@@ -479,72 +478,94 @@ body.body-shake { animation:bodyShake 0.4s ease; }
   align-items: center;
   pointer-events: none;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   contain: strict;
 }
 #mistakeOverlay.open { display: flex; }
+
+#mistakeOverlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: white;
+  opacity: 0;
+  animation: mistakeFlash 0.35s ease-out forwards;
+}
 
 #mistakeOverlay::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(220,38,38,0.08);
-  animation: mistakeTint 0.8s ease-out forwards;
+  background: rgba(220,38,38,0.1);
+  animation: mistakeTint 1.2s ease-out forwards;
 }
 
 #mistakeOverlay .mistake-x {
   position: relative;
-  width: 140px;
-  height: 140px;
+  width: 160px;
+  height: 160px;
   color: #ef4444;
-  filter: drop-shadow(0 0 40px rgba(239,68,68,0.5));
-  animation: mistakeSlam 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards, mistakeFade 0.4s 0.5s ease-out forwards;
+  filter: drop-shadow(0 0 50px rgba(239,68,68,0.6));
+  animation: mistakeSlam 0.55s cubic-bezier(0.18, 1.3, 0.4, 1) forwards, mistakeFade 0.45s 0.65s ease-out forwards;
   opacity: 0;
 }
 
 #mistakeOverlay .mistake-ring {
   position: absolute;
   top: 50%; left: 50%;
-  width: 80px; height: 80px;
-  margin: -40px 0 0 -40px;
+  width: 100px; height: 100px;
+  margin: -50px 0 0 -50px;
   border-radius: 50%;
-  border: 3px solid rgba(239,68,68,0.4);
-  animation: ringPop 0.6s ease-out forwards;
+  border: 4px solid rgba(239,68,68,0.5);
+  animation: ringPop 0.7s ease-out forwards;
   pointer-events: none;
-  transform: scale(0.5);
+  transform: scale(0.3);
   opacity: 0;
 }
 
 #mistakeOverlay .mistake-ring2 {
   position: absolute;
   top: 50%; left: 50%;
-  width: 80px; height: 80px;
-  margin: -40px 0 0 -40px;
+  width: 100px; height: 100px;
+  margin: -50px 0 0 -50px;
   border-radius: 50%;
-  border: 2px solid rgba(239,68,68,0.2);
-  animation: ringPop 0.6s 0.12s ease-out forwards;
+  border: 3px solid rgba(239,68,68,0.25);
+  animation: ringPop 0.7s 0.12s ease-out forwards;
   pointer-events: none;
-  transform: scale(0.5);
+  transform: scale(0.3);
   opacity: 0;
 }
 
 #mistakeOverlay .mistake-label {
   position: relative;
-  font-size: 28px;
+  font-size: 34px;
   font-weight: 900;
-  letter-spacing: 6px;
+  letter-spacing: 10px;
   color: #ef4444;
-  text-shadow: 0 0 30px rgba(239,68,68,0.4);
-  animation: mistakeSlam 0.4s 0.15s cubic-bezier(0.22, 1, 0.36, 1) both, mistakeFade 0.3s 0.6s ease-out forwards;
+  text-shadow: 0 0 50px rgba(239,68,68,0.5);
+  animation: labelSlam 0.5s 0.15s cubic-bezier(0.18, 1.3, 0.4, 1) both, mistakeFade 0.4s 0.7s ease-out forwards;
   opacity: 0;
 }
 
 @keyframes mistakeSlam {
-  0% { transform: scale(3.5); opacity: 0; }
-  40% { transform: scale(0.85); opacity: 1; }
-  65% { transform: scale(1.1); opacity: 1; }
-  85% { transform: scale(0.95); opacity: 1; }
+  0% { transform: scale(6); opacity: 0; }
+  35% { transform: scale(0.75); opacity: 1; }
+  55% { transform: scale(1.2); opacity: 1; }
+  75% { transform: scale(0.92); opacity: 1; }
   100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes labelSlam {
+  0% { transform: scale(5); opacity: 0; }
+  35% { transform: scale(0.7); opacity: 1; }
+  55% { transform: scale(1.25); opacity: 1; }
+  75% { transform: scale(0.9); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes mistakeFlash {
+  0% { opacity: 0.9; }
+  100% { opacity: 0; }
 }
 
 @keyframes mistakeFade {
@@ -558,8 +579,8 @@ body.body-shake { animation:bodyShake 0.4s ease; }
 }
 
 @keyframes ringPop {
-  0% { transform: scale(0.5); opacity: 0.7; }
-  100% { transform: scale(2); opacity: 0; }
+  0% { transform: scale(0.3); opacity: 0.8; }
+  100% { transform: scale(3); opacity: 0; }
 }
 
 /* ============ IN-GAME SETTINGS OVERLAY ============ */

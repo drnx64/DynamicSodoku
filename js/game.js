@@ -99,12 +99,12 @@ function placeNumber(row, col, num) {
     if (!state.started) { state.started = true; startTimer(); }
     render({ shakeCell: [row, col], mistakeCell: [row, col] });
     saveGame(); playSound('error');
-    haptic([30, 50, 30, 60, 40]);
+    haptic([30, 60, 40, 70, 50, 80, 60]);
     const boardWrap = document.getElementById('boardWrap');
     if (boardWrap) { boardWrap.classList.remove('mistake-shake'); void boardWrap.offsetWidth; boardWrap.classList.add('mistake-shake'); }
     document.body.classList.remove('body-shake'); void document.body.offsetWidth; document.body.classList.add('body-shake');
     const mo = document.getElementById('mistakeOverlay');
-    if (mo) { mo.classList.remove('open'); void mo.offsetWidth; mo.classList.add('open'); setTimeout(() => { mo.classList.remove('open'); document.body.classList.remove('body-shake'); }, 900); }
+    if (mo) { mo.classList.remove('open'); void mo.offsetWidth; mo.classList.add('open'); setTimeout(() => { mo.classList.remove('open'); document.body.classList.remove('body-shake'); }, 1100); }
     if (state.mistakes >= 3) {
       log('[game] placeNumber: 3 mistakes reached');
       gameOver();

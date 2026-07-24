@@ -4,7 +4,7 @@
 const SOUND_THEMES = {
   classic: {
     place: { freq: 520, type: 'sine', duration: 0.1, gain: 0.08 },
-    error: { freq: 200, type: 'sawtooth', duration: 0.2, gain: 0.08 },
+    error: { freq: 200, type: 'sawtooth', duration: 0.25, gain: 0.12 },
     winBase: { freq: 523, type: 'sine', duration: 0.15, gain: 0.08 },
     winThird: { freq: 659, type: 'sine', duration: 0.15, gain: 0.08 },
     winFifth: { freq: 784, type: 'sine', duration: 0.2, gain: 0.08 },
@@ -16,7 +16,7 @@ const SOUND_THEMES = {
   },
   piano: {
     place: { freq: 440, type: 'sine', duration: 0.3, gain: 0.06 },
-    error: { freq: 160, type: 'sine', duration: 0.4, gain: 0.06 },
+    error: { freq: 120, type: 'sawtooth', duration: 0.45, gain: 0.1 },
     winBase: { freq: 262, type: 'sine', duration: 0.4, gain: 0.06 },
     winThird: { freq: 330, type: 'sine', duration: 0.4, gain: 0.06 },
     winFifth: { freq: 392, type: 'sine', duration: 0.5, gain: 0.06 },
@@ -28,7 +28,7 @@ const SOUND_THEMES = {
   },
   digital: {
     place: { freq: 800, type: 'square', duration: 0.05, gain: 0.04 },
-    error: { freq: 100, type: 'square', duration: 0.15, gain: 0.04 },
+    error: { freq: 80, type: 'square', duration: 0.2, gain: 0.08 },
     winBase: { freq: 880, type: 'square', duration: 0.1, gain: 0.04 },
     winThird: { freq: 1108, type: 'square', duration: 0.1, gain: 0.04 },
     winFifth: { freq: 1318, type: 'square', duration: 0.15, gain: 0.04 },
@@ -40,7 +40,7 @@ const SOUND_THEMES = {
   },
   retro: {
     place: { freq: 600, type: 'triangle', duration: 0.08, gain: 0.07 },
-    error: { freq: 150, type: 'triangle', duration: 0.25, gain: 0.07 },
+    error: { freq: 100, type: 'square', duration: 0.3, gain: 0.11 },
     winBase: { freq: 500, type: 'triangle', duration: 0.12, gain: 0.07 },
     winThird: { freq: 630, type: 'triangle', duration: 0.12, gain: 0.07 },
     winFifth: { freq: 750, type: 'triangle', duration: 0.18, gain: 0.07 },
@@ -90,7 +90,8 @@ function playSound(type) {
       playTone(s.freq, s.type, s.duration, s.gain);
     } else if (type === 'error') {
       const s = theme.error;
-      playTone(s.freq, s.type, s.duration, s.gain);
+      playTone(s.freq, s.type, s.duration, s.gain * 1.5);
+      setTimeout(() => playTone(s.freq * 0.7, 'square', s.duration * 1.2, s.gain * 1.3), 120);
     } else if (type === 'win') {
       playTone(theme.winBase.freq, theme.winBase.type, theme.winBase.duration, theme.winBase.gain);
       setTimeout(() => {
