@@ -296,7 +296,28 @@
     </div>
 
     <div id="boardWrap">
-      <div id="board"></div>
+      <div class="board-coords" id="boardCoords">
+        <div class="coords-corner"></div>
+        <div class="coords-col" data-coord="0">A</div>
+        <div class="coords-col" data-coord="1">B</div>
+        <div class="coords-col" data-coord="2">C</div>
+        <div class="coords-col" data-coord="3">D</div>
+        <div class="coords-col" data-coord="4">E</div>
+        <div class="coords-col" data-coord="5">F</div>
+        <div class="coords-col" data-coord="6">G</div>
+        <div class="coords-col" data-coord="7">H</div>
+        <div class="coords-col" data-coord="8">I</div>
+        <div class="coords-row" data-coord="0">1</div>
+        <div class="coords-row" data-coord="1">2</div>
+        <div class="coords-row" data-coord="2">3</div>
+        <div class="coords-row" data-coord="3">4</div>
+        <div class="coords-row" data-coord="4">5</div>
+        <div class="coords-row" data-coord="5">6</div>
+        <div class="coords-row" data-coord="6">7</div>
+        <div class="coords-row" data-coord="7">8</div>
+        <div class="coords-row" data-coord="8">9</div>
+        <div id="board"></div>
+      </div>
     </div>
 
     <div id="controls">
@@ -593,6 +614,17 @@
       <button id="pauseResumeBtn">Resume</button>
       <button id="pauseQuitBtn" class="pause-quit">Quit to Menu</button>
     </div>
+  </div>
+</div>
+
+<!-- ============ IN-GAME SETTINGS OVERLAY ============ -->
+<div class="game-settings-overlay" id="gameSettingsOverlay">
+  <div class="game-settings-card">
+    <div class="game-settings-header">
+      <h2><svg width="16" height="16" viewBox="0 0 24 24"><use href="#ico-gear"/></svg> Game Settings</h2>
+      <button class="game-settings-close" id="gameSettingsClose"><svg width="20" height="20" viewBox="0 0 24 24"><use href="#ico-x"/></svg></button>
+    </div>
+    <div class="game-settings-body" id="gameSettingsBody"></div>
   </div>
 </div>
 

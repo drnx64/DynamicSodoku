@@ -10,6 +10,7 @@ const DEFAULT_SETTINGS = {
   timerVisible: true, darkTheme: false, soundEnabled: true, autoClearNotes: true,
   hapticFeedback: true, autoDarkMode: true, keyboardShortcuts: true,
   colorTheme: 'default', soundTheme: 'classic', playerName: 'Player',
+  showCoordinates: false,
 };
 
 const SETTINGS_CATEGORIES = [
@@ -54,6 +55,7 @@ const SETTINGS_CATEGORIES = [
       { key: 'mistakeLimit', label: 'Mistake limit (3)' },
       { key: 'autoClearNotes', label: 'Auto-clear notes' },
       { key: 'keyboardShortcuts', label: 'Keyboard shortcuts' },
+      { key: 'showCoordinates', label: 'Show coordinates (A1-I9)' },
       { key: 'playerName', label: 'Player name', type: 'text' },
     ],
   },
@@ -320,6 +322,8 @@ function applySettings() {
   if (muteBtn) {
     muteBtn.classList.toggle('muted', !state.settings.soundEnabled);
   }
+  const bc = document.getElementById('boardCoords');
+  if (bc) bc.classList.toggle('hidden', !state.settings.showCoordinates);
   if (state.board && state.board.length === 9) render();
 }
 
@@ -327,6 +331,43 @@ function rebuildSettingsUI() {
   log('[settings] rebuildSettingsUI()');
   const container = document.getElementById('settingsPageContent');
   if (container) setupSettings();
+}
+
+const GAME_SETTINGS_ITEMS = [
+  { key: 'highlightSame', label: 'Highlight same number' },
+  { key: 'highlightPeers', label: 'Highlight row/col/box' },
+  { key: 'highlightConflicts', label: 'Highlight conflicts' },
+  { key: 'showRemaining', label: 'Show remaining counts' },
+  { key: 'timerVisible', label: 'Show timer' },
+  { key: 'autoClearNotes', label: 'Auto-clear notes' },
+  { key: 'soundEnabled', label: 'Sound effects' },
+  { key: 'showCoordinates', label: 'Show coordinates (A1-I9)' },
+];
+
+function setupGameSettings() {
+  log('[settings] setupGameSettings()');
+  const body = document.getElementById('gameSettingsBody');
+  if (!body) return;
+  body.innerHTML = '';
+  for (const item of GAME_SETTINGS_ITEMS) {
+    const row = document.createElement('div');
+    row.className = 'setting-row';
+    const label = document.createElement('span');
+    label.className = 'setting-label';
+    label.textContent = item.label;
+    const toggle = document.createElement('div');
+    toggle.className = 'toggle';
+    if (state.settings[item.key]) toggle.classList.add('on');
+    toggle.addEventListener('click', () => {
+      state.settings[item.key] = !state.settings[item.key];
+      toggle.classList.toggle('on', state.settings[item.key]);
+      applySettings();
+      saveSettings();
+    });
+    row.appendChild(label);
+    row.appendChild(toggle);
+    body.appendChild(row);
+  }
 }
 
 function exportData() {

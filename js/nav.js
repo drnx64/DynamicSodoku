@@ -101,10 +101,23 @@ function setupNavigation() {
   if (gameSettingsBtn) {
     gameSettingsBtn.addEventListener('click', () => {
       log('[nav] click: gameSettingsBtn');
-      showPage('page-settings');
-      setupSettings();
+      const overlay = document.getElementById('gameSettingsOverlay');
+      if (overlay) {
+        setupGameSettings();
+        overlay.classList.add('open');
+      }
     });
   }
+
+  document.getElementById('gameSettingsClose')?.addEventListener('click', () => {
+    document.getElementById('gameSettingsOverlay')?.classList.remove('open');
+  });
+
+  document.getElementById('gameSettingsOverlay')?.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) {
+      document.getElementById('gameSettingsOverlay')?.classList.remove('open');
+    }
+  });
 
   const settingsCard = document.getElementById('settingsCard');
   if (settingsCard) {
