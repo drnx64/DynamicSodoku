@@ -230,22 +230,47 @@ function setupInput() {
   const AUTO_COST = 10;
   const gameAutoBtn = document.getElementById('gameAutoBtn');
   if (gameAutoBtn) {
-    gameAutoBtn.addEventListener('click', () => {
-      const wantsOn = !state.settings.autoCandidates;
-      if (wantsOn) {
-        if ((stats.totalXp || 0) < AUTO_COST) {
-          showToast('Not enough XP! (' + AUTO_COST + ' XP required)');
-          return;
-        }
-        stats.totalXp = (stats.totalXp || 0) - AUTO_COST;
-        saveStats();
-        updateMenuUI();
+    function showAutoModal() {
+      const overlay = document.getElementById('autoInfoOverlay');
+      if (!overlay) return;
+      document.getElementById('autoInfoXp').textContent = stats.totalXp || 0;
+      overlay.classList.add('open');
+    }
+    function confirmAuto() {
+      if ((stats.totalXp || 0) < AUTO_COST) {
+        showToast('Not enough XP! (' + AUTO_COST + ' XP required)');
+        document.getElementById('autoInfoOverlay')?.classList.remove('open');
+        return;
       }
-      state.settings.autoCandidates = wantsOn;
-      log('[ui] click: gameAutoBtn', { autoCandidates: state.settings.autoCandidates });
+      stats.totalXp = (stats.totalXp || 0) - AUTO_COST;
+      saveStats();
+      updateMenuUI();
+      state.settings.autoCandidates = true;
+      log('[ui] click: gameAutoBtn - confirmed via modal', { autoCandidates: true });
       render();
       saveSettings();
       updateNotesBtn();
+      document.getElementById('autoInfoOverlay')?.classList.remove('open');
+    }
+    gameAutoBtn.addEventListener('click', () => {
+      if (state.settings.autoCandidates) {
+        state.settings.autoCandidates = false;
+        log('[ui] click: gameAutoBtn - toggle off', { autoCandidates: false });
+        render();
+        saveSettings();
+        updateNotesBtn();
+      } else {
+        showAutoModal();
+      }
+    });
+    document.getElementById('autoInfoBuy')?.addEventListener('click', confirmAuto);
+    document.getElementById('autoInfoCancel')?.addEventListener('click', () => {
+      document.getElementById('autoInfoOverlay')?.classList.remove('open');
+    });
+    document.getElementById('autoInfoOverlay')?.addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) {
+        document.getElementById('autoInfoOverlay')?.classList.remove('open');
+      }
     });
   }
 

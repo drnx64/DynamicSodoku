@@ -79,7 +79,7 @@
 
 .coords-row-area {
   position: absolute;
-  top: 0; left: 26px; right: 0;
+  top: 0; left: 29px; right: 3px;
   height: 22px;
   display: grid;
   grid-template-columns: repeat(9, 1fr);
@@ -95,7 +95,7 @@
 
 .coords-col-area {
   position: absolute;
-  left: 0; top: 24px; bottom: 0;
+  left: 0; top: 27px; bottom: 3px;
   width: 24px;
   display: grid;
   grid-template-rows: repeat(9, 1fr);
