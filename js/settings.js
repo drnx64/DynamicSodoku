@@ -322,8 +322,8 @@ function applySettings() {
   if (muteBtn) {
     muteBtn.classList.toggle('muted', !state.settings.soundEnabled);
   }
-  const bc = document.getElementById('boardCoords');
-  if (bc) bc.classList.toggle('hidden', !state.settings.showCoordinates);
+  const bc = document.getElementById('boardArea');
+  if (bc) bc.classList.toggle('hidden-coords', !state.settings.showCoordinates);
   if (state.board && state.board.length === 9) render();
 }
 

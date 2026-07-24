@@ -104,13 +104,17 @@
     grid-template-rows: auto 1fr auto;
     gap: 12px;
     align-items: start;
+    overflow: hidden;
   }
   #page-game > .game-header { grid-column: 1 / -1; }
-  #boardWrap {
+  .board-area {
     grid-row: 2;
     grid-column: 1;
+    width: 100%;
     max-width: none;
-    aspect-ratio: 1;
+  }
+  #boardWrap {
+    max-width: none;
   }
   #controls {
     grid-row: 2;

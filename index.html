@@ -295,8 +295,8 @@
       <button class="game-settings-btn" id="gameSettingsBtn"><svg width="20" height="20" viewBox="0 0 24 24"><use href="#ico-gear"/></svg></button>
     </div>
 
-    <div id="boardWrap">
-      <div class="board-coords" id="boardCoords">
+    <div class="board-area" id="boardArea">
+      <div class="coords-row-area" id="coordsRowArea">
         <div class="coords-corner"></div>
         <div class="coords-col" data-coord="0">A</div>
         <div class="coords-col" data-coord="1">B</div>
@@ -307,6 +307,8 @@
         <div class="coords-col" data-coord="6">G</div>
         <div class="coords-col" data-coord="7">H</div>
         <div class="coords-col" data-coord="8">I</div>
+      </div>
+      <div class="coords-col-area" id="coordsColArea">
         <div class="coords-row" data-coord="0">1</div>
         <div class="coords-row" data-coord="1">2</div>
         <div class="coords-row" data-coord="2">3</div>
@@ -316,6 +318,8 @@
         <div class="coords-row" data-coord="6">7</div>
         <div class="coords-row" data-coord="7">8</div>
         <div class="coords-row" data-coord="8">9</div>
+      </div>
+      <div id="boardWrap">
         <div id="board"></div>
       </div>
     </div>
