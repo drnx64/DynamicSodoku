@@ -109,6 +109,23 @@ function setupNavigation() {
     });
   }
 
+  const gameShareBtn = document.getElementById('gameShareBtn');
+  if (gameShareBtn) {
+    gameShareBtn.addEventListener('click', () => {
+      log('[nav] click: gameShareBtn');
+      const url = window.location.href.split('?')[0];
+      if (navigator.share) {
+        navigator.share({ title: 'Sudoku', text: 'Playing Sudoku on Dynamic Sodoku! 🧩', url: url }).catch(() => {});
+      } else {
+        navigator.clipboard.writeText(url).then(() => {
+          showToast('Link copied!');
+        }).catch(() => {
+          showToast('Share: ' + url);
+        });
+      }
+    });
+  }
+
   document.getElementById('gameSettingsClose')?.addEventListener('click', () => {
     document.getElementById('gameSettingsOverlay')?.classList.remove('open');
   });

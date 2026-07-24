@@ -15,14 +15,12 @@
   width: 100%;
   gap: 6px;
 }
-.game-header-left { flex-shrink: 0; }
 .game-header-right {
   display: flex;
   align-items: center;
   gap: 2px;
   flex-shrink: 0;
 }
-.game-header .back-btn { flex-shrink: 0; }
 
 .game-info {
   flex: 1;
@@ -71,8 +69,6 @@
 }
 .game-settings-btn svg { width: clamp(16px, 2.5vw, 20px); height: clamp(16px, 2.5vw, 20px); }
 .game-settings-btn:hover { background: var(--btn-bg); }
-
-.game-header .back-btn svg { width: clamp(18px, 2.8vw, 22px); height: clamp(18px, 2.8vw, 22px); }
 
 .game-info .game-meta svg { width: clamp(12px, 1.8vw, 15px); height: clamp(12px, 1.8vw, 15px); }
 

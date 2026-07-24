@@ -160,6 +160,27 @@
   font-weight: 700;
 }
 
+.page-header-spacer {
+  flex: 1;
+}
+
+.page-header-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.page-header-btn:hover { background: var(--btn-bg); }
+.page-header-btn svg { width: clamp(18px, 2.8vw, 22px); height: clamp(18px, 2.8vw, 22px); }
+
 #gameMuteBtn { color: var(--text-muted); }
 #gameMuteBtn.muted { color: var(--danger); opacity: 0.6; }
 
