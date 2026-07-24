@@ -50,27 +50,28 @@ function getNextRank(totalXp) {
 
 function calcScore(difficulty, timeSec, mistakes, hintsUsed) {
   log('[xp] calcScore()', { difficulty, timeSec, mistakes, hintsUsed });
-  const baseMap = { easy: 6, medium: 10, hard: 15, impossible: 20 };
-  const base = baseMap[difficulty] || 10;
+  const ranges = {
+    easy: { min: 4, max: 12 },
+    medium: { min: 8, max: 20 },
+    hard: { min: 12, max: 28 },
+    impossible: { min: 16, max: 38 }
+  };
+  const range = ranges[difficulty] || ranges.medium;
 
-  const diffMult = { easy: 0.5, medium: 0.7, hard: 0.9, impossible: 1.1 };
-  const perf = diffMult[difficulty] || 0.7;
+  let score = range.min + Math.floor(Math.random() * (range.max - range.min + 1));
 
-  let timeMod = 0;
   const benchmarks = { easy: 300, medium: 600, hard: 900, impossible: 1800 };
   const bm = benchmarks[difficulty] || 600;
-  if (timeSec < bm * 0.5) timeMod = 3;
-  else if (timeSec < bm * 0.75) timeMod = 2;
-  else if (timeSec < bm) timeMod = 1;
-  else if (timeSec > bm * 2) timeMod = -3;
-  else if (timeSec > bm * 1.5) timeMod = -1;
+  if (timeSec < bm * 0.5) score += 4;
+  else if (timeSec < bm * 0.75) score += 2;
+  else if (timeSec < bm) score += 1;
+  else if (timeSec > bm * 2) score -= 3;
+  else if (timeSec > bm * 1.5) score -= 1;
 
-  const mistakeMod = Math.max(0, 3 - mistakes);
-  const hintMod = Math.max(0, 3 - hintsUsed);
+  score -= Math.min(mistakes, 3);
+  score -= Math.min(hintsUsed, 2);
 
-  let score = Math.round((base + timeMod + mistakeMod + hintMod) * perf);
-  score = Math.max(1, Math.min(80, score));
-  return score;
+  return Math.max(1, Math.round(score));
 }
 
 function calcDailyBonus() {

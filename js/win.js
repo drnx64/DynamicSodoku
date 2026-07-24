@@ -69,6 +69,7 @@ function showWinDialog() {
   if (!stats.firstGameDate) stats.firstGameDate = todayStr();
   stats.totalGames++;
   trackBonusGame();
+  stats._lastRankName = prevRank.name;
   stats.totalXp += totalEarned;
   stats.totalTime += state.timer;
   stats.gamesByDifficulty[state.difficulty] = (stats.gamesByDifficulty[state.difficulty] || 0) + 1;
@@ -86,7 +87,36 @@ function showWinDialog() {
   const leveledUp = newRank.name !== prevRank.name;
   log('[win] stats updated', { score, comboMult, comboBonus, totalEarned, newTotalXp: stats.totalXp, prevRank: prevRank.name, newRank: newRank.name, leveledUp });
 
-  document.getElementById('winXp').textContent = totalEarned;
+  const nextRank = getNextRank(stats.totalXp);
+  const isMaxRank = nextRank.name === newRank.name;
+  const rankDenom = isMaxRank ? 1 : (nextRank.xp - newRank.xp || 1);
+  const newProgress = isMaxRank ? 100 : ((stats.totalXp - newRank.xp) / rankDenom) * 100;
+  let prevProgress, oldRankProgress;
+  if (leveledUp) {
+    prevProgress = 0;
+    const oldNextRank = getNextRank(prevXp);
+    const oldDenom = oldNextRank.xp - prevRank.xp || 1;
+    oldRankProgress = Math.min(100, ((prevXp - prevRank.xp) / oldDenom) * 100);
+  } else if (isMaxRank) {
+    prevProgress = 100;
+    oldRankProgress = 100;
+  } else {
+    const prevDenom = nextRank.xp - newRank.xp || 1;
+    prevProgress = Math.min(100, Math.max(0, ((prevXp - newRank.xp) / prevDenom) * 100));
+    oldRankProgress = prevProgress;
+  }
+
+  document.getElementById('winRankCurrent').textContent = newRank.name;
+  document.getElementById('winRankCurrentIcon').innerHTML = rankSvgImg(newRank.name, 16);
+  document.getElementById('winRankNext').textContent = isMaxRank ? 'MAX RANK' : nextRank.name;
+  document.getElementById('winRankNextIcon').innerHTML = isMaxRank ? '' : rankSvgImg(nextRank.name, 16);
+  document.getElementById('winRankBarFill').style.width = prevProgress + '%';
+  document.getElementById('winRankBarText').textContent = Math.round(rankDenom * prevProgress / 100) + ' / ' + rankDenom + ' XP';
+  document.getElementById('winRankProgress').classList.add('has-text');
+  document.getElementById('winRankProgress').style.display = 'block';
+
+  const winXpEl = document.getElementById('winXp');
+  winXpEl.textContent = '0';
   const comboEl = document.getElementById('winComboBonus');
   if (comboEl) {
     comboEl.style.display = state.maxCombo >= 2 ? 'inline' : 'none';
@@ -94,7 +124,7 @@ function showWinDialog() {
   }
   const levelUpEl = document.getElementById('winLevelUp');
   if (leveledUp) {
-    levelUpEl.style.display = 'inline-block';
+    levelUpEl.style.display = 'none';
     levelUpEl.innerHTML = rankSvgImg(newRank.name, 18) + '\u2002&#8593; ' + newRank.name + '!';
   } else {
     levelUpEl.style.display = 'none';
@@ -112,27 +142,92 @@ function showWinDialog() {
   addScoreToLeaderboard(state.settings.playerName || 'Player', Math.round(totalEarned), state.difficulty);
   fireConfetti();
 
-  function openWinDialog() {
-    const winOverlay = document.getElementById('winOverlay');
-    if (!winOverlay) { log('[win] WARN: #winOverlay not found'); return; }
-    winOverlay.classList.add('open');
-    updateMenuUI();
+  function animateBar(from, to, dur, maxXp, onDone) {
+    const bar = document.getElementById('winRankBarFill');
+    const barText = document.getElementById('winRankBarText');
+    const steps = Math.ceil(dur / 16);
+    let step = 0;
+    function tick() {
+      step++;
+      const t = Math.min(step / steps, 1);
+      const ease = 1 - Math.pow(1 - t, 3);
+      const current = from + (to - from) * ease;
+      bar.style.width = current + '%';
+      barText.textContent = Math.round(maxXp * current / 100) + ' / ' + maxXp + ' XP';
+      winXpEl.textContent = Math.round(totalEarned * ease);
+      if (t < 1) requestAnimationFrame(tick);
+      else {
+        bar.style.width = to + '%';
+        barText.textContent = Math.round(maxXp * to / 100) + ' / ' + maxXp + ' XP';
+        winXpEl.textContent = totalEarned;
+        if (onDone) onDone();
+      }
+    }
+    requestAnimationFrame(tick);
   }
 
-  if (leveledUp) {
-    log('[win] showing rank-up animation');
+  function showRankupOverlay() {
+    log('[win] showing rank-up overlay');
     const overlay = document.getElementById('rankupOverlay');
-    if (!overlay) { log('[win] WARN: #rankupOverlay not found'); return; }
-    document.getElementById('rankupBadge').innerHTML = rankSvgImg(newRank.name, 96);
-    document.getElementById('rankupOldRank').textContent = prevRank.name;
-    document.getElementById('rankupNewRank').textContent = newRank.name;
+    if (!overlay) return;
+    document.getElementById('rankupOldIcon').innerHTML = rankSvgImg(prevRank.name, 80);
+    document.getElementById('rankupNewIcon').innerHTML = rankSvgImg(newRank.name, 80);
+    document.getElementById('rankupOldName').textContent = prevRank.name;
+    document.getElementById('rankupNewName').textContent = newRank.name;
+    document.getElementById('rankupEarnedXp').textContent = totalEarned;
     overlay.classList.add('open');
     setTimeout(() => {
       overlay.classList.remove('open');
-      openWinDialog();
-    }, 2200);
+      document.getElementById('winRankCurrent').textContent = newRank.name;
+      document.getElementById('winRankCurrentIcon').innerHTML = rankSvgImg(newRank.name, 16);
+      const nr = getNextRank(stats.totalXp);
+      const nrName = nr.name === newRank.name ? 'MAX RANK' : nr.name;
+      document.getElementById('winRankNext').textContent = nrName;
+      document.getElementById('winRankNextIcon').innerHTML = nrName === 'MAX RANK' ? '' : rankSvgImg(nr.name, 16);
+      document.getElementById('winRankBarFill').style.width = '0%';
+      document.getElementById('winRankBarText').textContent = '0 / ' + rankDenom + ' XP';
+      winXpEl.textContent = '0';
+      setTimeout(() => {
+        animateBar(0, Math.min(100, newProgress), 700, rankDenom, () => {
+          levelUpEl.style.display = 'inline-block';
+          levelUpEl.style.animation = 'pop 0.3s ease';
+        });
+      }, 300);
+    }, 3800);
+  }
+
+  function openNormal() {
+    const winOverlay = document.getElementById('winOverlay');
+    if (!winOverlay) return;
+    winOverlay.classList.add('open');
+    updateMenuUI();
+    document.getElementById('winRankBarFill').style.width = prevProgress + '%';
+    setTimeout(() => {
+      animateBar(prevProgress, Math.min(100, newProgress), 1000, rankDenom);
+    }, 400);
+  }
+
+  if (leveledUp) {
+    setTimeout(() => {
+      const winOverlay = document.getElementById('winOverlay');
+      if (!winOverlay) return;
+      winOverlay.classList.add('open');
+      updateMenuUI();
+      const oldNext = getNextRank(prevXp);
+      const oldRange = oldNext.xp - prevRank.xp || 1;
+      document.getElementById('winRankCurrent').textContent = prevRank.name;
+      document.getElementById('winRankCurrentIcon').innerHTML = rankSvgImg(prevRank.name, 16);
+      const oldNextName = oldNext.name === prevRank.name ? 'MAX RANK' : oldNext.name;
+      document.getElementById('winRankNext').textContent = oldNextName;
+      document.getElementById('winRankNextIcon').innerHTML = oldNextName === 'MAX RANK' ? '' : rankSvgImg(oldNext.name, 16);
+      document.getElementById('winRankBarFill').style.width = oldRankProgress + '%';
+      document.getElementById('winRankBarText').textContent = Math.round(oldRange * oldRankProgress / 100) + ' / ' + oldRange + ' XP';
+      setTimeout(() => {
+        animateBar(oldRankProgress, 100, 700, oldRange, showRankupOverlay);
+      }, 400);
+    }, 100);
   } else {
-    openWinDialog();
+    openNormal();
   }
 }
 

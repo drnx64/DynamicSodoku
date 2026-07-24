@@ -26,6 +26,12 @@ function updateMenuUI() {
   const xpCurrent = document.getElementById('xpCurrent');
   if (xpCurrent) xpCurrent.textContent = totalXp + ' XP';
 
+  if (stats._lastRankName && stats._lastRankName !== rank.name) {
+    levelBadge.classList.add('ranked-up');
+  } else {
+    levelBadge.classList.remove('ranked-up');
+  }
+
   if (nextRank && nextRank.xp > rank.xp) {
     const denom = nextRank.xp - rank.xp || 1;
     const progress = ((totalXp - rank.xp) / denom) * 100;
@@ -71,13 +77,28 @@ function updateMenuUI() {
   const earned = stats.achievements || [];
   const achieveSub = document.getElementById('achieveSub');
   if (achieveSub) {
-    achieveSub.textContent = earned.length + ' / ' + ACHIEVEMENTS.length + ' unlocked';
+    const newCount = (stats._newAchievements || []).length;
+    achieveSub.textContent = earned.length + ' / ' + ACHIEVEMENTS.length + ' unlocked' + (newCount > 0 ? '  \u2714 +' + newCount + ' new!' : '');
   }
   const bonusCircle = document.getElementById('bonusCircle');
   if (bonusCircle) {
     loadBonus();
     const ready = isBonusChallengeActive() && (bonusChallenge.gamesPlayed || 0) >= 10;
     bonusCircle.classList.toggle('claimable', ready);
+  }
+
+  const continueCard = document.getElementById('continueCard');
+  const continueSub = document.getElementById('continueSub');
+  if (continueCard) {
+    const saved = hasSavedGame();
+    if (saved) {
+      continueCard.style.display = '';
+      const diff = saved.difficulty || 'easy';
+      const timer = saved.timer || 0;
+      if (continueSub) continueSub.textContent = 'Resume ' + capitalize(diff) + ' game \u2022 ' + formatTime(timer);
+    } else {
+      continueCard.style.display = 'none';
+    }
   }
   log('[menu] updateMenuUI complete', { rank: rank.name, xp: totalXp, streak: s });
 }
@@ -223,6 +244,25 @@ function setupDialogs() {
   if (xpBarWrap) xpBarWrap.addEventListener('click', () => { log('[menu] click: xpBarWrap'); showRankJourney(); });
   const streakBadge = document.getElementById('streakBadge');
   if (streakBadge) streakBadge.addEventListener('click', () => { log('[menu] click: streakBadge'); showStreakJourney(); });
+  const continueCard = document.getElementById('continueCard');
+  if (continueCard) continueCard.addEventListener('click', () => {
+    log('[menu] click: continueCard');
+    if (loadGame()) {
+      state.isDaily = false;
+      state.gameMode = 'normal';
+      document.getElementById('gameLabel').textContent = capitalize(state.difficulty);
+      document.getElementById('winOverlay').classList.remove('open');
+      const gameBadge = document.getElementById('gameLevelBadge');
+      if (gameBadge) gameBadge.style.display = 'inline-flex';
+      const numBadge = document.getElementById('gameLevelNum');
+      if (numBadge) numBadge.textContent = state.currentLevel;
+      updateUndoRedo();
+      render({ entering: true });
+      if (state.timer > 0 && !state.won && !state.gameOver) startTimer();
+      showPage('page-game');
+    }
+  });
+
   const achieveCard = document.getElementById('achieveCard');
   if (achieveCard) achieveCard.addEventListener('click', () => { log('[menu] click: achieveCard'); showAchievements(); });
   const statsCard = document.getElementById('statsCard');
@@ -398,6 +438,7 @@ function showRankJourney() {
 function showAchievements() {
   log('[menu] showAchievements()');
   const earned = stats.achievements || [];
+  const newAchievements = stats._newAchievements || [];
   const filter = document.querySelector('#achieveFilterTabs .achieve-tab.active')?.dataset?.filter || 'all';
   const catFilter = document.querySelector('#achieveCatTabs .achieve-cat-tab.active')?.dataset?.cat || 'all';
   const grid = document.getElementById('achieveGrid');
@@ -458,15 +499,17 @@ function showAchievements() {
       grid.appendChild(header);
     }
     const unlocked = earned.includes(a.id);
+    const isNew = newAchievements.includes(a.id);
     const card = document.createElement('div');
-    card.className = 'achieve-card' + (unlocked ? ' unlocked' : '');
+    card.className = 'achieve-card' + (unlocked ? ' unlocked' : '') + (isNew ? ' achieve-new' : '');
     const progress = getAchievementProgress(a.id);
     let progressHtml = '';
     if (progress && !unlocked) {
       const pct = Math.min(100, (progress.current / progress.max * 100));
       progressHtml = '<div class="achieve-progress"><div class="achieve-progress-fill" style="width:' + pct + '%"></div></div><div class="achieve-progress-label">' + progress.current + '/' + progress.max + '</div>';
     }
-    card.innerHTML = '<div class="achieve-icon"><svg width="22" height="22" viewBox="0 0 24 24"><use href="#' + a.icon + '"/></svg></div><div class="achieve-info"><div class="achieve-name">' + a.name + '</div><div class="achieve-desc">' + a.desc + '</div>' + progressHtml + '</div>';
+    const newBadge = isNew ? '<span class="achieve-new-badge">NEW</span>' : '';
+    card.innerHTML = '<div class="achieve-icon"><svg width="22" height="22" viewBox="0 0 24 24"><use href="#' + a.icon + '"/></svg></div><div class="achieve-info"><div class="achieve-name">' + a.name + newBadge + '</div><div class="achieve-desc">' + a.desc + '</div>' + progressHtml + '</div>';
     grid.appendChild(card);
   }
 
@@ -477,6 +520,11 @@ function showAchievements() {
 
   const filterTabs = document.getElementById('achieveFilterTabs');
   if (filterTabs) filterTabs.scrollLeft = 0;
+
+  if (newAchievements.length > 0) {
+    clearNewAchievements();
+    updateMenuUI();
+  }
 
   log('[menu] achievements page shown');
 }

@@ -10,7 +10,7 @@ const DEFAULT_SETTINGS = {
   timerVisible: true, darkTheme: false, soundEnabled: true, autoClearNotes: true,
   hapticFeedback: true, autoDarkMode: true, keyboardShortcuts: true,
   colorTheme: 'default', soundTheme: 'classic', playerName: 'Player',
-  showCoordinates: false,
+  showCoordinates: true,
 };
 
 const SETTINGS_CATEGORIES = [

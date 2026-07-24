@@ -127,6 +127,26 @@
   border-color: rgba(251,191,36,0.3);
   box-shadow: 0 1px 8px rgba(251,191,36,0.08);
 }
+.achieve-card.achieve-new {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-glow), 0 1px 8px rgba(37,99,235,0.12);
+  animation: achieveNewPulse 2s ease-in-out 3;
+}
+@keyframes achieveNewPulse {
+  0%, 100% { box-shadow: 0 0 0 2px var(--accent-glow), 0 1px 8px rgba(37,99,235,0.12); }
+  50% { box-shadow: 0 0 0 4px var(--accent-glow), 0 2px 16px rgba(37,99,235,0.2); }
+}
+.achieve-new-badge {
+  font-size: 9px;
+  font-weight: 800;
+  color: #fff;
+  background: var(--accent);
+  padding: 1px 6px;
+  border-radius: 8px;
+  margin-left: 6px;
+  vertical-align: middle;
+  letter-spacing: 0.3px;
+}
 .achieve-card .achieve-icon {
   width: 40px; height: 40px;
   display: flex; align-items: center; justify-content: center;
@@ -564,8 +584,9 @@
   z-index: 300;
   justify-content: center;
   align-items: center;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  contain: strict;
 }
 .daily-entry-overlay.open { display: flex; }
 
@@ -576,6 +597,7 @@
   background: radial-gradient(ellipse at center, rgba(251,191,36,0.12) 0%, rgba(245,158,11,0.05) 40%, transparent 70%);
   animation: glowPulse 1.2s ease;
   pointer-events: none;
+  will-change: transform, opacity;
 }
 
 .daily-entry-overlay::after {
@@ -587,18 +609,13 @@
     radial-gradient(2px 2px at 35% 65%, rgba(251,191,36,0.5), transparent),
     radial-gradient(2px 2px at 55% 8%, rgba(255,255,255,0.4), transparent),
     radial-gradient(2px 2px at 75% 75%, rgba(236,72,153,0.4), transparent),
-    radial-gradient(2px 2px at 92% 35%, rgba(251,191,36,0.5), transparent),
-    radial-gradient(2px 2px at 8% 85%, rgba(255,255,255,0.4), transparent),
-    radial-gradient(2px 2px at 68% 15%, rgba(245,158,11,0.4), transparent),
     radial-gradient(2px 2px at 45% 92%, rgba(236,72,153,0.3), transparent),
-    radial-gradient(3px 3px at 85% 55%, rgba(251,191,36,0.3), transparent),
-    radial-gradient(3px 3px at 22% 45%, rgba(255,255,255,0.3), transparent),
-    radial-gradient(2px 2px at 60% 40%, rgba(251,191,36,0.5), transparent),
-    radial-gradient(2px 2px at 40% 30%, rgba(236,72,153,0.4), transparent);
+    radial-gradient(2px 2px at 60% 40%, rgba(251,191,36,0.5), transparent);
   background-size: 100% 100%;
   background-repeat: no-repeat;
-  animation: particleDrift 1.2s ease;
+  animation: particleDrift 0.8s ease;
   pointer-events: none;
+  will-change: opacity;
 }
 
 .daily-entry-card {
@@ -606,6 +623,7 @@
   text-align: center;
   animation: cardMain 1.2s ease forwards;
   transform-origin: center center;
+  will-change: transform, opacity;
 }
 
 .daily-entry-card::before,
@@ -613,10 +631,11 @@
   content: '';
   position: absolute;
   top: 50%; left: 50%;
-  width: 160px; height: 160px;
-  transform: translate(-50%, -50%);
+  width: 260px; height: 260px;
+  transform: translate(-50%, -50%) scale(0.6);
   border-radius: 50%;
   pointer-events: none;
+  will-change: transform, opacity;
 }
 
 .daily-entry-card::before {

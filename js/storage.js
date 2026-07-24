@@ -503,9 +503,18 @@ function checkAchievements(difficulty, mistakes, hintsUsed, notesUsed, score, au
   }
   if (newOnes.length > 0) {
     stats.achievements = earned;
+    stats._newAchievements = [...(stats._newAchievements || []), ...newOnes];
     saveStats();
-    showAchievementToast(newOnes);
   }
+}
+
+function hasNewAchievements() {
+  return (stats._newAchievements || []).length > 0;
+}
+
+function clearNewAchievements() {
+  stats._newAchievements = [];
+  saveStats();
 }
 
 function getAchievementProgress(id) {
@@ -611,30 +620,7 @@ function getAchievementProgress(id) {
   }
 }
 
-function showAchievementToast(ids) {
-  log('[storage] showAchievementToast()', { ids });
-  const container = document.getElementById('achievementToastContainer') || (() => {
-    const el = document.createElement('div');
-    el.id = 'achievementToastContainer';
-    el.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:400;display:flex;flex-direction:column;gap:12px;pointer-events:none;align-items:center;';
-    document.body.appendChild(el);
-    return el;
-  })();
-  ids.forEach((id, idx) => {
-    const a = ACHIEVEMENTS.find(x => x.id === id);
-    if (!a) { log('[storage] achievement not found', { id }); return; }
-    const toast = document.createElement('div');
-    toast.style.cssText = 'background:linear-gradient(135deg,var(--xp-gold),#f97316,#ef4444);color:#fff;padding:18px 32px;border-radius:14px;font-size:17px;font-weight:700;box-shadow:0 8px 32px rgba(0,0,0,0.3);animation:achievePop 1.2s ease forwards;display:flex;align-items:center;gap:12px;text-align:center;border:2px solid rgba(255,255,255,0.3);max-width:340px;';
-    toast.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24"><use href="#' + a.icon + '"/></svg> <div><div style="font-size:11px;opacity:0.8;font-weight:600;text-transform:uppercase;letter-spacing:1px;">Achievement Unlocked!</div><div>' + a.name + '</div></div>';
-    setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateY(-20px)'; toast.style.transition = 'all 0.5s ease'; setTimeout(() => toast.remove(), 500); }, 4000 + idx * 800);
-    container.appendChild(toast);
-  });
 
-  if ('Notification' in window && Notification.permission === 'granted') {
-    const first = ACHIEVEMENTS.find(x => x.id === ids[0]);
-    if (first) new Notification('Achievement Unlocked!', { body: first.name + ' - ' + first.desc, icon: 'assets/icon.svg' });
-  }
-}
 
 let stats = {
   totalGames: 0, totalXp: 0, totalTime: 0,
@@ -642,6 +628,7 @@ let stats = {
   bestTimes: { easy: Infinity, medium: Infinity, hard: Infinity, impossible: Infinity },
   bestStreak: 0,
   achievements: [],
+  _newAchievements: [],
   puzzlesNoHints: 0,
   flawlessCount: 0,
   dailyChallengesDone: 0,
@@ -653,6 +640,7 @@ let stats = {
   highestLevel: 1,
   highestLevelByDifficulty: { easy: 0, medium: 0, hard: 0, impossible: 0 },
   firstGameDate: null,
+  _lastRankName: null,
   _vault: '',
 };
 
@@ -727,7 +715,8 @@ function claimBonusReward() {
 function loadStats() {
   log('[storage] loadStats()');
   stats = loadWithVault(LS.stats, 'stats', stats);
-  log('[storage] stats loaded', { totalGames: stats.totalGames, totalXp: stats.totalXp });
+  if (!stats._lastRankName) stats._lastRankName = getRank(stats.totalXp || 0).name;
+  log('[storage] stats loaded', { totalGames: stats.totalGames, totalXp: stats.totalXp, _lastRankName: stats._lastRankName });
 }
 function saveStats() {
   log('[storage] saveStats()', { totalGames: stats.totalGames, totalXp: stats.totalXp });
@@ -751,6 +740,7 @@ function verifyStatsIntegrity() {
     if (!decoded) return;
     let tampered = false;
     for (const k of Object.keys(decoded)) {
+      if (k === '_vault') continue;
       if (decoded[k] !== undefined && JSON.stringify(decoded[k]) !== JSON.stringify(data[k])) {
         log('[storage] integrity violation for', { field: k, vault: decoded[k], stored: data[k] });
         data[k] = decoded[k];
@@ -767,7 +757,8 @@ function verifyStatsIntegrity() {
 
 function encodeVault(obj, type) {
   const salt = type + '_sd_v3';
-  const raw = salt + ':' + JSON.stringify(obj);
+  const { _vault, ...clean } = obj;
+  const raw = salt + ':' + JSON.stringify(clean);
   return btoa(btoa(raw).split('').reverse().join(''));
 }
 function decodeVault(encoded) {
@@ -805,6 +796,7 @@ function loadWithVault(key, type, defaults) {
     if (!decoded) { log('[storage] vault decode failed for', { key, type }); return data; }
     let tampered = false;
     for (const k of Object.keys(decoded)) {
+      if (k === '_vault') continue;
       if (decoded[k] !== undefined && JSON.stringify(decoded[k]) !== JSON.stringify(data[k])) {
         log('[storage] tamper detected for', { key, field: k, vault: decoded[k], stored: data[k] });
         data[k] = decoded[k];
@@ -889,6 +881,14 @@ function requestNotificationPermission() {
 }
 
 const LEVEL_PROGRESS_KEY = 'sudoku_level_progress';
+
+function hasSavedGame() {
+  try {
+    const data = loadWithVault(LS.game, 'game', null);
+    if (data && !data.won && !data.gameOver && (data.mistakes || 0) < 3 && data.board) return data;
+  } catch(e) {}
+  return null;
+}
 
 function saveLevelProgress(difficulty, level) {
   try {

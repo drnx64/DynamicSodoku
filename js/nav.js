@@ -86,10 +86,7 @@ function setupNavigation() {
     gameBack.addEventListener('click', () => {
       log('[nav] click: gameBack', { started: state.started, won: state.won, gameOver: state.gameOver });
       if (state.started && !state.won && !state.gameOver) {
-        showConfirm('Leave the current game? You will get a new puzzle next time.', () => {
-          clearGame();
-          showPage('page-menu');
-        });
+        showGameExitConfirm();
       } else {
         clearGame();
         showPage('page-menu');
@@ -266,15 +263,52 @@ function setupNavigation() {
   });
 }
 
-function showConfirm(msg, callback) {
-  log('[nav] showConfirm()', { msg });
+function showGameExitConfirm() {
+  log('[nav] showGameExitConfirm()');
   const overlay = document.getElementById('confirmOverlay');
   if (!overlay) { log('[nav] WARN: #confirmOverlay not found'); return; }
-  const confirmMsg = document.getElementById('confirmMsg');
-  const confirmIcon = document.getElementById('confirmIcon');
-  if (!confirmMsg || !confirmIcon) { log('[nav] WARN: confirm dialog elements missing'); return; }
-  confirmMsg.textContent = msg;
+  document.getElementById('confirmMsg').textContent = 'Save your game and come back later, or quit without saving?';
   overlay.classList.add('open');
-  document.getElementById('confirmOk').onclick = () => { log('[nav] confirmOk clicked'); overlay.classList.remove('open'); callback(); };
-  document.getElementById('confirmCancel').onclick = () => { log('[nav] confirmCancel clicked'); overlay.classList.remove('open'); };
+
+  const saveQuitBtn = document.getElementById('confirmSaveQuit');
+  const quitBtn = document.getElementById('confirmQuit');
+  const cancelBtn = document.getElementById('confirmCancel');
+
+  const pauseOverlay = document.getElementById('pauseOverlay');
+
+  const cleanup = () => {
+    overlay.classList.remove('open');
+    saveQuitBtn.onclick = null;
+    quitBtn.onclick = null;
+    cancelBtn.onclick = null;
+  };
+
+  saveQuitBtn.onclick = () => {
+    log('[nav] saveQuit clicked');
+    if (pauseOverlay) pauseOverlay.classList.remove('open');
+    document.getElementById('page-game')?.classList.remove('paused');
+    document.getElementById('timerWrap')?.classList.remove('paused');
+    pauseTimer();
+    saveGame();
+    cleanup();
+    showPage('page-menu');
+    updateMenuUI();
+  };
+
+  quitBtn.onclick = () => {
+    log('[nav] quit clicked');
+    if (pauseOverlay) pauseOverlay.classList.remove('open');
+    document.getElementById('page-game')?.classList.remove('paused');
+    document.getElementById('timerWrap')?.classList.remove('paused');
+    pauseTimer();
+    clearGame();
+    cleanup();
+    showPage('page-menu');
+    updateMenuUI();
+  };
+
+  cancelBtn.onclick = () => {
+    log('[nav] cancel clicked');
+    cleanup();
+  };
 }

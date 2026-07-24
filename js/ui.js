@@ -304,17 +304,14 @@ function setupInput() {
     document.getElementById('pauseResumeBtn')?.addEventListener('click', togglePause);
     document.getElementById('pauseQuitBtn')?.addEventListener('click', () => {
       log('[ui] click: pauseQuitBtn');
-      document.getElementById('pauseOverlay')?.classList.remove('open');
-      document.getElementById('page-game')?.classList.remove('paused');
-      document.getElementById('timerWrap')?.classList.remove('paused');
-      if (state.timerRunning && !state.won && !state.gameOver) {
-        pauseTimer();
-      }
       if (state.started && !state.won && !state.gameOver) {
+        showGameExitConfirm();
+      } else {
+        document.getElementById('pauseOverlay')?.classList.remove('open');
         clearGame();
+        showPage('page-menu');
+        updateMenuUI();
       }
-      showPage('page-menu');
-      updateMenuUI();
     });
   }
 

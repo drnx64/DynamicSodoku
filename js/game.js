@@ -99,7 +99,7 @@ function placeNumber(row, col, num) {
     if (!state.started) { state.started = true; startTimer(); }
     render({ shakeCell: [row, col], mistakeCell: [row, col] });
     saveGame(); playSound('error');
-    haptic([30, 60, 40, 70, 50, 80, 60]);
+    haptic([80, 30, 100, 30, 120, 30, 150]);
     const boardWrap = document.getElementById('boardWrap');
     if (boardWrap) { boardWrap.classList.remove('mistake-shake'); void boardWrap.offsetWidth; boardWrap.classList.add('mistake-shake'); }
     document.body.classList.remove('body-shake'); void document.body.offsetWidth; document.body.classList.add('body-shake');
