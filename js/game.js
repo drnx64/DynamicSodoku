@@ -104,7 +104,7 @@ function placeNumber(row, col, num) {
     if (boardWrap) { boardWrap.classList.remove('mistake-shake'); void boardWrap.offsetWidth; boardWrap.classList.add('mistake-shake'); }
     document.body.classList.remove('body-shake'); void document.body.offsetWidth; document.body.classList.add('body-shake');
     const mo = document.getElementById('mistakeOverlay');
-    if (mo) { mo.classList.remove('open'); void mo.offsetWidth; mo.classList.add('open'); setTimeout(() => { mo.classList.remove('open'); document.body.classList.remove('body-shake'); }, 1200); }
+    if (mo) { mo.classList.remove('open'); void mo.offsetWidth; mo.classList.add('open'); setTimeout(() => { mo.classList.remove('open'); document.body.classList.remove('body-shake'); }, 900); }
     if (state.mistakes >= 3) {
       log('[game] placeNumber: 3 mistakes reached');
       gameOver();
