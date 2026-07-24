@@ -344,12 +344,32 @@ const GAME_SETTINGS_ITEMS = [
   { key: 'showCoordinates', label: 'Show coordinates (A1-I9)' },
 ];
 
+const GAME_SETTINGS_EXTRA = [
+  { type: 'separator' },
+  { type: 'theme' },
+  { type: 'select', key: 'colorTheme', label: 'Color theme', options: [
+    { value: 'default', label: 'Default' },
+    { value: 'ocean', label: 'Ocean' },
+    { value: 'forest', label: 'Forest' },
+    { value: 'sunset', label: 'Sunset' },
+    { value: 'midnight', label: 'Midnight' },
+  ]},
+  { type: 'select', key: 'soundTheme', label: 'Sound theme', options: [
+    { value: 'classic', label: 'Classic' },
+    { value: 'piano', label: 'Piano' },
+    { value: 'digital', label: 'Digital' },
+    { value: 'retro', label: 'Retro' },
+  ]},
+];
+
 function setupGameSettings() {
   log('[settings] setupGameSettings()');
   const body = document.getElementById('gameSettingsBody');
   if (!body) return;
   body.innerHTML = '';
-  for (const item of GAME_SETTINGS_ITEMS) {
+  
+  const allItems = [...GAME_SETTINGS_ITEMS];
+  for (const item of allItems) {
     const row = document.createElement('div');
     row.className = 'setting-row';
     const label = document.createElement('span');
@@ -368,6 +388,79 @@ function setupGameSettings() {
     row.appendChild(toggle);
     body.appendChild(row);
   }
+
+  // separator
+  const sep = document.createElement('div');
+  sep.style.cssText = 'height:1px;background:var(--border);margin:8px 0;';
+  body.appendChild(sep);
+
+  // theme options
+  const themeRow = document.createElement('div');
+  themeRow.className = 'setting-row';
+  themeRow.style.flexDirection = 'column';
+  themeRow.style.alignItems = 'stretch';
+  themeRow.style.gap = '6px';
+  const themeLabel = document.createElement('span');
+  themeLabel.className = 'setting-label';
+  themeLabel.textContent = 'Color theme';
+  themeRow.appendChild(themeLabel);
+  const themeOpts = document.createElement('div');
+  themeOpts.style.cssText = 'display:flex;gap:4px;flex-wrap:wrap;';
+  const themes = [
+    { id: 'default', label: 'Default', style: 'linear-gradient(135deg,#f0f2f5,#fff)' },
+    { id: 'ocean', label: 'Ocean', style: 'linear-gradient(135deg,#e8f4f8,#fff)' },
+    { id: 'forest', label: 'Forest', style: 'linear-gradient(135deg,#ecfdf5,#fff)' },
+    { id: 'sunset', label: 'Sunset', style: 'linear-gradient(135deg,#fff1f2,#fff)' },
+    { id: 'midnight', label: 'Midnight', style: 'linear-gradient(135deg,#1e293b,#0f172a);color:#e2e8f0' },
+  ];
+  const currentTheme = state.settings.colorTheme || 'default';
+  for (const t of themes) {
+    const btn = document.createElement('button');
+    btn.className = 'theme-option';
+    btn.style.cssText = 'background:' + t.style + ';font-size:10px;padding:5px 8px;border-radius:6px;border:2px solid transparent;cursor:pointer;font-weight:600;';
+    if (t.id === currentTheme) btn.style.borderColor = '#7c5cfc';
+    btn.textContent = t.label;
+    btn.addEventListener('click', () => {
+      themeOpts.querySelectorAll('button').forEach(b => b.style.borderColor = 'transparent');
+      btn.style.borderColor = '#7c5cfc';
+      state.settings.colorTheme = t.id;
+      applySettings();
+      saveSettings();
+    });
+    themeOpts.appendChild(btn);
+  }
+  themeRow.appendChild(themeOpts);
+  body.appendChild(themeRow);
+
+  // sound theme select
+  const soundRow = document.createElement('div');
+  soundRow.className = 'setting-row';
+  const soundLabel = document.createElement('span');
+  soundLabel.className = 'setting-label';
+  soundLabel.textContent = 'Sound theme';
+  const soundSelect = document.createElement('select');
+  soundSelect.className = 'setting-select';
+  const soundThemes = [
+    { value: 'classic', label: 'Classic' },
+    { value: 'piano', label: 'Piano' },
+    { value: 'digital', label: 'Digital' },
+    { value: 'retro', label: 'Retro' },
+  ];
+  for (const opt of soundThemes) {
+    const op = document.createElement('option');
+    op.value = opt.value;
+    op.textContent = opt.label;
+    if (state.settings.soundTheme === opt.value) op.selected = true;
+    soundSelect.appendChild(op);
+  }
+  soundSelect.addEventListener('change', () => {
+    state.settings.soundTheme = soundSelect.value;
+    applySettings();
+    saveSettings();
+  });
+  soundRow.appendChild(soundLabel);
+  soundRow.appendChild(soundSelect);
+  body.appendChild(soundRow);
 }
 
 function exportData() {

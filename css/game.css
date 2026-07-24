@@ -80,7 +80,7 @@
 .coords-row-area {
   position: absolute;
   top: 0; left: 26px; right: 0;
-  height: 20px;
+  height: 22px;
   display: grid;
   grid-template-columns: repeat(9, 1fr);
   gap: 0;
@@ -88,29 +88,29 @@
 .coords-row-area .coords-col {
   display: flex; align-items: flex-end; justify-content: center;
   padding-bottom: 3px;
-  font-size: 12px; font-weight: 700;
+  font-size: clamp(11px, 2.8vw, 16px); font-weight: 700;
   letter-spacing: 0.3px;
   color: #7c5cfc;
 }
 
 .coords-col-area {
   position: absolute;
-  left: 0; top: 22px; bottom: 0;
-  width: 22px;
+  left: 0; top: 24px; bottom: 0;
+  width: 24px;
   display: grid;
   grid-template-rows: repeat(9, 1fr);
   gap: 0;
 }
 .coords-col-area .coords-row {
   display: flex; align-items: center; justify-content: center;
-  padding-right: 2px;
-  font-size: 12px; font-weight: 700;
+  padding-right: 3px;
+  font-size: clamp(11px, 2.8vw, 16px); font-weight: 700;
   color: #f59e0b;
 }
 
 #boardWrap {
   position: absolute;
-  inset: 22px 0 0 24px;
+  inset: 24px 0 0 26px;
   background: var(--glass);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -578,7 +578,7 @@ body.body-shake { animation:bodyShake 0.6s ease; }
   background: var(--bg);
   border-radius: 16px;
   padding: 20px;
-  width: min(90vw, 360px);
+  width: min(92vw, 380px);
   max-height: 80vh;
   overflow-y: auto;
   box-shadow: 0 20px 60px rgba(0,0,0,0.3);
@@ -629,4 +629,9 @@ body.body-shake { animation:bodyShake 0.6s ease; }
 }
 .game-settings-body .toggle {
   flex-shrink: 0;
+}
+.game-settings-body select.setting-select {
+  font-size: 12px; padding: 4px 8px; border-radius: 6px;
+  border: 1.5px solid var(--border); background: var(--btn-bg);
+  color: var(--text); font-weight: 500; cursor: pointer;
 }
