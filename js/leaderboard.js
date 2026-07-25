@@ -58,30 +58,66 @@ function getMockLeaderboard() {
   const cached = loadWithVault(MOCK_CACHE_KEY, 'mockLeaderboard', null);
   if (cached && Array.isArray(cached) && cached.length > 0) return cached;
 
-  const mockNames = ['SudokuMaster', 'LogicQueen', 'NumberNinja', 'GridWizard', 'CellKing', 'PuzzleWhiz', 'DigitDancer', 'RowRuler', 'BoxBoss', 'CageBreaker', 'SolverSam', 'BrainAce', 'PencilMark', 'XWingFox', 'Swordfish'];
+  const mockNames = [
+    'GrandmasterZen', 'SageOfSudoku', 'NumberWizard', 'LogicOverlord', 'GridDeity',
+    'SudokuSamurai', 'PuzzleTitan', 'CellSorcerer', 'BoxMagician', 'RowEnforcer',
+    'DigitMystic', 'RiddleMaster', 'BrainStorm', 'SolverElite', 'PuzzleProphet',
+    'SudokuMaster', 'LogicQueen', 'NumberNinja', 'GridWizard', 'CellKing',
+    'PuzzleWhiz', 'DigitDancer', 'RowRuler', 'BoxBoss', 'CageBreaker',
+    'SolverSam', 'BrainAce', 'PencilMark', 'XWingFox', 'Swordfish',
+    'NakedPair', 'HiddenTriple', 'SkyScraper', 'WXYZwing', 'BugHunter',
+    'QuantumGrid', 'NeuralSolver', 'DeductionKing',
+  ];
   const userXp = stats.totalXp || 0;
   const userGames = stats.totalGames || 0;
-  const baseScore = userGames > 0 ? Math.round(userXp / userGames) : 20;
   const today = todayStr().replace(/-/g, '');
   const seed = parseInt(today, 10) || 20260718;
   let r = seed;
   const next = () => { r = (r * 1103515245 + 12345) & 0x7fffffff; return r / 0x7fffffff; };
 
+  const XP_TIERS = [
+    { minXp: 180000, maxXp: 280000, minGames: 500, maxGames: 1200, count: 8 },
+    { minXp: 85000,  maxXp: 179999, minGames: 200, maxGames: 499,  count: 5 },
+    { minXp: 59000,  maxXp: 84999,  minGames: 120, maxGames: 199,  count: 5 },
+    { minXp: 29000,  maxXp: 58999,  minGames: 60,  maxGames: 119,  count: 5 },
+    { minXp: 8000,   maxXp: 28999,  minGames: 20,  maxGames: 59,   count: 5 },
+    { minXp: 500,    maxXp: 7999,   minGames: 2,   maxGames: 19,   count: 10 },
+  ];
+
+  let tierIdx = 0, usedInTier = 0;
   const data = mockNames.map((name, i) => {
+    if (tierIdx < XP_TIERS.length && usedInTier >= XP_TIERS[tierIdx].count) { usedInTier = 0; tierIdx++; }
+    const t = XP_TIERS[Math.min(tierIdx, XP_TIERS.length - 1)];
+    usedInTier++;
     const s1 = next(), s2 = next(), s3 = next(), s4 = next();
-    const varScore = Math.round(baseScore * (0.5 + s1 * 0.5) + s2 * 30);
-    const games = Math.round(Math.max(1, userGames * (0.2 + s3 * 1.3)));
-    const xp = varScore * games + Math.round(s4 * 100);
+    const xp = Math.round(t.minXp + s1 * (t.maxXp - t.minXp));
+    const games = Math.round(t.minGames + s2 * (t.maxGames - t.minGames));
+    const varScore = Math.max(5, Math.round(xp / games));
     const diffs = ['easy','medium','hard','impossible'];
     return {
-      name, score: varScore + Math.round(next() * 15),
-      xp, games, difficulty: diffs[Math.floor(next() * 4)],
-      date: todayStr(), id: i + 1, isMock: true,
+      name,
+      score: Math.max(1, varScore + Math.round(s3 * 20 - 5)),
+      xp: Math.max(1, xp),
+      games: Math.max(1, games),
+      difficulty: diffs[Math.floor(s4 * 4)],
+      date: todayStr(),
+      id: i + 1,
+      isMock: true,
     };
-  }).sort((a, b) => b.score - a.score);
+  }).sort((a, b) => b.xp - a.xp);
 
   saveWithVault(MOCK_CACHE_KEY, data, 'mockLeaderboard');
   return data;
+}
+
+function getRankInfo(xp) {
+  const r = getRank(xp || 0);
+  return { name: r.name, icon: rankSvgImg(r.name, 14) };
+}
+
+function getRankSuffix(name) {
+  const parts = name.split(' ');
+  return parts[parts.length - 1];
 }
 
 function renderLeaderboard(view) {
@@ -101,28 +137,45 @@ function renderLeaderboard(view) {
     entries.push(userEntry);
   }
   if (view === 'top') {
-    entries.sort((a, b) => b.score - a.score);
+    entries.sort((a, b) => (b.xp || 0) - (a.xp || 0) || (b.games || 0) - (a.games || 0));
   } else {
     entries.sort((a, b) => b.id - a.id);
   }
   const top = entries.slice(0, 50);
   log('[leaderboard] rendering entries', { count: top.length, view, userRank: top.findIndex(e => e.isMe) + 1 });
-  list.innerHTML = top.map((e, i) => {
+
+  const firstGameDate = stats.firstGameDate || '--';
+  const userRank = getRank(stats.totalXp || 0);
+  const profileHtml = '<div class="leader-profile">'
+    + '<div class="leader-profile-avatar">' + rankSvgImg(userRank.name, 36) + '</div>'
+    + '<div class="leader-profile-info">'
+    + '<div class="leader-profile-name">' + escapeHtml(state.settings.playerName || 'Player') + '</div>'
+    + '<div class="leader-profile-rank">' + userRank.name + ' \u00b7 ' + (stats.totalXp || 0) + ' XP</div>'
+    + '<div class="leader-profile-joined">Joined ' + firstGameDate + ' \u00b7 ' + (stats.totalGames || 0) + ' puzzles solved</div>'
+    + '</div>'
+    + '</div>';
+
+  const rowsHtml = top.map((e, i) => {
     const topThree = i < 3;
     const rankCls = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : '';
     const rankLabel = i === 0 ? '1' : i === 1 ? '2' : i === 2 ? '3' : '#' + (i + 1);
+    const rankInfo = getRankInfo(e.xp);
     const avatarUrl = 'https://api.dicebear.com/9.x/pixel-art/svg?seed=' + encodeURIComponent(e.name) + '&scale=120';
     const fallbackAvatar = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30"><rect width="30" height="30" fill="%23e4e7ec" rx="15"/><text x="15" y="20" font-size="16" font-weight="700" fill="%23888" text-anchor="middle" font-family="sans-serif">' + (e.name ? e.name.charAt(0).toUpperCase() : '?') + '</text></svg>');
     const detail = view === 'recent'
       ? e.difficulty + ' \u00b7 ' + e.date
-      : e.difficulty + ' \u00b7 ' + (e.games || 0) + ' games';
+      : (e.xp || 0) + ' XP \u00b7 ' + (e.games || 0) + ' games';
+    const scoreLabel = view === 'top' ? e.xp || 0 : '+' + e.score;
     return '<div class="leader-entry' + (topThree ? ' top-three' : '') + (e.isMe ? ' is-me' : '') + '">'
       + '<div class="leader-rank ' + rankCls + '">' + rankLabel + '</div>'
+      + '<div class="leader-badge-wrap"><div class="leader-rank-icon">' + rankInfo.icon + '</div><div class="leader-rank-label">' + getRankSuffix(rankInfo.name) + '</div></div>'
       + '<img class="leader-avatar" src="' + avatarUrl + '" alt="" loading="lazy" onerror="this.src=\'' + fallbackAvatar + '\'">'
       + '<div class="leader-info"><div class="leader-name">' + escapeHtml(e.name) + '</div><div class="leader-detail">' + detail + '</div></div>'
-      + '<div class="leader-score">+' + e.score + '</div>'
+      + '<div class="leader-score">' + scoreLabel + '</div>'
       + '</div>';
   }).join('');
+
+  list.innerHTML = profileHtml + rowsHtml;
 
   const tabs = document.querySelector('.leader-tabs');
   if (tabs) tabs.scrollLeft = 0;

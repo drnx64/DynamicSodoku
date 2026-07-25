@@ -1,11 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
   <defs>
-    <radialGradient id="g1" cx="50%" cy="30%" r="60%"><stop offset="0%" stop-color="#fff4b0"/><stop offset="40%" stop-color="#ffd700"/><stop offset="100%" stop-color="#b8860b"/></radialGradient>
-    <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff8d0"/><stop offset="50%" stop-color="#ffd700"/><stop offset="100%" stop-color="#daa520"/></linearGradient>
+    <radialGradient id="goldBg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFD700"/>
+      <stop offset="60%" stop-color="#DAA520"/>
+      <stop offset="100%" stop-color="#B8860B"/>
+    </radialGradient>
+    <linearGradient id="goldShine" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FFF4B0"/>
+      <stop offset="50%" stop-color="#FFD700"/>
+      <stop offset="100%" stop-color="#C5960A"/>
+    </linearGradient>
   </defs>
-  <path d="M24 4l4 8 9-1-6 7 5 8-9-2-3 9-3-9-9 2 5-8-6-7 9 1z" fill="url(#g1)" stroke="#b8860b" stroke-width="1.5"/>
-  <path d="M24 8l3 6 7-1-5 5.5 4 6-7-1.5-2 7-2-7-7 1.5 4-6-5-5.5 7 1z" fill="url(#g2)" stroke="#daa520" stroke-width="0.8"/>
-  <circle cx="24" cy="14" r="2.5" fill="#fff8d0" opacity="0.7"/>
-  <circle cx="30" cy="18" r="1.5" fill="#fff8d0" opacity="0.5"/>
-  <circle cx="18" cy="18" r="1.5" fill="#fff8d0" opacity="0.5"/>
+  <polygon points="60,8 75,20 95,14 92,34 108,48 90,60 100,80 80,76 70,94 60,78 50,94 40,76 20,80 30,60 12,48 28,34 25,14 45,20" fill="url(#goldBg)" stroke="#FFF4B0" stroke-width="2"/>
+  <polygon points="60,18 72,28 86,24 84,38 96,48 82,56 88,72 74,68 66,82 60,68 54,82 40,68 26,72 32,56 18,48 30,38 28,24 42,28" fill="none" stroke="url(#goldShine)" stroke-width="1" opacity="0.4"/>
+  <ellipse cx="60" cy="48" rx="18" ry="14" fill="none" stroke="#8B5A0A" stroke-width="2.5"/>
+  <ellipse cx="60" cy="48" rx="12" ry="10" fill="none" stroke="#FFF4B0" stroke-width="1" opacity="0.5"/>
+  <circle cx="60" cy="46" r="4" fill="#4A2800"/>
+  <circle cx="52" cy="42" r="1.5" fill="#FFF4B0" opacity="0.7"/>
+  <circle cx="68" cy="42" r="1.5" fill="#FFF4B0" opacity="0.7"/>
+  <path d="M48 56 Q54 66 60 68 Q66 66 72 56" fill="none" stroke="#FFF4B0" stroke-width="2" stroke-linecap="round"/>
 </svg>

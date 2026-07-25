@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 140" width="120" height="140">
+  <defs>
+    <radialGradient id="mythBg" cx="50%" cy="50%" r="55%">
+      <stop offset="0%" stop-color="#8B00FF"/>
+      <stop offset="40%" stop-color="#4B0082"/>
+      <stop offset="100%" stop-color="#0D0020"/>
+    </radialGradient>
+    <linearGradient id="mythGold" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#FFD700"/>
+      <stop offset="50%" stop-color="#FFA500"/>
+      <stop offset="100%" stop-color="#FFD700"/>
+    </linearGradient>
+    <linearGradient id="mythMagenta" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FF00FF"/>
+      <stop offset="100%" stop-color="#8B008B"/>
+    </linearGradient>
+    <filter id="mythGlow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <path d="M60 4 L116 34 L116 90 Q116 120 60 138 Q4 120 4 90 L4 34 Z" fill="url(#mythBg)" stroke="#FFD700" stroke-width="3"/>
+  <path d="M60 14 L104 38 L104 86 Q104 112 60 126 Q16 112 16 86 L16 38 Z" fill="none" stroke="#FF00FF" stroke-width="1" opacity="0.2"/>
+  <path d="M60 22 L86 40 L78 22 L86 10 L60 18 L34 10 L42 22 L34 40 Z" fill="url(#mythGold)" opacity="0.5"/>
+  <path d="M60 28 L80 42 L72 28 L80 18 L60 24 L40 18 L48 28 L40 42 Z" fill="#FFD700" opacity="0.3"/>
+  <path d="M38 48 Q34 36 42 28 Q48 22 54 30 Q50 38 48 48" fill="none" stroke="#FFD700" stroke-width="2"/>
+  <path d="M82 48 Q86 36 78 28 Q72 22 66 30 Q70 38 72 48" fill="none" stroke="#FFD700" stroke-width="2"/>
+  <path d="M40 50 Q48 40 60 42 Q72 40 80 50" fill="none" stroke="#FF00FF" stroke-width="2" stroke-linecap="round"/>
+  <ellipse cx="60" cy="54" rx="20" ry="13" fill="none" stroke="#FFD700" stroke-width="2.5"/>
+  <circle cx="60" cy="52" r="6" fill="#0D0020"/>
+  <circle cx="52" cy="48" r="2" fill="#FF00FF" filter="url(#mythGlow)"/>
+  <circle cx="60" cy="46" r="2" fill="#FFD700"/>
+  <circle cx="68" cy="48" r="2" fill="#FF00FF" filter="url(#mythGlow)"/>
+  <circle cx="60" cy="52" r="2" fill="#FF0000"/>
+  <path d="M44 62 Q50 76 60 78 Q70 76 76 62" fill="none" stroke="#FFD700" stroke-width="2" stroke-linecap="round"/>
+  <path d="M34 44 L20 34 M86 44 L100 34" fill="none" stroke="#FF00FF" stroke-width="2" stroke-linecap="round"/>
+  <path d="M40 32 L28 20 M80 32 L92 20" fill="none" stroke="#FFD700" stroke-width="2" stroke-linecap="round"/>
+  <path d="M30 40 L16 30 M90 40 L104 30" fill="none" stroke="#FF00FF" stroke-width="1.5" stroke-linecap="round"/>
+  <circle cx="60" cy="112" r="10" fill="none" stroke="#FFD700" stroke-width="1.5" opacity="0.5"/>
+  <circle cx="60" cy="112" r="6" fill="#FFD700" opacity="0.2"/>
+  <circle cx="60" cy="112" r="3" fill="#FF00FF" opacity="0.4"/>
+</svg>

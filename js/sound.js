@@ -13,6 +13,11 @@ const SOUND_THEMES = {
       { freq: 659, type: 'sine', duration: 0.12, gain: 0.07, delay: 0.1 },
       { freq: 784, type: 'sine', duration: 0.18, gain: 0.08, delay: 0.2 },
     ],
+    complete: [
+      { freq: 587, type: 'sine', duration: 0.1, gain: 0.07, delay: 0 },
+      { freq: 784, type: 'sine', duration: 0.1, gain: 0.07, delay: 0.08 },
+      { freq: 1047, type: 'sine', duration: 0.18, gain: 0.08, delay: 0.16 },
+    ],
   },
   piano: {
     place: { freq: 440, type: 'sine', duration: 0.3, gain: 0.06 },
@@ -24,6 +29,11 @@ const SOUND_THEMES = {
       { freq: 262, type: 'sine', duration: 0.3, gain: 0.05, delay: 0 },
       { freq: 330, type: 'sine', duration: 0.3, gain: 0.05, delay: 0.12 },
       { freq: 392, type: 'sine', duration: 0.4, gain: 0.06, delay: 0.24 },
+    ],
+    complete: [
+      { freq: 294, type: 'sine', duration: 0.25, gain: 0.05, delay: 0 },
+      { freq: 392, type: 'sine', duration: 0.25, gain: 0.05, delay: 0.1 },
+      { freq: 523, type: 'sine', duration: 0.35, gain: 0.06, delay: 0.2 },
     ],
   },
   digital: {
@@ -37,6 +47,11 @@ const SOUND_THEMES = {
       { freq: 1108, type: 'square', duration: 0.06, gain: 0.03, delay: 0.08 },
       { freq: 1318, type: 'square', duration: 0.1, gain: 0.04, delay: 0.16 },
     ],
+    complete: [
+      { freq: 1047, type: 'square', duration: 0.05, gain: 0.03, delay: 0 },
+      { freq: 1318, type: 'square', duration: 0.05, gain: 0.03, delay: 0.06 },
+      { freq: 1568, type: 'square', duration: 0.1, gain: 0.04, delay: 0.12 },
+    ],
   },
   retro: {
     place: { freq: 600, type: 'triangle', duration: 0.08, gain: 0.07 },
@@ -48,6 +63,11 @@ const SOUND_THEMES = {
       { freq: 500, type: 'triangle', duration: 0.1, gain: 0.06, delay: 0 },
       { freq: 630, type: 'triangle', duration: 0.1, gain: 0.06, delay: 0.1 },
       { freq: 750, type: 'triangle', duration: 0.14, gain: 0.07, delay: 0.2 },
+    ],
+    complete: [
+      { freq: 600, type: 'triangle', duration: 0.08, gain: 0.06, delay: 0 },
+      { freq: 800, type: 'triangle', duration: 0.08, gain: 0.06, delay: 0.08 },
+      { freq: 1000, type: 'triangle', duration: 0.14, gain: 0.07, delay: 0.16 },
     ],
   },
 };

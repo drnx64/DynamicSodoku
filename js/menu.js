@@ -317,7 +317,8 @@ function showRankJourney() {
   const totalXp = stats.totalXp || 0;
   const rank = getRank(totalXp);
   const nextRank = getNextRank(totalXp);
-  const rankIdx = RANKS.indexOf(rank);
+  const rankIdx = getRankIndex(rank);
+  const allRanks = getFixedRanksWithNextFew(8);
 
   const iconEl = document.getElementById('rankCurrentIcon');
   if (!iconEl) { log('[menu] WARN: #rankCurrentIcon not found'); return; }
@@ -337,7 +338,7 @@ function showRankJourney() {
   const timeline = document.getElementById('rankTimeline');
   if (!timeline) { log('[menu] WARN: #rankTimeline not found'); return; }
   timeline.innerHTML = '';
-  const count = RANKS.length;
+  const count = allRanks.length;
   const gapY = 56, marginL = 60, marginR = 60;
   const wrapW = 280;
   const leftX = marginL, rightX = wrapW - marginR;
@@ -374,7 +375,7 @@ function showRankJourney() {
   }
 
   for (const p of nodes) {
-    const r = RANKS[p.idx];
+    const r = allRanks[p.idx];
     const node = document.createElement('div');
     node.className = 'rank-tl-node';
     if (p.idx < rankIdx) node.classList.add('passed');

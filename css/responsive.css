@@ -19,6 +19,14 @@
   .leader-rank.top1 { font-size: 13px; }
   .leader-rank.top2 { font-size: 12px; }
   .leader-rank.top3 { font-size: 12px; }
+  .leader-badge-wrap { width: 24px; }
+  .leader-rank-icon { width: 16px; }
+  .leader-rank-label { font-size: 8px; }
+  .leader-profile { padding: 10px 12px; gap: 10px; }
+  .leader-profile-avatar { width: 34px; height: 34px; }
+  .leader-profile-name { font-size: 13px; }
+  .leader-profile-rank { font-size: 11px; }
+  .leader-profile-joined { font-size: 9px; }
   .leaderboard-actions { padding: 6px 12px 12px; }
   .leaderboard-actions .data-btn { padding: 6px 14px; font-size: 11px; }
   #actions button { min-width: 44px; padding: 10px 4px; }
@@ -52,10 +60,18 @@
   .win-stats { gap: 4px; }
   .win-stat { padding: 8px 4px; }
   .stat-card .stat-value { font-size: 20px; }
-  .rank-timeline { max-height: 180px; }
+  .rank-timeline { height: 160px; }
   .streak-count-big { font-size: 36px; }
   .achieve-grid { margin: 0 auto 6px; width: calc(100% - 6px); padding: 4px 6px; border-radius: var(--radius-sm); }
   .leaderboard-list { margin: 4px auto 6px; width: calc(100% - 6px); padding: 4px 6px; border-radius: var(--radius-sm); }
+  .leader-badge-wrap { width: 22px; }
+  .leader-rank-icon { width: 14px; }
+  .leader-rank-label { font-size: 7px; }
+  .leader-profile { padding: 8px 10px; gap: 8px; }
+  .leader-profile-avatar { width: 30px; height: 30px; }
+  .leader-profile-name { font-size: 12px; }
+  .leader-profile-rank { font-size: 10px; }
+  .leader-profile-joined { font-size: 8px; }
   .achieve-card { padding: 8px 10px; min-height: 38px; gap: 8px; }
   .achieve-card .achieve-icon { width: 30px; height: 30px; font-size: 14px; }
   .achieve-card .achieve-name { font-size: 11px; }
@@ -87,6 +103,14 @@
   .leader-avatar { width: 20px; height: 20px; }
   .leader-name { font-size: 11px; }
   .leader-detail { font-size: 8px; }
+  .leader-badge-wrap { width: 20px; }
+  .leader-rank-icon { width: 14px; }
+  .leader-rank-label { font-size: 7px; }
+  .leader-profile { padding: 8px 8px; gap: 8px; }
+  .leader-profile-avatar { width: 28px; height: 28px; }
+  .leader-profile-name { font-size: 12px; }
+  .leader-profile-rank { font-size: 10px; }
+  .leader-profile-joined { font-size: 8px; }
 }
 
 @media (max-width: 320px) {

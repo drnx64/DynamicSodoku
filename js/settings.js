@@ -10,7 +10,7 @@ const DEFAULT_SETTINGS = {
   timerVisible: true, darkTheme: false, soundEnabled: true, autoClearNotes: true,
   hapticFeedback: true, autoDarkMode: true, keyboardShortcuts: true,
   colorTheme: 'default', soundTheme: 'classic', playerName: 'Player',
-  showCoordinates: true,
+  showCoordinates: true, showCompleted: true,
 };
 
 const SETTINGS_CATEGORIES = [
@@ -56,6 +56,7 @@ const SETTINGS_CATEGORIES = [
       { key: 'autoClearNotes', label: 'Auto-clear notes' },
       { key: 'keyboardShortcuts', label: 'Keyboard shortcuts' },
       { key: 'showCoordinates', label: 'Show coordinates (A1-I9)' },
+      { key: 'showCompleted', label: 'Highlight completed rows/cols/boxes' },
       { key: 'playerName', label: 'Player name', type: 'text' },
     ],
   },
@@ -342,6 +343,7 @@ const GAME_SETTINGS_ITEMS = [
   { key: 'autoClearNotes', label: 'Auto-clear notes' },
   { key: 'soundEnabled', label: 'Sound effects' },
   { key: 'showCoordinates', label: 'Show coordinates (A1-I9)' },
+  { key: 'showCompleted', label: 'Highlight completed rows/cols/boxes' },
 ];
 
 const GAME_SETTINGS_EXTRA = [

@@ -38,6 +38,27 @@ function render(opts) {
         cell.classList.add('same-num');
       if (conflicts.has(r+','+c)) cell.classList.add('conflict');
 
+      if (state.settings.showCompleted && state.board[r][c]) {
+        const rowDone = state.completed.rows.has(r);
+        const colDone = state.completed.cols.has(c);
+        const bi = boxIndexOf(r, c);
+        const boxDone = state.completed.boxes.has(bi);
+        if (rowDone || colDone || boxDone) {
+          let delay = 0;
+          if (rowDone) delay = c * 60;
+          else if (colDone) delay = r * 60;
+          else {
+            const sr = Math.floor(bi / 3) * 3;
+            const sc = (bi % 3) * 3;
+            delay = ((r - sr) * 3 + (c - sc)) * 60;
+          }
+          cell.style.animationDelay = delay + 'ms';
+          if (rowDone) cell.classList.add('completed-row');
+          if (colDone) cell.classList.add('completed-col');
+          if (boxDone) cell.classList.add('completed-box');
+        }
+      }
+
       if (opts.hintHighlight && opts.hintHighlight.row === r && opts.hintHighlight.col === c) cell.classList.add('hint-cell');
       if (opts.hintHighlight && (r === opts.hintHighlight.row || c === opts.hintHighlight.col || (Math.floor(r/3) === Math.floor(opts.hintHighlight.row/3) && Math.floor(c/3) === Math.floor(opts.hintHighlight.col/3)))) {
         if (!(r === opts.hintHighlight.row && c === opts.hintHighlight.col)) cell.classList.add('hint-peer');

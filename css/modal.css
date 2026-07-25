@@ -426,12 +426,9 @@
 
 .rank-timeline {
   padding: 12px 20px;
-  max-height: 280px;
-  overflow-y: auto;
+  height: 220px;
+  overflow-y: scroll;
   border-bottom: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
 }
 .rank-tl-svg-wrap {
   width: 100%;

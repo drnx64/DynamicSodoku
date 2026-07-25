@@ -3,6 +3,7 @@ let WEBHOOK_URL = '';
 async function loadEnv() {
   try {
     const res = await fetch('.env');
+    if (!res.ok) return;
     const text = await res.text();
     for (const line of text.split('\n')) {
       const t = line.trim();

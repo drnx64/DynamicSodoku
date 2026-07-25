@@ -30,22 +30,77 @@ const RANKS = [
   { name: 'Diamond III', xp: 46500 },
   { name: 'Diamond II', xp: 52500 },
   { name: 'Diamond I', xp: 59000 },
-  { name: 'Master', xp: 66000 },
-  { name: 'Grandmaster', xp: 75000 },
-  { name: 'Elite Grandmaster', xp: 85000 },
+  { name: 'Grandmaster III', xp: 64000 },
+  { name: 'Grandmaster II', xp: 69000 },
+  { name: 'Grandmaster I', xp: 74000 },
+  { name: 'Legend III', xp: 77500 },
+  { name: 'Legend II', xp: 80500 },
+  { name: 'Legend I', xp: 83000 },
+  { name: 'Elite Grandmaster III', xp: 85500 },
+  { name: 'Elite Grandmaster II', xp: 88000 },
+  { name: 'Elite Grandmaster I', xp: 90000 },
+  { name: 'Mythic I', xp: 92000 },
 ];
+
+const RANK_BASE = RANKS[RANKS.length - 1];
+const DYNAMIC_RATIO = 1.15;
+
+function toRoman(n) {
+  const vals = [[1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],[50,'L'],[40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']];
+  let s = '';
+  for (const [v, r] of vals) { while (n >= v) { s += r; n -= v; } }
+  return s;
+}
+
+function getDynamicRankByIndex(idx) {
+  const xp = Math.round(RANK_BASE.xp * Math.pow(DYNAMIC_RATIO, idx));
+  const numeral = toRoman(idx + 1);
+  return { name: 'Elite Grandmaster ' + numeral, xp: xp };
+}
+
+function getDynamicRankForXp(totalXp) {
+  let idx = 1;
+  while (true) {
+    const next = Math.round(RANK_BASE.xp * Math.pow(DYNAMIC_RATIO, idx));
+    if (totalXp < next) {
+      const prev = Math.round(RANK_BASE.xp * Math.pow(DYNAMIC_RATIO, idx - 1));
+      const numeral = toRoman(idx);
+      return { name: 'Elite Grandmaster ' + numeral, xp: prev };
+    }
+    idx++;
+  }
+}
 
 function getRank(totalXp) {
   log('[xp] getRank()', { totalXp });
   let rank = RANKS[0];
   for (const r of RANKS) { if (totalXp >= r.xp) rank = r; }
+  if (totalXp >= RANK_BASE.xp) rank = getDynamicRankForXp(totalXp);
   return rank;
 }
 
 function getNextRank(totalXp) {
   log('[xp] getNextRank()', { totalXp });
   for (const r of RANKS) { if (totalXp < r.xp) return r; }
-  return RANKS[RANKS.length - 1];
+  let idx = 1;
+  while (true) {
+    const next = Math.round(RANK_BASE.xp * Math.pow(DYNAMIC_RATIO, idx));
+    if (totalXp < next) return { name: 'Elite Grandmaster ' + toRoman(idx + 1), xp: next };
+    idx++;
+  }
+}
+
+function getRankIndex(rank) {
+  const i = RANKS.indexOf(rank);
+  if (i !== -1) return i;
+  return RANKS.length;
+}
+
+function getFixedRanksWithNextFew(count) {
+  const dynCount = count || 5;
+  const result = RANKS.slice();
+  for (let i = 1; i <= dynCount; i++) result.push(getDynamicRankByIndex(i));
+  return result;
 }
 
 function calcScore(difficulty, timeSec, mistakes, hintsUsed) {

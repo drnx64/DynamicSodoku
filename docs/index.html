@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Techniques — Dynamic Sudoku</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300..700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f0f1a;
+  --surface: rgba(30,30,50,0.8);
+  --surface-solid: #1a1a2e;
+  --text: #e8e8f0;
+  --text-muted: #8888aa;
+  --text-dim: #6666a0;
+  --card-bg: #1e1e32;
+  --card-shadow: 0 2px 20px rgba(0,0,0,0.3);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --border: #2a2a44;
+  --accent: #60a5fa;
+  --accent-glow: rgba(96,165,250,0.15);
+  --xp-gold: #f59e0b;
+  --success: #22c55e;
+  --danger: #ef4444;
+  --btn-bg: #2a2a3e;
+  --btn-hover: #333350;
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --toggle-bg: #444;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { height: 100%; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100%;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- Layout ---- */
+.container { max-width: 640px; margin: 0 auto; padding: 0 16px; }
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 16px 0 8px;
+}
+.page-header h1 {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  background: linear-gradient(135deg, var(--accent), var(--xp-gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.page-header p {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* ---- Section ---- */
+section { padding: 24px 0; }
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.section-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+/* ---- Engine Overview ---- */
+#overview p {
+  font-size: 14px;
+  color: var(--text);
+  opacity: 0.85;
+  margin-bottom: 12px;
+}
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+  margin-top: 16px;
+}
+.feature-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  box-shadow: var(--card-shadow);
+}
+.feature-card strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 2px;
+}
+.feature-card span {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ---- Sample Board ---- */
+#sample-board {
+  padding: 20px 0;
+}
+.board-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.board-grid {
+  display: grid;
+  grid-template-columns: repeat(9, 34px);
+  grid-template-rows: repeat(9, 34px);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  box-shadow: var(--card-shadow);
+}
+.cell {
+  width: 34px; height: 34px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 500;
+  background: var(--surface-solid);
+  border: 0.5px solid var(--border);
+  position: relative;
+  color: var(--text);
+}
+.cell.given { color: var(--text); font-weight: 600; }
+.cell.user { color: var(--accent); }
+.cell.br { border-right: 1.5px solid var(--text-dim); }
+.cell.bb { border-bottom: 1.5px solid var(--text-dim); }
+.cell .tag {
+  position: absolute;
+  top: -5px; right: -5px;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 8px;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+  z-index: 2;
+}
+.cell .tag.t3 { background: var(--xp-gold); }
+.cell .tag.t4 { background: var(--danger); }
+.board-legend {
+  display: flex;
+  gap: 16px;
+  font-size: 11px;
+  color: var(--text-muted);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.legend-dot {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+/* ---- Technique Cards ---- */
+.tech-grid { display: flex; flex-direction: column; gap: 10px; }
+.tech-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  box-shadow: var(--card-shadow);
+  transition: border-color 0.15s;
+}
+.tech-card:hover { border-color: var(--text-dim); }
+.tech-visual {
+  flex-shrink: 0;
+  width: 80px; height: 80px;
+}
+.tech-visual svg { width: 80px; height: 80px; display: block; }
+.tech-body { flex: 1; min-width: 0; }
+.tech-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+.tech-tier {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+.tech-tier.t1 { background: rgba(34,197,94,0.15); color: var(--success); }
+.tech-tier.t2 { background: rgba(245,158,11,0.15); color: var(--xp-gold); }
+.tech-tier.t3 { background: rgba(139,92,246,0.2); color: #a78bfa; }
+.tech-tier.t4 { background: rgba(239,68,68,0.15); color: var(--danger); }
+.tech-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+.tech-body p {
+  font-size: 13px;
+  color: var(--text);
+  opacity: 0.75;
+  line-height: 1.5;
+}
+
+/* ---- Tier separator ---- */
+.tier-sep {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 20px 0 4px;
+}
+.tier-sep::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.tier-sep-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+}
+.tier-intro {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+}
+
+/* ---- Footer ---- */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 20px 0 32px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 480px) {
+  .board-grid { grid-template-columns: repeat(9, 28px); grid-template-rows: repeat(9, 28px); }
+  .cell { width: 28px; height: 28px; font-size: 11px; }
+  .cell .tag { width: 12px; height: 12px; font-size: 7px; top: -4px; right: -4px; }
+  .tech-card { flex-direction: column; align-items: center; text-align: center; }
+  .tech-visual { width: 64px; height: 64px; }
+  .tech-visual svg { width: 64px; height: 64px; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- ============ HEADER ============ -->
+  <div class="page-header">
+    <div>
+      <h1>Technique Reference</h1>
+      <p>21 logical solving strategies &bull; 4 difficulty tiers</p>
+    </div>
+  </div>
+
+  <!-- ===================== OVERVIEW ===================== -->
+  <section id="overview">
+    <h2 class="section-title">How the Engine Works</h2>
+    <p>
+      Difficulty is determined <strong>strictly by the highest tier of logical technique required</strong>
+      to solve — never by clue count. The engine uses <strong>bitwise candidates</strong> (9-bit masks,
+      O(1) eliminate/union/intersection) for maximum performance. Each solver pass shuffles techniques
+      within the current tier, producing a <strong>non-linear solving path</strong> that avoids biasing
+      generation. A separate <strong>backtracking uniqueness validator</strong> runs after every clue
+      removal, guaranteeing exactly one solution.
+    </p>
+    <div class="feature-grid">
+      <div class="feature-card"><strong>Bitwise Candidates</strong><span>9-bit masks for O(1) operations</span></div>
+      <div class="feature-card"><strong>Logical Grading</strong><span>Difficulty from technique tier</span></div>
+      <div class="feature-card"><strong>Non-linear Solver</strong><span>Shuffled technique order</span></div>
+      <div class="feature-card"><strong>Uniqueness Guarantee</strong><span>MCV backtracking validator</span></div>
+      <div class="feature-card"><strong>Seeded RNG</strong><span>Deterministic daily puzzles</span></div>
+      <div class="feature-card"><strong>4 Difficulty Tiers</strong><span>21 techniques total</span></div>
+    </div>
+  </section>
+
+  <!-- ===================== SAMPLE BOARD ===================== -->
+  <section id="sample-board">
+    <h2 class="section-title">Sample Board</h2>
+    <p class="section-sub">Numbered callouts show where each technique applies.</p>
+    <div class="board-wrapper">
+      <div class="board-grid">
+        <!-- Row 0 -->
+        <div class="cell given br bb">5</div>
+        <div class="cell given br bb">3</div>
+        <div class="cell given bb">7</div>
+        <div class="cell given br">6</div>
+        <div class="cell br">1</div>
+        <div class="cell user">9</div>
+        <div class="cell br">8</div>
+        <div class="cell">4</div>
+        <div class="cell">2</div>
+        <!-- Row 1 -->
+        <div class="cell br bb">6</div>
+        <div class="cell br bb">9</div>
+        <div class="cell bb">8</div>
+        <div class="cell br">7</div>
+        <div class="cell br">4</div>
+        <div class="cell user">2</div>
+        <div class="cell user br">3</div>
+        <div class="cell user"><div class="tag t2">5</div>1</div>
+        <div class="cell user">5</div>
+        <!-- Row 2 -->
+        <div class="cell given br bb">2</div>
+        <div class="cell bb">4</div>
+        <div class="cell bb">1</div>
+        <div class="cell br">8</div>
+        <div class="cell br">5</div>
+        <div class="cell user">3</div>
+        <div class="cell user br"><div class="tag">1</div>7</div>
+        <div class="cell">9</div>
+        <div class="cell user">6</div>
+        <!-- Row 3 -->
+        <div class="cell given br bb">1</div>
+        <div class="cell given br bb">8</div>
+        <div class="cell bb">9</div>
+        <div class="cell br">3</div>
+        <div class="cell br">6</div>
+        <div class="cell">4</div>
+        <div class="cell user br"><div class="tag">9</div>2</div>
+        <div class="cell user">7</div>
+        <div class="cell user"><div class="tag t3">11</div>5</div>
+        <!-- Row 4 -->
+        <div class="cell br bb">3</div>
+        <div class="cell br bb">6</div>
+        <div class="cell bb">4</div>
+        <div class="cell br">9</div>
+        <div class="cell br">7</div>
+        <div class="cell">1</div>
+        <div class="cell br"><div class="tag">4</div>8</div>
+        <div class="cell">2</div>
+        <div class="cell"><div class="tag">6</div>6</div>
+        <!-- Row 5 -->
+        <div class="cell given br bb">7</div>
+        <div class="cell given br bb">2</div>
+        <div class="cell bb">6</div>
+        <div class="cell br">4</div>
+        <div class="cell br">8</div>
+        <div class="cell">5</div>
+        <div class="cell user br">1</div>
+        <div class="cell user">3</div>
+        <div class="cell user"><div class="tag t3">13</div>9</div>
+        <!-- Row 6 -->
+        <div class="cell given br bb">8</div>
+        <div class="cell bb">1</div>
+        <div class="cell bb">3</div>
+        <div class="cell br">2</div>
+        <div class="cell br">9</div>
+        <div class="cell user">6</div>
+        <div class="cell user br">5</div>
+        <div class="cell user"><div class="tag t2">7</div>4</div>
+        <div class="cell user">7</div>
+        <!-- Row 7 -->
+        <div class="cell given br bb">9</div>
+        <div class="cell given br bb">7</div>
+        <div class="cell bb">2</div>
+        <div class="cell br">5</div>
+        <div class="cell br">3</div>
+        <div class="cell user">8</div>
+        <div class="cell br">4</div>
+        <div class="cell">6</div>
+        <div class="cell user"><div class="tag">3</div>1</div>
+        <!-- Row 8 -->
+        <div class="cell given br bb">4</div>
+        <div class="cell given br bb">5</div>
+        <div class="cell bb">6</div>
+        <div class="cell br">1</div>
+        <div class="cell br">2</div>
+        <div class="cell">7</div>
+        <div class="cell user br"><div class="tag t3">12</div>9</div>
+        <div class="cell user">8</div>
+        <div class="cell user">3</div>
+      </div>
+      <div class="board-legend">
+        <span><span class="legend-dot" style="background:var(--text)"></span> Given</span>
+        <span><span class="legend-dot" style="background:var(--accent)"></span> User placed</span>
+        <span><span class="legend-dot" style="background:var(--accent)"></span> Tier 1&ndash;2 technique</span>
+        <span><span class="legend-dot" style="background:var(--xp-gold)"></span> Tier 3&ndash;4 technique</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== TECHNIQUE REFERENCE ===================== -->
+  <section id="techniques">
+
+    <!-- TIER 1 -->
+    <div class="tier-sep"><span class="tier-sep-label">Tier 1 &mdash; Easy</span></div>
+    <p class="tier-intro">Direct placements — no candidate elimination needed.</p>
+    <div class="tech-grid">
+
+      <div class="tech-card">
+        <div class="tech-visual">
+          <svg viewBox="0 0 80 80"><rect width="80" height="80" rx="5" fill="var(--surface-solid)" stroke="var(--border)" stroke-width="1"/>
+            <rect x="26" y="26" width="28" height="28" rx="3" fill="rgba(34,197,94,0.12)" stroke="var(--success)" stroke-width="1.5"/>
+            <text x="40" y="47" text-anchor="middle" font-family="Outfit,sans-serif" font-size="20" font-weight="700" fill="var(--success)">5</text>
+            <text x="40" y="14" text-anchor="middle" font-family="Outfit,sans-serif" font-size="9" fill="var(--text-muted)">1 2 3 4</text>
+            <text x="40" y="73" text-anchor="middle" font-family="Outfit,sans-serif" font-size="9" fill="var(--text-muted)">6 7 8 9</text>
+            <text x="12" y="42" text-anchor="middle" font-family="Outfit,sans-serif" font-size="7" fill="var(--success)">{3}</text>
+            <text x="68" y="42" text-anchor="middle" font-family="Outfit,sans-serif" font-size="7" fill="var(--success)">{4}</text>
+          </svg>
+        </div>
+        <div class="tech-body">
+          <div class="tech-header"><span class="tech-tier t1">Tier 1</span><span class="tech-name">Naked Singles</span></div>
+          <p>A cell with exactly one remaining candidate must hold that digit. When all other digits have been eliminated by peers, the last standing digit is placed.</p>
+        </div>
+      </div>
+
+      <div class="tech-card">
+        <div class="tech-visual">
+          <svg viewBox="0 0 80 80"><rect width="80" height="80" rx="5" fill="var(--surface-solid)" stroke="var(--border)" stroke-width="1"/>
+            <rect x="4" y="26" width="72" height="28" rx="3" fill="none" stroke="var(--accent)" stroke-width="0.8"/>
+            <text x="14" y="46" text-anchor="middle" font-family="Outfit,sans-serif" font-size="11" fill="var(--text-muted)">2</text>
+            <text x="28" y="46" text-anchor="middle" font-family="Outfit,sans-serif" font-size="11" fill="var(--text-muted)">4</text>
+            <text x="52" y="46" text-anchor="middle" font-family="Outfit,sans-serif" font-size="11" fill="var(--text-muted)">6</text>
+            <text x="66" y="46" text-anchor="middle" font-family="Outfit,sans-serif" font-size="11" fill="var(--text-muted)">8</text>
+            <rect x="33" y="28" width="16" height="24" rx="2" fill="rgba(34,197,94,0.12)" stroke="var(--success)" stroke-width="1.5"/>
+            <text x="41" y="47" text-anchor="middle" font-family="Outfit,sans-serif" font-size="16" font-weight="700" fill="var(--success)">5</text>
+            <text x="40" y="13" text-anchor="middle" font-family="Outfit,sans-serif" font-size="8" fill="var(--text-muted)">Row: 5 only fits here</text>
+          </svg>
+        </div>
+        <div class="tech-body">
+          <div class="tech-header"><span class="tech-tier t1">Tier 1</span><span class="tech-name">Hidden Singles</span></div>
+          <p>A digit that can only go in one cell of a row, column, or box must go there — even if that cell has other candidates.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- TIER 2 -->
+    <div class="tier-sep"><span class="tier-sep-label">Tier 2 &mdash; Medium</span></div>
+    <p class="tier-intro">Candidate elimination across two houses, plus subset patterns within a single house.</p>
+    <div class="tech-grid">
+
+      <div class="tech-card">
+        <div class="tech-visual">
+          <svg viewBox="0 0 80 80"><rect width="80" height="80" rx="5" fill="var(--surface-solid)" stroke="var(--border)" stroke-width="1"/>
+            <rect x="4" y="4" width="72" height="26" rx="3" fill="none" stroke="var(--accent)" stroke-width="0.6"/>
+            <rect x="4" y="4" width="26" height="26" rx="3" fill="none" stroke="var(--xp-gold)" stroke-width="1.5"/>
+            <text x="17" y="22" text-anchor="middle" font-family="Outfit,sans-serif" font-size="9" fill="var(--xp-gold)">5</text>
+            <text x="30" y="22" text-anchor="middle" font-family="Outfit,sans-serif" font-size="9" fill="var(--xp-gold)">5</text>
+            <text x="64" y="22" text-anchor="middle" font-family="Outfit,sans-serif" font-size="9" fill="var(--danger)">5&times;</text>
+            <text x="64" y="52" text-anchor="middle" font-family="Outfit,sans-serif" font-size="9" fill="var(--danger)">5&times;</text>
+            <text x="40" y="72" text-anchor="middle" font-family="Outfit,sans-serif" font-size="8" fill="var(--text-muted)">Digit 5 confined to row in box</text>
+          </svg>
+        </div>
+        <div class="tech-body">
+          <div class="tech-header"><span class="tech-tier t2">Tier 2</span><span class="tech-name">Pointing Pairs / Triples</span></div>
+          <p>When a digit's candidates within a box lie in a single row or column, eliminate it from the rest of that line outside the box.</p>
+        </div>
+      </div>
+
+      <div class="tech-card">
+        <div class="tech-visual">
+          <svg viewBox="0 0 80 80"><rect width="80" height="80" rx="5" fill="var(--surface-solid)" stroke="var(--border)" stroke-width="1"/>
+            <rect x="4" y="4" width="26" height="72" rx="3" fill="none" stroke="var(--accent)" stroke-width="0.6"/>
+            <rect x="4" y="4" width="26" height="26" rx="3" fill="none" stroke="var(--xp-gold)" stroke-width="1.5"/>
+            <text x="17" y="22" text-anchor="middle" font-family="Outfit,sans-serif" font-size="9" fill="var(--xp-gold)">5</text>
+            <text x="17" y="38" text-anchor="middle" font-family="Outfit,sans-serif" font-size="9" fill="var(--xp-gold)">5</text>
+            <text x="48" y="22" text-anchor="middle" font-family="Outfit,sans-serif" font-size="9" fill="var(--danger)">5&times;</text>
+            <text x="48" y="52" text-anchor="middle" font-family="Outfit,sans-serif" font-size="9" fill="var(--danger)">5&times;</text>
+            <text x="40" y="72" text-anchor="middle" font-family="Outfit,sans-serif" font-size="8" fill="var(--text-muted)">Digit 5 confined to box in col</text>
+          </svg>
+        </div>
+        <div class="tech-body">
+          <div class="tech-header"><span class="tech-tier t2">Tier 2</span><span class="tech-name">Claiming Pairs / Triples</span></div>
+          <p>Mirror of Pointing Pairs: a digit's candidates within a line lie in one box — eliminate from the rest of that box.</p>
+        </div>
+      </div>
+
+      <div class="tech-card">
+        <div class="tech-visual">
+          <svg viewBox="0 0 80 80"><rect width="80" height="80" rx="5" fill="var(--surface-solid)" stroke="var(--border)" stroke-width="1"/>
+            <rect x="4" y="4" width="72" height="24" rx="3" fill="none" stroke="var(--accent)" stroke-width="0.6"/>
+            <rect x="7" y="7" width="18" height="18" rx="2" fill="rgba(34,197,94,0.1)" stroke="var(--xp-gold)" stroke-width="1"/>
+            <text x="16" y="20" text-anchor="middle" font-family="Outfit,sans-serif" font-size="9" font-weight="600" fill="var(--xp-gold)">{1,2}</text>
+            <rect x="28" y="7" width="18" height="18" rx="2" fill="rgba(34,197,94,0.1)" stroke="var(--xp-gold)" stroke-width="1"/>
+            <text x="37" y="20" text-anchor="middle" font-family="Outfit,sans-serif" font-size="9" font-weight="600" fill="var(--xp-gold)">{1,2}</text>
+            <text x="60" y="20" text-anchor="middle" font-family="Outfit,sans-serif" font-size="9" fill="var(--danger)">1&times;</text>
+            <text x="72" y="20" text-anchor="middle" font-family="Outfit,sans-serif" font-size="9" fill="var(--danger)">2&times;</text>
+            <text x="40" y="75" text-anchor="middle" font-family="Outfit,sans-serif" font-size="8" fill="var(--text-muted)">{1,2} locked to 2 cells</text>
+          </svg>
+        </div>
+        <div class="tech-body">
+          <div class="tech-header"><span class="tech-tier t2">Tier 2</span><span class="tech-name">Naked Pairs / Triples / Quads</span></div>
+          <p><em>N</em> cells with <em>N</em> total candidates form a locked set — those digits can be eliminated from every other cell in the house.</p>
+        </div>
+      </div>
+
+      <div class="tech-card">
+        <div class="tech-visual">
+          <svg viewBox="0 0 80 80"><rect width="80" height="80" rx="5" fill="var(--surface-solid)" stroke="var(--border)" stroke-width="1"/>
+            <rect x="4" y="4" width="72" height="24" rx="3" fill="none" stroke="var(--accent)" stroke-width="0.6"/>
+            <rect x="7" y="7" width="18" height="18" rx="2" fill="rgba(34,197,94,0.1)" stroke="var(--xp-gold)" stroke-width="1"/>
+            <text x="16" y="15" text-anchor="middle" font-family="Outfit,sans-serif" font-size="5" fill="var(--text-muted)">1 2 4</text>
+            <text x="16" y="22" text-anchor="middle" font-family="Outfit,sans-serif" font-size="7" font-weight="700" fill="var(--xp-gold)">1 2</text>
+            <rect x="28" y="7" width="18" height="18" rx="2" fill="rgba(34,197,94,0.1)" stroke="var(--xp-gold)" stroke-width="1"/>
+            <text x="37" y="15" text-anchor="middle" font-family="Outfit,sans-serif" font-size="5" fill="var(--text-muted)">1 3 5</text>
+            <text x="37" y="22" text-anchor="middle" font-family="Outfit,sans-serif" font-size="7" font-weight="700" fill="var(--xp-gold)">1 2</text>
+            <text x="60" y="18" text-anchor="middle" font-family="Outfit,sans-serif" font-size="8" fill="var(--text-muted)">1,2 only here</text>
+            <text x="40" y="75" text-anchor="middle" font-family="Outfit,sans-serif" font-size="8" fill="var(--text-muted)">{1,2} hidden in 2 cells</text>
+          </svg>
+        </div>
+        <div class="tech-body">
+          <div class="tech-header"><span class="tech-tier t2">Tier 2</span><span class="tech-name">Hidden Pairs / Triples / Quads</span></div>
+          <p><em>N</em> digits that only appear in <em>N</em> cells of a house lock those cells — every other candidate can be stripped.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- TIER 3 -->
+    <div class="tier-sep"><span class="tier-sep-label">Tier 3 &mdash; Hard</span></div>
+    <p class="tier-intro">Multi-house patterns: fish, wings, single-digit chains, and uniqueness.</p>
+    <div class="tech-grid">
+
+      <div class="tech-card">
+        <div class="tech-visual">
+          <svg viewBox="0 0 80 80"><rect width="80" height="80" rx="5" fill="var(--surface-solid)" stroke="var(--border)" stroke-width="1"/>
+            <rect x="6" y="6" width="18" height="18" rx="2" fill="rgba(139,92,246,0.15)" stroke="#a78bfa" stroke-width="1.5"/>
+            <rect x="56" y="6" width="18" height="18" rx="2" fill="rgba(139,92,246,0.15)" stroke="#a78bfa" stroke-width="1.5"/>
+            <rect x="6" y="56" width="18" height="18" rx="2" fill="rgba(139,92,246,0.15)" stroke="#a78bfa" stroke-width="1.5"/>
+            <rect x="56" y="56" width="18" height="18" rx="2" fill="rgba(139,92,246,0.15)" stroke="#a78bfa" stroke-width="1.5"/>
+            <text x="15" y="20" text-anchor="middle" font-family="Outfit,sans-serif" font-size="11" font-weight="700" fill="#a78bfa">5</text>
+            <text x="65" y="20" text-anchor="middle" font-family="Outfit,sans-serif" font-size="11" font-weight="700" fill="#a78bfa">5</text>
+            <text x="15" y="70" text-anchor="middle" font-family="Outfit,sans-serif" font-size="11" font-weight="700" fill="#a78bfa">5</text>
+            <text x="65" y="70" text-anchor="middle" font-family="Outfit,sans-serif" font-size="11" font-weight="700" fill="#a78bfa">5</text>
+            <rect x="30" y="6" width="20" height="68" rx="2" fill="none" stroke="var(--danger)" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.6"/>
+            <text x="40" y="48" text-anchor="middle" font-family="Outfit,sans-serif" font-size="9" fill="var(--danger)">5&times;</text>
+          </svg>
+        </div>
+        <div class="tech-body">
+          <div class="tech-header"><span class="tech-tier t3">Tier 3</span><span class="tech-name">X-Wing</span></div>
+          <p>A digit confined to the same two columns across two rows (or vice versa) — a size-2 fish. Eliminate it from those columns in every other row.</p>
+        </div>
+      </div>
+
+      <div class="tech-card">
+        <div class="tech-visual">
+          <svg viewBox="0 0 80 80"><rect width="80" height="80" rx="5" fill="var(--surface-solid)" stroke="var(--border)" stroke-width="1"/>
+            <rect x="6" y="6" width="12" height="12" rx="2" fill="rgba(139,92,246,0.15)" stroke="#a78bfa" stroke-width="1"/>
+            <rect x="34" y="6" width="12" height="12" rx="2" fill="rgba(139,92,246,0.15)" stroke="#a78bfa" stroke-width="1"/>
+            <rect x="62" y="6" width="12" height="12" rx="2" fill="rgba(139,92,246,0.15)" stroke="#a78bfa" stroke-width="1"/>
+            <rect x="6" y="34" width="12" height="12" rx="2" fill="rgba(139,92,246,0.15)" stroke="#a78bfa" stroke-width="1"/>
+            <rect x="62" y="34" width="12" height="12" rx="2" fill="rgba(139,92,246,0.15)" stroke="#a78bfa" stroke-width="1"/>
+            <rect x="6" y="62" width="12" height="12" rx="2" fill="rgba(139,92,246,0.15)" stroke="#a78bfa" stroke-width="1"/>
+            <rect x="34" y="62" width="12" height="12" rx="2" fill="rgba(139,92,246,0.15)" stroke="#a78bfa" stroke-width="1"/>
+            <rect x="62" y="62" width="12" height="12" rx="2" fill="rgba(139,92,246,0.15)" stroke="#a78bfa" stroke-width="1"/>
+            <text x="40" y="78" text-anchor="middle" font-family="Outfit,sans-serif" font-size="8" fill="var(--text-muted)">3 rows &times; 3 cols</text>
+          </svg>
+        </div>
+        <div class="tech-body">
+          <div class="tech-header"><span class="tech-tier t3">Tier 3</span><span class="tech-name">Swordfish</span></div>
+          <p>A size-3 fish: a digit confined to exactly three columns across three rows. The 3&times;3 generalization of X-Wing.</p>
+        </div>
+      </div>
+
+      <div class="tech-card">
+        <div class="tech-visual">
+          <svg viewBox="0 0 80 80"><rect width="80" height="80" rx="5" fill="var(--surface-solid)" stroke="var(--border)" stroke-width="1"/>
+            <circle cx="40" cy="40" r="8" fill="rgba(139,92,246,0.15)" stroke="#a78bfa" stroke-width="1.2"/>
+            <text x="40" y="43" text-anchor="middle" font-family="Outfit,sans-serif" font-size="7" font-weight="600" fill="#a78bfa">{1,5}</text>
+            <circle cx="16" cy="16" r="7" fill="rgba(139,92,246,0.15)" stroke="var(--xp-gold)" stroke-width="1.2"/>
+            <text x="16" y="19" text-anchor="middle" font-family="Outfit,sans-serif" font-size="6" font-weight="600" fill="var(--xp-gold)">{1,3}</text>
+            <circle cx="64" cy="16" r="7" fill="rgba(139,92,246,0.15)" stroke="var(--xp-gold)" stroke-width="1.2"/>
+            <text x="64" y="19" text-anchor="middle" font-family="Outfit,sans-serif" font-size="6" font-weight="600" fill="var(--xp-gold)">{3,5}</text>
+            <line x1="23" y1="20" x2="34" y2="36" stroke="var(--accent)" stroke-width="0.8" stroke-dasharray="2 2"/>
+            <line x1="57" y1="20" x2="46" y2="36" stroke="var(--accent)" stroke-width="0.8" stroke-dasharray="2 2"/>
+            <text x="55" y="68" text-anchor="middle" font-family="Outfit,sans-serif" font-size="7" fill="var(--danger)">3&times;</text>
+            <text x="40" y="76" text-anchor="middle" font-family="Outfit,sans-serif" font-size="8" fill="var(--text-muted)">Pivot + pincers</text>
+          </svg>
+        </div>
+        <div class="tech-body">
+          <div class="tech-header"><span class="tech-tier t3">Tier 3</span><span class="tech-name">Y-Wing (XY-Wing)</span></div>
+          <p>A bivalue pivot {a,b} plus two bivalue pincers {a,c} and {b,c} that both see the pivot. Any cell seeing both pincers cannot be <em>c</em>.</p>
+        </div>
+      </div>
+
+      <div class="tech-card">
+        <div class="tech-visual">
+          <svg viewBox="0 0 80 80"><rect width="80" height="80" rx="5" fill="var(--surface-solid)" stroke="var(--border)" stroke-width="1"/>
+            <circle cx="40" cy="40" r="9" fill="rgba(139,92,246,0.15)" stroke="#a78bfa" stroke-width="1.2"/>
+            <text x="40" y="43" text-anchor="middle" font-family="Outfit,sans-serif" font-size="6" font-weight="600" fill="#a78bfa">{1,5,7}</text>
+            <circle cx="16" cy="16" r="7" fill="rgba(139,92,246,0.15)" stroke="var(--xp-gold)" stroke-width="1.2"/>
+            <text x="16" y="19" text-anchor="middle" font-family="Outfit,sans-serif" font-size="6" font-weight="600" fill="var(--xp-gold)">{1,5}</text>
+            <circle cx="64" cy="16" r="7" fill="rgba(139,92,246,0.15)" stroke="var(--xp-gold)" stroke-width="1.2"/>
+            <text x="64" y="19" text-anchor="middle" font-family="Outfit,sans-serif" font-size="6" font-weight="600" fill="var(--xp-gold)">{5,7}</text>
+            <text x="40" y="75" text-anchor="middle" font-family="Outfit,sans-serif" font-size="8" fill="var(--text-muted)">Trivalue pivot + bivalue</text>
+          </svg>
+        </div>
+        <div class="tech-body">
+          <div class="tech-header"><span class="tech-tier t3">Tier 3</span><span class="tech-name">XYZ-Wing</span></div>
+          <p>A trivalue pivot {a,b,c} with two bivalue pincers sharing two digits with the pivot. Eliminate <em>c</em> from cells seeing all three.</p>
+        </div>
+      </div>
+
+      <div class="tech-card">
+        <div class="tech-visual">
+          <svg viewBox="0 0 80 80"><rect width="80" height="80" rx="5" fill="var(--surface-solid)" stroke="var(--border)" stroke-width="1"/>
+            <circle cx="10" cy="10" r="5" fill="rgba(34,197,94,0.2)" stroke="var(--success)" stroke-width="1"/>
+            <circle cx="30" cy="10" r="5" fill="rgba(139,92,246,0.2)" stroke="#a78bfa" stroke-width="1"/>
+            <circle cx="50" cy="10" r="5" fill="rgba(34,197,94,0.2)" stroke="var(--success)" stroke-width="1"/>
+            <circle cx="70" cy="10" r="5" fill="rgba(139,92,246,0.2)" stroke="#a78bfa" stroke-width="1"/>
+            <line x1="15" y1="10" x2="25" y2="10" stroke="var(--accent)" stroke-width="0.8"/>
+            <line x1="35" y1="10" x2="45" y2="10" stroke="var(--accent)" stroke-width="0.8"/>
+            <line x1="55" y1="10" x2="65" y2="10" stroke="var(--accent)" stroke-width="0.8"/>
+            <text x="40" y="45" text-anchor="middle" font-family="Outfit,sans-serif" font-size="8" fill="var(--danger)">Same color in house = false</text>
+            <text x="40" y="70" text-anchor="middle" font-family="Outfit,sans-serif" font-size="8" fill="var(--text-muted)">Alternating conjugate chain</text>
+          </svg>
+        </div>
+        <div class="tech-body">
+          <div class="tech-header"><span class="tech-tier t3">Tier 3</span><span class="tech-name">Simple Coloring</span></div>
+          <p>Conjugate-pair chains for one digit colored with two alternating colors. Two same-colored cells in a house = contradiction (false). Any cell seeing both colors eliminates the digit.</p>
+        </div>
+      </div>
+
+      <div class="tech-card">
+        <div class="tech-visual">
+          <svg viewBox="0 0 80 80"><rect width="80" height="80" rx="5" fill="var(--surface-solid)" stroke="var(--border)" stroke-width="1"/>
+            <rect x="6" y="6" width="18" height="18" rx="2" fill="rgba(139,92,246,0.15)" stroke="#a78bfa" stroke-width="1.5"/>
+            <rect x="56" y="6" width="18" height="18" rx="2" fill="rgba(139,92,246,0.15)" stroke="#a78bfa" stroke-width="1.5"/>
+            <rect x="6" y="56" width="18" height="18" rx="2" fill="rgba(139,92,246,0.15)" stroke="#a78bfa" stroke-width="1.5"/>
+            <rect x="56" y="56" width="18" height="18" rx="2" fill="rgba(239,68,68,0.15)" stroke="var(--danger)" stroke-width="1.5"/>
+            <text x="15" y="20" text-anchor="middle" font-family="Outfit,sans-serif" font-size="8" font-weight="600" fill="#a78bfa">{1,2}</text>
+            <text x="65" y="20" text-anchor="middle" font-family="Outfit,sans-serif" font-size="8" font-weight="600" fill="#a78bfa">{1,2}</text>
+            <text x="15" y="70" text-anchor="middle" font-family="Outfit,sans-serif" font-size="8" font-weight="600" fill="#a78bfa">{1,2}</text>
+            <text x="65" y="70" text-anchor="middle" font-family="Outfit,sans-serif" font-size="8" font-weight="600" fill="var(--danger)">{1,2,4}</text>
+            <text x="40" y="45" text-anchor="middle" font-family="Outfit,sans-serif" font-size="7" fill="var(--text-muted)">Three corners {1,2}, fourth has extras</text>
+          </svg>
+        </div>
+        <div class="tech-body">
+          <div class="tech-header"><span class="tech-tier t3">Tier 3</span><span class="tech-name">Unique Rectangle Type 1</span></div>
+          <p>Four cells across two boxes. Three corners share the same pair {a,b}, the fourth has extras — eliminate {a,b} from the fourth to avoid a second solution.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- TIER 4 -->
+    <div class="tier-sep"><span class="tier-sep-label">Tier 4 &mdash; Impossible</span></div>
+    <p class="tier-intro">Branch-and-intersect chaining, Almost Locked Sets, and exotic patterns. Computationally heavy but fully sound.</p>
+    <div class="tech-grid">
+
+      <div class="tech-card">
+        <div class="tech-visual">
+          <svg viewBox="0 0 80 80"><rect width="80" height="80" rx="5" fill="var(--surface-solid)" stroke="var(--border)" stroke-width="1"/>
+            <circle cx="40" cy="26" r="9" fill="rgba(239,68,68,0.15)" stroke="var(--danger)" stroke-width="1.2"/>
+            <text x="40" y="29" text-anchor="middle" font-family="Outfit,sans-serif" font-size="7" font-weight="600" fill="var(--danger)">cell</text>
+            <line x1="40" y1="35" x2="16" y2="54" stroke="var(--danger)" stroke-width="0.8"/>
+            <line x1="40" y1="35" x2="64" y2="54" stroke="var(--danger)" stroke-width="0.8"/>
+            <circle cx="16" cy="62" r="8" fill="rgba(34,197,94,0.15)" stroke="var(--success)" stroke-width="1"/>
+            <text x="16" y="65" text-anchor="middle" font-family="Outfit,sans-serif" font-size="7" fill="var(--success)">=1</text>
+            <circle cx="64" cy="62" r="8" fill="rgba(34,197,94,0.15)" stroke="var(--success)" stroke-width="1"/>
+            <text x="64" y="65" text-anchor="middle" font-family="Outfit,sans-serif" font-size="7" fill="var(--success)">=2</text>
+            <text x="40" y="77" text-anchor="middle" font-family="Outfit,sans-serif" font-size="8" fill="var(--text-muted)">Branch every digit &rarr; intersect</text>
+          </svg>
+        </div>
+        <div class="tech-body">
+          <div class="tech-header"><span class="tech-tier t4">Tier 4</span><span class="tech-name">Dynamic Cell Forcing Chains</span></div>
+          <p>For a cell with 2+ candidates, branch on every digit, propagate singles-only in each branch, then intersect. A placement or elimination true in EVERY branch must be true. Self-contradicting branches eliminate that digit.</p>
+        </div>
+      </div>
+
+      <div class="tech-card">
+        <div class="tech-visual">
+          <svg viewBox="0 0 80 80"><rect width="80" height="80" rx="5" fill="var(--surface-solid)" stroke="var(--border)" stroke-width="1"/>
+            <rect x="8" y="8" width="64" height="20" rx="3" fill="none" stroke="var(--danger)" stroke-width="1"/>
+            <text x="40" y="22" text-anchor="middle" font-family="Outfit,sans-serif" font-size="8" fill="var(--danger)">digit 5 in row</text>
+            <line x1="18" y1="30" x2="18" y2="46" stroke="var(--danger)" stroke-width="0.8"/>
+            <line x1="40" y1="30" x2="40" y2="46" stroke="var(--danger)" stroke-width="0.8"/>
+            <line x1="62" y1="30" x2="62" y2="46" stroke="var(--danger)" stroke-width="0.8"/>
+            <circle cx="18" cy="56" r="7" fill="rgba(34,197,94,0.15)" stroke="var(--success)" stroke-width="1"/>
+            <text x="18" y="59" text-anchor="middle" font-family="Outfit,sans-serif" font-size="6" fill="var(--success)">A</text>
+            <circle cx="40" cy="56" r="7" fill="rgba(34,197,94,0.15)" stroke="var(--success)" stroke-width="1"/>
+            <text x="40" y="59" text-anchor="middle" font-family="Outfit,sans-serif" font-size="6" fill="var(--success)">B</text>
+            <circle cx="62" cy="56" r="7" fill="rgba(34,197,94,0.15)" stroke="var(--success)" stroke-width="1"/>
+            <text x="62" y="59" text-anchor="middle" font-family="Outfit,sans-serif" font-size="6" fill="var(--success)">C</text>
+            <text x="40" y="76" text-anchor="middle" font-family="Outfit,sans-serif" font-size="8" fill="var(--text-muted)">Branch each placement</text>
+          </svg>
+        </div>
+        <div class="tech-body">
+          <div class="tech-header"><span class="tech-tier t4">Tier 4</span><span class="tech-name">Dynamic Region Forcing Chains</span></div>
+          <p>Same idea as Cell Forcing Chains, but branches come from every possible placement of a digit within a single house (row/column/box).</p>
+        </div>
+      </div>
+
+      <div class="tech-card">
+        <div class="tech-visual">
+          <svg viewBox="0 0 80 80"><rect width="80" height="80" rx="5" fill="var(--surface-solid)" stroke="var(--border)" stroke-width="1"/>
+            <rect x="4" y="4" width="32" height="32" rx="3" fill="none" stroke="#a78bfa" stroke-width="0.6"/>
+            <rect x="7" y="7" width="10" height="10" rx="1" fill="rgba(139,92,246,0.2)" stroke="var(--xp-gold)" stroke-width="1"/>
+            <rect x="20" y="7" width="10" height="10" rx="1" fill="rgba(139,92,246,0.2)" stroke="var(--xp-gold)" stroke-width="1"/>
+            <text x="12" y="15" text-anchor="middle" font-family="Outfit,sans-serif" font-size="5" fill="var(--xp-gold)">{1,5}</text>
+            <text x="25" y="15" text-anchor="middle" font-family="Outfit,sans-serif" font-size="5" fill="var(--xp-gold)">{1,3}</text>
+            <text x="12" y="28" text-anchor="middle" font-family="Outfit,sans-serif" font-size="5" fill="var(--text-muted)">ALS A</text>
+            <rect x="48" y="4" width="28" height="20" rx="3" fill="none" stroke="var(--xp-gold)" stroke-width="0.6"/>
+            <rect x="51" y="7" width="10" height="10" rx="1" fill="rgba(139,92,246,0.2)" stroke="var(--xp-gold)" stroke-width="1"/>
+            <rect x="64" y="7" width="10" height="10" rx="1" fill="rgba(139,92,246,0.2)" stroke="var(--xp-gold)" stroke-width="1"/>
+            <text x="56" y="15" text-anchor="middle" font-family="Outfit,sans-serif" font-size="5" fill="var(--xp-gold)">{1,5}</text>
+            <text x="69" y="15" text-anchor="middle" font-family="Outfit,sans-serif" font-size="5" fill="var(--xp-gold)">{3,5}</text>
+            <text x="56" y="28" text-anchor="middle" font-family="Outfit,sans-serif" font-size="5" fill="var(--text-muted)">ALS B</text>
+            <text x="40" y="62" text-anchor="middle" font-family="Outfit,sans-serif" font-size="7" fill="var(--danger)">restricted 1, eliminate 5</text>
+            <text x="40" y="76" text-anchor="middle" font-family="Outfit,sans-serif" font-size="8" fill="var(--text-muted)">Two ALSs, share X, eliminate Z</text>
+          </svg>
+        </div>
+        <div class="tech-body">
+          <div class="tech-header"><span class="tech-tier t4">Tier 4</span><span class="tech-name">ALS-XZ (Almost Locked Sets)</span></div>
+          <p>An ALS is <em>N</em> cells in one house with <em>N+1</em> candidates. Two non-overlapping ALSs sharing a restricted common digit X allow a shared digit Z to be eliminated from cells seeing every Z in both.</p>
+        </div>
+      </div>
+
+      <div class="tech-card">
+        <div class="tech-visual">
+          <svg viewBox="0 0 80 80"><rect width="80" height="80" rx="5" fill="var(--surface-solid)" stroke="var(--border)" stroke-width="1"/>
+            <rect x="4" y="4" width="36" height="36" rx="3" fill="none" stroke="var(--accent)" stroke-width="0.6"/>
+            <rect x="4" y="4" width="18" height="18" rx="2" fill="rgba(139,92,246,0.15)" stroke="#a78bfa" stroke-width="1.2"/>
+            <rect x="24" y="4" width="14" height="18" rx="2" fill="rgba(139,92,246,0.15)" stroke="#a78bfa" stroke-width="1.2"/>
+            <text x="13" y="17" text-anchor="middle" font-family="Outfit,sans-serif" font-size="6" fill="#a78bfa">2 cells</text>
+            <text x="31" y="17" text-anchor="middle" font-family="Outfit,sans-serif" font-size="6" fill="#a78bfa">intersection</text>
+            <text x="40" y="62" text-anchor="middle" font-family="Outfit,sans-serif" font-size="7" fill="var(--text-muted)">Box/line intersection</text>
+            <text x="40" y="76" text-anchor="middle" font-family="Outfit,sans-serif" font-size="8" fill="var(--text-muted)">ALS in line + ALS in box</text>
+          </svg>
+        </div>
+        <div class="tech-body">
+          <div class="tech-header"><span class="tech-tier t4">Tier 4</span><span class="tech-name">Sue de Coq</span></div>
+          <p>At a box/line intersection of 2&ndash;3 cells, the candidates can be partitioned between an ALS in the rest of the line and another ALS in the rest of the box. Each ALS's digits are eliminated from its respective house.</p>
+        </div>
+      </div>
+
+      <div class="tech-card">
+        <div class="tech-visual">
+          <svg viewBox="0 0 80 80"><rect width="80" height="80" rx="5" fill="var(--surface-solid)" stroke="var(--border)" stroke-width="1"/>
+            <rect x="6" y="6" width="18" height="18" rx="2" fill="rgba(139,92,246,0.15)" stroke="#a78bfa" stroke-width="1.2"/>
+            <rect x="56" y="6" width="18" height="18" rx="2" fill="rgba(139,92,246,0.15)" stroke="#a78bfa" stroke-width="1.2"/>
+            <text x="15" y="20" text-anchor="middle" font-family="Outfit,sans-serif" font-size="7" fill="#a78bfa">base</text>
+            <text x="65" y="20" text-anchor="middle" font-family="Outfit,sans-serif" font-size="7" fill="#a78bfa">base</text>
+            <rect x="32" y="40" width="16" height="16" rx="2" fill="rgba(239,68,68,0.15)" stroke="var(--danger)" stroke-width="1.2"/>
+            <text x="40" y="52" text-anchor="middle" font-family="Outfit,sans-serif" font-size="6" fill="var(--danger)">target</text>
+            <text x="40" y="76" text-anchor="middle" font-family="Outfit,sans-serif" font-size="8" fill="var(--text-muted)">Base pair &rarr; target boxes</text>
+          </svg>
+        </div>
+        <div class="tech-body">
+          <div class="tech-header"><span class="tech-tier t4">Tier 4</span><span class="tech-name">Exocet Pattern</span></div>
+          <p>A base pair on a line sharing a box (2&ndash;3 combined candidates) plus two target cells whose candidates are a subset of the base digits. Base digits are eliminated from the rest of both target boxes.</p>
+        </div>
+      </div>
+
+    </div>
+
+  </section>
+
+</div>
+
+<footer>
+  Dynamic Sudoku Engine &mdash; Logical difficulty grading &bull; Bitwise candidates &bull; 21 techniques across 4 tiers
+</footer>
+
+</body>
+</html>

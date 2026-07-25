@@ -1,12 +1,29 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
   <defs>
-    <linearGradient id="e1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#90ee90"/><stop offset="40%" stop-color="#50c878"/><stop offset="100%" stop-color="#1b6b3a"/></linearGradient>
-    <linearGradient id="e2" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#b8f0b8"/><stop offset="50%" stop-color="#60d888"/><stop offset="100%" stop-color="#2a8a4a"/></linearGradient>
-    <radialGradient id="e3" cx="40%" cy="35%" r="35%"><stop offset="0%" stop-color="#d0f8d0"/><stop offset="100%" stop-color="#40b868"/></radialGradient>
+    <radialGradient id="emBg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#50C878"/>
+      <stop offset="60%" stop-color="#2E8B57"/>
+      <stop offset="100%" stop-color="#1A5C34"/>
+    </radialGradient>
+    <linearGradient id="emShine" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#90EE90"/>
+      <stop offset="50%" stop-color="#3CB371"/>
+      <stop offset="100%" stop-color="#1E6B3A"/>
+    </linearGradient>
+    <linearGradient id="emHorn" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#2E8B57"/>
+      <stop offset="100%" stop-color="#90EE90"/>
+    </linearGradient>
   </defs>
-  <path d="M24 4L6 18l6 24h24l6-24z" fill="url(#e1)" stroke="#1b5e30" stroke-width="1.5"/>
-  <path d="M24 8L10 19l5 20h18l5-20z" fill="url(#e2)" stroke="#2a7a40" stroke-width="1"/>
-  <path d="M24 12l-10 8.5 4 17h12l4-17z" fill="url(#e3)" stroke="#3a8a50" stroke-width="0.5"/>
-  <path d="M24 16l-6 6 2.5 12h7l2.5-12z" fill="#b0f0c0" opacity="0.4"/>
-  <path d="M18 26l12-4M20 30l8-2" stroke="#1b6b3a" stroke-width="0.7" fill="none" opacity="0.4"/>
+  <circle cx="60" cy="60" r="52" fill="url(#emBg)" stroke="#3CB371" stroke-width="3"/>
+  <circle cx="60" cy="60" r="46" fill="none" stroke="#90EE90" stroke-width="1" opacity="0.3"/>
+  <path d="M60 20 L66 36 L60 42 L54 36 Z" fill="url(#emHorn)" stroke="#90EE90" stroke-width="1"/>
+  <path d="M40 56 Q42 48 48 44 Q52 42 56 46" fill="none" stroke="#1A5C34" stroke-width="2.5"/>
+  <path d="M80 56 Q78 48 72 44 Q68 42 64 46" fill="none" stroke="#1A5C34" stroke-width="2.5"/>
+  <ellipse cx="60" cy="58" rx="20" ry="14" fill="none" stroke="url(#emShine)" stroke-width="2"/>
+  <circle cx="60" cy="56" r="4" fill="#0A2A14"/>
+  <circle cx="52" cy="52" r="1.5" fill="#90EE90" opacity="0.6"/>
+  <circle cx="68" cy="52" r="1.5" fill="#90EE90" opacity="0.6"/>
+  <path d="M48 66 Q54 76 60 78 Q66 76 72 66" fill="none" stroke="#90EE90" stroke-width="2" stroke-linecap="round"/>
+  <path d="M36 56 L26 50 M84 56 L94 50" fill="none" stroke="#3CB371" stroke-width="2.5" stroke-linecap="round"/>
 </svg>

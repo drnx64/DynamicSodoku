@@ -657,3 +657,19 @@ body.body-shake { animation:bodyShake 0.5s ease; }
   border: 1.5px solid var(--border); background: var(--btn-bg);
   color: var(--text); font-weight: 500; cursor: pointer;
 }
+
+/* ============ COMPLETED HOUSE SNAKE ANIMATION ============ */
+@keyframes completeSnake {
+  0% { transform: scale(1); }
+  20% { transform: scale(1.25); background: rgba(34,197,94,0.35); box-shadow: 0 0 20px rgba(34,197,94,0.5); }
+  45% { transform: scale(0.92); }
+  70% { transform: scale(1.05); background: rgba(34,197,94,0.08); }
+  100% { transform: scale(1); background: transparent; box-shadow: none; }
+}
+.cell.completed-row,
+.cell.completed-col,
+.cell.completed-box {
+  animation: completeSnake 0.7s ease both;
+  pointer-events: none;
+  z-index: 1;
+}

@@ -29,6 +29,7 @@ const state = {
   countdownMode: false, countdownTime: 0,
   secondChanceUsed: false,
   _retryData: null,
+  completed: { rows: new Set(), cols: new Set(), boxes: new Set() },
 };
 state.settings = {};
 
@@ -79,6 +80,9 @@ function placeNumber(row, col, num) {
     state.board[row][col] = 0;
     state.notes[row][col] = new Set();
     state._lastMistakeCell = null;
+    state.completed.rows.delete(row);
+    state.completed.cols.delete(col);
+    state.completed.boxes.delete(boxIndexOf(row, col));
     pushHistory('clear', row, col, prevVal, 0, prevNotes, []);
     if (!state.started) { state.started = true; startTimer(); }
     render(); saveGame(); playSound('place');
@@ -123,6 +127,7 @@ function placeNumber(row, col, num) {
   render({ popCell: [row, col] }); saveGame(); playSound('place');
   haptic(8);
   if (state.settings.autoClearNotes) autoClearNotes(row, col, num);
+  checkCompleted(row, col);
   checkWin();
 }
 
@@ -253,6 +258,35 @@ function showHintShopModal() {
     };
   }
   if (cancelBtn) cancelBtn.onclick = () => modal.classList.remove('open');
+}
+
+function isHouseCompleted(type, index) {
+  const cells = type === 'row' ? getHouseCells('row', index)
+    : type === 'col' ? getHouseCells('col', index)
+    : getHouseCells('box', index);
+  return cells.every(([r, c]) => state.board[r][c] !== 0);
+}
+
+function checkCompleted(row, col) {
+  if (!state.settings.showCompleted) return;
+  const newCompleted = [];
+  if (!state.completed.rows.has(row) && isHouseCompleted('row', row)) {
+    state.completed.rows.add(row);
+    newCompleted.push({ type: 'row', index: row });
+  }
+  if (!state.completed.cols.has(col) && isHouseCompleted('col', col)) {
+    state.completed.cols.add(col);
+    newCompleted.push({ type: 'col', index: col });
+  }
+  const bi = boxIndexOf(row, col);
+  if (!state.completed.boxes.has(bi) && isHouseCompleted('box', bi)) {
+    state.completed.boxes.add(bi);
+    newCompleted.push({ type: 'box', index: bi });
+  }
+  if (newCompleted.length > 0) {
+    log('[game] completed:', newCompleted.map(h => h.type + ' ' + h.index).join(', '));
+    render();
+  }
 }
 
 function checkWin() {
@@ -409,6 +443,7 @@ function retryLevel() {
   state.gameOver = false; state.won = false;
   state.combo = 0; state.maxCombo = 0;
   state.secondChanceUsed = false;
+  state.completed = { rows: new Set(), cols: new Set(), boxes: new Set() };
   state._hintCell = null; state._lastMistakeCell = null;
   document.getElementById('timer').textContent = formatTime(state.timer);
   document.getElementById('mistakes').textContent = '0';
@@ -538,6 +573,7 @@ function initNewGame(difficulty, isDaily, startLevel) {
     state.combo = 0; state.maxCombo = 0;
     state.secondChanceUsed = false;
     state._retryData = null; state._lastMistakeCell = null;
+    state.completed = { rows: new Set(), cols: new Set(), boxes: new Set() };
     document.getElementById('timer').textContent = formatTime(state.countdownMode ? state.countdownTime : 0);
     document.getElementById('mistakes').textContent = '0';
     document.getElementById('gameLabel').textContent = state.isDaily ? 'Daily Challenge' : capitalize(state.difficulty);

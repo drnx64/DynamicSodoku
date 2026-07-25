@@ -1,16 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 140" width="120" height="140">
   <defs>
-    <linearGradient id="w1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#b8864e"/><stop offset="100%" stop-color="#7a4a2e"/></linearGradient>
-    <linearGradient id="w2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#d4a56a"/><stop offset="100%" stop-color="#9c6b42"/></linearGradient>
+    <linearGradient id="woodBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#5C3A1E"/>
+      <stop offset="100%" stop-color="#3E2510"/>
+    </linearGradient>
+    <linearGradient id="woodGrain" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8B6914"/>
+      <stop offset="50%" stop-color="#6B4F12"/>
+      <stop offset="100%" stop-color="#4A3610"/>
+    </linearGradient>
   </defs>
-  <path d="M24 4L6 16v10c0 8.5 7.5 16 18 18 10.5-2 18-9.5 18-18V16z" fill="url(#w1)" stroke="#5a3520" stroke-width="1.5"/>
-  <path d="M24 8L10 18v8c0 7 5.8 13 14 14.5 8.2-1.5 14-7.5 14-14.5v-8z" fill="url(#w2)" stroke="#8b5e34" stroke-width="1"/>
-  <path d="M24 14l-4 6 2 8 2-4 2 4 2-8z" fill="#5a3520" opacity="0.6"/>
-  <path d="M24 16l-2.5 4 1 5 1.5-3 1.5 3 1-5z" fill="#d4a56a" opacity="0.8"/>
-  <line x1="14" y1="20" x2="20" y2="20" stroke="#5a3520" stroke-width="0.8" opacity="0.5"/>
-  <line x1="14" y1="24" x2="22" y2="24" stroke="#5a3520" stroke-width="0.8" opacity="0.5"/>
-  <line x1="14" y1="28" x2="20" y2="28" stroke="#5a3520" stroke-width="0.8" opacity="0.5"/>
-  <line x1="28" y1="20" x2="34" y2="20" stroke="#5a3520" stroke-width="0.8" opacity="0.5"/>
-  <line x1="26" y1="24" x2="34" y2="24" stroke="#5a3520" stroke-width="0.8" opacity="0.5"/>
-  <line x1="28" y1="28" x2="34" y2="28" stroke="#5a3520" stroke-width="0.8" opacity="0.5"/>
+  <path d="M60 8 L112 38 L112 90 Q112 115 60 132 Q8 115 8 90 L8 38 Z" fill="url(#woodBg)" stroke="#8B6914" stroke-width="2.5"/>
+  <path d="M60 18 L100 40 L100 86 Q100 106 60 120 Q20 106 20 86 L20 40 Z" fill="none" stroke="url(#woodGrain)" stroke-width="1.5" opacity="0.5"/>
+  <path d="M60 48 Q52 48 48 54 Q44 60 48 66 Q52 70 60 70 Q68 70 72 66 Q76 60 72 54 Q68 48 60 48 Z" fill="none" stroke="#C4952A" stroke-width="2"/>
+  <circle cx="60" cy="58" r="3" fill="#C4952A"/>
+  <path d="M48 66 Q42 76 38 84" fill="none" stroke="#C4952A" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M72 66 Q78 76 82 84" fill="none" stroke="#C4952A" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M52 52 L46 44" fill="none" stroke="#C4952A" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M68 52 L74 44" fill="none" stroke="#C4952A" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M52 50 L52 42" fill="none" stroke="#C4952A" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M68 50 L68 42" fill="none" stroke="#C4952A" stroke-width="1.5" stroke-linecap="round"/>
 </svg>

@@ -210,6 +210,11 @@ function setupNavigation() {
     });
   }
 
+  const docsCard = document.getElementById('docsCard');
+  if (docsCard) {
+    docsCard.addEventListener('click', () => { log('[nav] click: docsCard'); window.open('docs/index.html', '_blank'); });
+  } else { log('[nav] WARN: #docsCard not found'); }
+
   const settingsBack = document.getElementById('settingsBack');
   if (settingsBack) settingsBack.addEventListener('click', () => { log('[nav] click: settingsBack'); goBack(); });
   const statsBack = document.getElementById('statsBack');
