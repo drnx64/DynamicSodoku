@@ -173,6 +173,8 @@
 }
 .cell.conflict { background: var(--conflict); }
 .cell.conflict .cell-value { color: var(--conflict-text); }
+.cell.wrong-cell { background: rgba(220, 38, 38, 0.15); }
+.cell.wrong-cell .cell-value { color: var(--conflict-text); }
 .cell .cell-value { position: relative; z-index: 1; }
 .cell.pop .cell-value { animation: popPlace 0.25s ease; }
 .cell.entering { animation: cellEnter 0.35s ease backwards; }
@@ -664,12 +666,12 @@ body.body-shake { animation:bodyShake 0.5s ease; }
   20% { transform: scale(1.25); background: rgba(34,197,94,0.35); box-shadow: 0 0 20px rgba(34,197,94,0.5); }
   45% { transform: scale(0.92); }
   70% { transform: scale(1.05); background: rgba(34,197,94,0.08); }
-  100% { transform: scale(1); background: transparent; box-shadow: none; }
+  100% { transform: scale(1); box-shadow: none; }
 }
+
+/* Permanent completed state - subtle green highlight */
 .cell.completed-row,
 .cell.completed-col,
 .cell.completed-box {
-  animation: completeSnake 0.7s ease both;
-  pointer-events: none;
-  z-index: 1;
+  background: rgba(34, 197, 94, 0.12);
 }

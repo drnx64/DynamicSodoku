@@ -30,6 +30,7 @@ const state = {
   secondChanceUsed: false,
   _retryData: null,
   completed: { rows: new Set(), cols: new Set(), boxes: new Set() },
+  completedAnimated: { rows: new Set(), cols: new Set(), boxes: new Set() },
 };
 state.settings = {};
 
@@ -83,6 +84,9 @@ function placeNumber(row, col, num) {
     state.completed.rows.delete(row);
     state.completed.cols.delete(col);
     state.completed.boxes.delete(boxIndexOf(row, col));
+    state.completedAnimated.rows.delete(row);
+    state.completedAnimated.cols.delete(col);
+    state.completedAnimated.boxes.delete(boxIndexOf(row, col));
     pushHistory('clear', row, col, prevVal, 0, prevNotes, []);
     if (!state.started) { state.started = true; startTimer(); }
     render(); saveGame(); playSound('place');
@@ -226,6 +230,7 @@ function giveHint() {
   if (state.combo > state.maxCombo) state.maxCombo = state.combo;
   if (state.combo >= 2) showCombo(state.combo);
   render({ popCell: [row, col] }); saveGame(); playSound('place');
+  checkCompleted(row, col);
   checkWin();
 }
 
@@ -272,20 +277,33 @@ function checkCompleted(row, col) {
   const newCompleted = [];
   if (!state.completed.rows.has(row) && isHouseCompleted('row', row)) {
     state.completed.rows.add(row);
+    state.completedAnimated.rows.add(row);
     newCompleted.push({ type: 'row', index: row });
   }
   if (!state.completed.cols.has(col) && isHouseCompleted('col', col)) {
     state.completed.cols.add(col);
+    state.completedAnimated.cols.add(col);
     newCompleted.push({ type: 'col', index: col });
   }
   const bi = boxIndexOf(row, col);
   if (!state.completed.boxes.has(bi) && isHouseCompleted('box', bi)) {
     state.completed.boxes.add(bi);
+    state.completedAnimated.boxes.add(bi);
     newCompleted.push({ type: 'box', index: bi });
   }
   if (newCompleted.length > 0) {
     log('[game] completed:', newCompleted.map(h => h.type + ' ' + h.index).join(', '));
+    log('[game] completedAnimated rows:', [...state.completedAnimated.rows]);
+    log('[game] completedAnimated cols:', [...state.completedAnimated.cols]);
+    log('[game] completedAnimated boxes:', [...state.completedAnimated.boxes]);
     render();
+    setTimeout(() => {
+      newCompleted.forEach(h => {
+        if (h.type === 'row') state.completedAnimated.rows.delete(h.index);
+        else if (h.type === 'col') state.completedAnimated.cols.delete(h.index);
+        else state.completedAnimated.boxes.delete(h.index);
+      });
+    }, 1200);
   }
 }
 
@@ -443,7 +461,8 @@ function retryLevel() {
   state.gameOver = false; state.won = false;
   state.combo = 0; state.maxCombo = 0;
   state.secondChanceUsed = false;
-  state.completed = { rows: new Set(), cols: new Set(), boxes: new Set() };
+state.completed = { rows: new Set(), cols: new Set(), boxes: new Set() };
+  state.completedAnimated = { rows: new Set(), cols: new Set(), boxes: new Set() };
   state._hintCell = null; state._lastMistakeCell = null;
   document.getElementById('timer').textContent = formatTime(state.timer);
   document.getElementById('mistakes').textContent = '0';
@@ -573,7 +592,8 @@ function initNewGame(difficulty, isDaily, startLevel) {
     state.combo = 0; state.maxCombo = 0;
     state.secondChanceUsed = false;
     state._retryData = null; state._lastMistakeCell = null;
-    state.completed = { rows: new Set(), cols: new Set(), boxes: new Set() };
+state.completed = { rows: new Set(), cols: new Set(), boxes: new Set() };
+  state.completedAnimated = { rows: new Set(), cols: new Set(), boxes: new Set() };
     document.getElementById('timer').textContent = formatTime(state.countdownMode ? state.countdownTime : 0);
     document.getElementById('mistakes').textContent = '0';
     document.getElementById('gameLabel').textContent = state.isDaily ? 'Daily Challenge' : capitalize(state.difficulty);

@@ -1561,6 +1561,18 @@ function findConflicts(board) {
   return conflicts;
 }
 
+function getWrongCells(board, solution) {
+  const wrong = new Set();
+  for (let r = 0; r < 9; r++) {
+    for (let c = 0; c < 9; c++) {
+      if (board[r][c] !== 0 && board[r][c] !== solution[r][c]) {
+        wrong.add(r + ',' + c);
+      }
+    }
+  }
+  return wrong;
+}
+
 function getCandidates(board, row, col) {
   if (board[row][col]) return new Set();
   const cands = new Set([1,2,3,4,5,6,7,8,9]);

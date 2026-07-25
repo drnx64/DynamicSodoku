@@ -7,6 +7,7 @@ function render(opts) {
   if (!boardEl) { log('[ui] render: WARN #board not found'); return; }
   boardEl.innerHTML = '';
   const conflicts = state.settings.highlightConflicts ? findConflicts(state.board) : new Set();
+  const wrongCells = state.settings.highlightWrong ? getWrongCells(state.board, state.solution) : new Set();
   const selectedVal = state.selectedCell ? state.board[state.selectedCell[0]][state.selectedCell[1]] : 0;
 
   const candidatesCache = state.settings.autoCandidates ? {} : null;
@@ -37,25 +38,42 @@ function render(opts) {
       if (state.settings.highlightSame && selectedVal && state.board[r][c] === selectedVal && !(state.selectedCell && state.selectedCell[0] === r && state.selectedCell[1] === c))
         cell.classList.add('same-num');
       if (conflicts.has(r+','+c)) cell.classList.add('conflict');
+      if (wrongCells.has(r+','+c)) cell.classList.add('wrong-cell');
 
       if (state.settings.showCompleted && state.board[r][c]) {
+        const bi = boxIndexOf(r, c);
         const rowDone = state.completed.rows.has(r);
         const colDone = state.completed.cols.has(c);
-        const bi = boxIndexOf(r, c);
         const boxDone = state.completed.boxes.has(bi);
+        
         if (rowDone || colDone || boxDone) {
+          cell.style.background = 'rgba(34, 197, 94, 0.12)';
+        }
+        
+        const rowAnim = state.completedAnimated.rows.has(r);
+        const colAnim = state.completedAnimated.cols.has(c);
+        const boxAnim = state.completedAnimated.boxes.has(bi);
+        if (rowAnim || colAnim || boxAnim) {
           let delay = 0;
-          if (rowDone) delay = c * 60;
-          else if (colDone) delay = r * 60;
+          if (rowAnim) delay = c * 60;
+          else if (colAnim) delay = r * 60;
           else {
             const sr = Math.floor(bi / 3) * 3;
             const sc = (bi % 3) * 3;
             delay = ((r - sr) * 3 + (c - sc)) * 60;
           }
-          cell.style.animationDelay = delay + 'ms';
-          if (rowDone) cell.classList.add('completed-row');
-          if (colDone) cell.classList.add('completed-col');
-          if (boxDone) cell.classList.add('completed-box');
+          
+          log('[ui] animating cell', { r, c, rowAnim, colAnim, boxAnim, delay });
+          
+          setTimeout(() => {
+            cell.animate([
+              { transform: 'scale(1)', background: 'rgba(34, 197, 94, 0.12)', boxShadow: 'none' },
+              { transform: 'scale(1.25)', background: 'rgba(34, 197, 94, 0.35)', boxShadow: '0 0 20px rgba(34, 197, 94, 0.5)' },
+              { transform: 'scale(0.92)', background: 'rgba(34, 197, 94, 0.12)', boxShadow: 'none' },
+              { transform: 'scale(1.05)', background: 'rgba(34, 197, 94, 0.08)', boxShadow: 'none' },
+              { transform: 'scale(1)', background: 'rgba(34, 197, 94, 0.12)', boxShadow: 'none' }
+            ], { duration: 700, easing: 'ease', fill: 'forwards' });
+          }, delay);
         }
       }
 

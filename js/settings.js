@@ -5,7 +5,7 @@ const APP_VERSION = '1.9.0';
 const APP_VERSION_DATE = '2026-07-18';
 
 const DEFAULT_SETTINGS = {
-  highlightSame: true, highlightPeers: true, highlightConflicts: true,
+  highlightSame: true, highlightPeers: true, highlightConflicts: true, highlightWrong: true,
   autoCandidates: false, showRemaining: true, mistakeLimit: true,
   timerVisible: true, darkTheme: false, soundEnabled: true, autoClearNotes: true,
   hapticFeedback: true, autoDarkMode: true, keyboardShortcuts: true,
@@ -51,6 +51,7 @@ const SETTINGS_CATEGORIES = [
       { key: 'highlightSame', label: 'Highlight same number' },
       { key: 'highlightPeers', label: 'Highlight row/column/box' },
       { key: 'highlightConflicts', label: 'Highlight conflicts' },
+      { key: 'highlightWrong', label: 'Highlight wrong numbers' },
       { key: 'showRemaining', label: 'Show remaining counts' },
       { key: 'mistakeLimit', label: 'Mistake limit (3)' },
       { key: 'autoClearNotes', label: 'Auto-clear notes' },

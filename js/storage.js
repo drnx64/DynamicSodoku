@@ -107,6 +107,19 @@ function loadGame() {
     state.countdownMode = data.countdownMode || false; state.countdownTime = data.countdownTime || 0;
     state.secondChanceUsed = data.secondChanceUsed || false;
     state.gameMode = data.isDaily ? 'daily' : 'normal';
+    
+    state.completed = { rows: new Set(), cols: new Set(), boxes: new Set() };
+    state.completedAnimated = { rows: new Set(), cols: new Set(), boxes: new Set() };
+    for (let r = 0; r < 9; r++) {
+      if (isHouseCompleted('row', r)) state.completed.rows.add(r);
+    }
+    for (let c = 0; c < 9; c++) {
+      if (isHouseCompleted('col', c)) state.completed.cols.add(c);
+    }
+    for (let b = 0; b < 9; b++) {
+      if (isHouseCompleted('box', b)) state.completed.boxes.add(b);
+    }
+    
     log('[storage] game loaded', { difficulty: state.difficulty, timer: state.timer, mistakes: state.mistakes, won: state.won });
     return true;
   } catch(e) { log('[storage] loadGame error', e); return false; }
@@ -150,6 +163,19 @@ function loadDailyGame() {
     state.started = data.started || false; state.selectedCell = data.selectedCell || null;
     state.notesUsed = data.notesUsed || false; state.currentLevel = data.currentLevel || 1;
     state.isDaily = true; state.gameMode = 'daily';
+    
+    state.completed = { rows: new Set(), cols: new Set(), boxes: new Set() };
+    state.completedAnimated = { rows: new Set(), cols: new Set(), boxes: new Set() };
+    for (let r = 0; r < 9; r++) {
+      if (isHouseCompleted('row', r)) state.completed.rows.add(r);
+    }
+    for (let c = 0; c < 9; c++) {
+      if (isHouseCompleted('col', c)) state.completed.cols.add(c);
+    }
+    for (let b = 0; b < 9; b++) {
+      if (isHouseCompleted('box', b)) state.completed.boxes.add(b);
+    }
+    
     log('[storage] daily game loaded', { timer: state.timer, mistakes: state.mistakes });
     return true;
   } catch(e) { log('[storage] loadDailyGame error', e); return false; }
