@@ -87,6 +87,9 @@ function updateMenuUI() {
     bonusCircle.classList.toggle('claimable', ready);
   }
 
+  loadDailyTasks();
+  loadDailyClaim();
+
   const continueCard = document.getElementById('continueCard');
   const continueSub = document.getElementById('continueSub');
   if (continueCard) {
@@ -101,6 +104,94 @@ function updateMenuUI() {
     }
   }
   log('[menu] updateMenuUI complete', { rank: rank.name, xp: totalXp, streak: s });
+  showPendingTaskNotifications();
+}
+
+function showDailyTasks() {
+  log('[menu] showDailyTasks()');
+  loadDailyTasks();
+  const list = document.getElementById('dailyTasksList');
+  if (!list) return;
+  list.innerHTML = '';
+  for (let i = 0; i < dailyTasks.tasks.length; i++) {
+    const t = dailyTasks.tasks[i];
+    const done = dailyTasks.completed.includes(i);
+    const claimed = dailyTasks._claimedNotifications && dailyTasks._claimedNotifications.includes(i);
+    const card = document.createElement('div');
+    card.className = 'daily-task-item' + (done ? ' done' : '');
+    const rewardParts = [];
+    if (t.reward.hints) rewardParts.push(t.reward.hints + ' hints');
+    if (t.reward.xp) rewardParts.push(t.reward.xp + ' XP');
+    if (t.reward.autoUse) rewardParts.push(t.reward.autoUse + ' auto');
+    const progress = done ? 100 : 0;
+    card.innerHTML =
+      '<div class="daily-task-icon">' + (done ? '<svg width="20" height="20" viewBox="0 0 24 24"><use href="#ico-check"/></svg>' : '<svg width="20" height="20" viewBox="0 0 24 24"><use href="#ico-sparkle"/></svg>') + '</div>' +
+      '<div class="daily-task-info">' +
+        '<div class="daily-task-desc">' + t.desc + '</div>' +
+        '<div class="daily-task-progress-wrap"><div class="daily-task-progress-bar" style="width:' + progress + '%"></div></div>' +
+        '<div class="daily-task-reward">+' + rewardParts.join(' + ') + '</div>' +
+      '</div>' +
+      '<button class="daily-task-claim-btn"' + (done && !claimed ? '' : ' disabled') + ' data-idx="' + i + '">' + (done && !claimed ? 'Claim' : (claimed ? 'Done' : '--')) + '</button>';
+    list.appendChild(card);
+  }
+  list.querySelectorAll('.daily-task-claim-btn:not([disabled])').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.idx);
+      if (!dailyTasks._claimedNotifications) dailyTasks._claimedNotifications = [];
+      if (!dailyTasks._claimedNotifications.includes(idx)) {
+        dailyTasks._claimedNotifications.push(idx);
+        saveDailyTasks();
+      }
+      btn.disabled = true;
+      btn.textContent = 'Done';
+      showToast('Reward claimed!');
+    });
+  });
+  document.getElementById('dailyTasksOverlay').classList.add('open');
+}
+
+function showPendingTaskNotifications() {
+  if (!dailyTasks._pendingNotifications || dailyTasks._pendingNotifications.length === 0) return;
+  const pending = [...dailyTasks._pendingNotifications];
+  dailyTasks._pendingNotifications = [];
+  saveDailyTasks();
+  loadDailyTasks();
+  const overlay = document.getElementById('dailyTasksOverlay');
+  if (!overlay) return;
+  const list = document.getElementById('dailyTasksList');
+  if (!list) return;
+  list.innerHTML = '';
+  for (const idx of pending) {
+    const t = dailyTasks.tasks[idx];
+    if (!t) continue;
+    const rewardParts = [];
+    if (t.reward.hints) rewardParts.push(t.reward.hints + ' hints');
+    if (t.reward.xp) rewardParts.push(t.reward.xp + ' XP');
+    if (t.reward.autoUse) rewardParts.push(t.reward.autoUse + ' auto');
+    const card = document.createElement('div');
+    card.className = 'daily-task-item done';
+    card.innerHTML =
+      '<div class="daily-task-icon"><svg width="20" height="20" viewBox="0 0 24 24"><use href="#ico-check"/></svg></div>' +
+      '<div class="daily-task-info">' +
+        '<div class="daily-task-desc">' + t.desc + '</div>' +
+        '<div class="daily-task-progress-wrap"><div class="daily-task-progress-bar" style="width:100%"></div></div>' +
+        '<div class="daily-task-reward">+' + rewardParts.join(' + ') + ' earned!</div>' +
+      '</div>' +
+      '<button class="daily-task-claim-btn" data-idx="' + idx + '">Claim</button>';
+    list.appendChild(card);
+  }
+  list.querySelectorAll('.daily-task-claim-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.idx);
+      btn.disabled = true;
+      btn.textContent = 'Done';
+      showToast('Reward claimed!');
+    });
+  });
+  overlay.classList.add('open');
+  overlay.onclick = (e) => {
+    if (e.target === e.currentTarget) overlay.classList.remove('open');
+  };
 }
 
 function showDailyToast() {
@@ -183,14 +274,27 @@ function showDailyArchive() {
 
   const archive = stats.dailyArchive || [];
   const today = new Date();
-  const year = today.getFullYear();
-  const month = today.getMonth();
 
-  for (let m = 0; m < 3; m++) {
-    const d = new Date(year, month - m, 1);
-    const monthLabel = d.toLocaleString('default', { month: 'long', year: 'numeric' });
-    const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
-    const firstDay = d.getDay();
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const now = new Date(today);
+  const past = new Date(today);
+  past.setDate(past.getDate() - 29);
+
+  const months = [];
+  let d = new Date(past);
+  while (d <= now) {
+    const key = d.getFullYear() + '-' + d.getMonth();
+    if (!months.includes(key)) months.push(key);
+    d.setDate(d.getDate() + 1);
+  }
+
+  months.reverse();
+  for (const key of months) {
+    const [y, m] = key.split('-').map(Number);
+    const first = new Date(y, m, 1);
+    const monthLabel = first.toLocaleString('default', { month: 'long', year: 'numeric' });
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    const firstDay = new Date(y, m, 1).getDay();
 
     const label = document.createElement('div');
     label.className = 'archive-month-label';
@@ -200,7 +304,6 @@ function showDailyArchive() {
     const grid = document.createElement('div');
     grid.className = 'archive-grid';
 
-    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     dayNames.forEach(n => {
       const el = document.createElement('div');
       el.className = 'streak-day-label';
@@ -215,12 +318,28 @@ function showDailyArchive() {
     }
 
     for (let day = 1; day <= daysInMonth; day++) {
-      const dateStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+      const dateStr = y + '-' + String(m + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+      const dateObj = new Date(y, m, day);
       const isToday = dateStr === todayStr();
       const completed = archive.includes(dateStr);
+      const inRange = dateObj >= past && dateObj <= now;
       const el = document.createElement('div');
       el.className = 'archive-day' + (completed ? ' completed' : '') + (isToday ? ' today' : '');
       el.textContent = day;
+      if (inRange) {
+        el.dataset.date = dateStr;
+        el.classList.add('clickable');
+        el.title = isToday ? 'Today\'s puzzle' : 'Play ' + dateStr;
+        el.addEventListener('click', () => {
+          if (state.started && !state.won && !state.gameOver) {
+            if (!confirm('You have a game in progress. Start this archived puzzle instead?')) return;
+          }
+          clearGame();
+          initNewGame('medium', true, 1, dateStr);
+        });
+      } else {
+        el.style.opacity = '0.25';
+      }
       grid.appendChild(el);
     }
 
@@ -267,6 +386,12 @@ function setupDialogs() {
   if (achieveCard) achieveCard.addEventListener('click', () => { log('[menu] click: achieveCard'); showAchievements(); });
   const statsCard = document.getElementById('statsCard');
   if (statsCard) statsCard.addEventListener('click', () => { log('[menu] click: statsCard'); showStats(); });
+  const dailyTasksClose = document.getElementById('dailyTasksClose');
+  if (dailyTasksClose) dailyTasksClose.addEventListener('click', () => { document.getElementById('dailyTasksOverlay').classList.remove('open'); });
+  document.getElementById('dailyTasksOverlay')?.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) document.getElementById('dailyTasksOverlay').classList.remove('open');
+  });
+
   const bonusCircle = document.getElementById('bonusCircle');
   if (bonusCircle) bonusCircle.addEventListener('click', () => { log('[menu] click: bonusCircle'); loadBonus(); showBonusModal(); });
   const bonusClose = document.getElementById('bonusClose');
@@ -530,6 +655,12 @@ function showAchievements() {
   log('[menu] achievements page shown');
 }
 
+function formatDate(iso) {
+  if (!iso) return '--';
+  const d = new Date(iso);
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
 function showBonusModal() {
   log('[menu] showBonusModal()');
   const overlay = document.getElementById('bonusOverlay');
@@ -546,26 +677,40 @@ function showBonusModal() {
   countEl.className = 'bonus-count' + (played >= 10 ? ' done' : '');
   fillEl.style.width = pct + '%';
 
+  const dateInfoEl = document.getElementById('bonusDateInfo') || (() => {
+    const el = document.createElement('div');
+    el.id = 'bonusDateInfo';
+    el.style.cssText = 'font-size:11px;color:var(--text-muted);margin:4px 0 8px;text-align:center;';
+    timerEl.parentNode.insertBefore(el, timerEl.nextSibling);
+    return el;
+  })();
+
   if (bonusChallenge.claimed) {
     timerEl.textContent = 'Reward claimed!';
     timerEl.className = 'bonus-timer';
     claimBtn.disabled = true;
     const hints = bonusChallenge.bonusHints || 0;
     statusEl.textContent = 'You earned +3 bonus hints! (' + hints + ' remaining)';
+    dateInfoEl.textContent = 'Started ' + formatDate(bonusChallenge.startDate) + ' \u2022 Ended ' + formatDate(new Date(new Date(bonusChallenge.startDate).getTime() + 7*86400000).toISOString());
     overlay.classList.add('open');
     return;
   }
 
   if (!bonusChallenge.startDate) {
-    timerEl.textContent = 'Complete your first game to start!';
+    timerEl.textContent = 'Challenge starts on your first visit!';
     timerEl.className = 'bonus-timer';
     claimBtn.disabled = true;
     statusEl.textContent = '';
+    dateInfoEl.textContent = '';
     overlay.classList.add('open');
     return;
   }
 
   const hoursLeft = getBonusHoursLeft();
+  const startDate = formatDate(bonusChallenge.startDate);
+  const endDate = formatDate(new Date(new Date(bonusChallenge.startDate).getTime() + 7*86400000).toISOString());
+  dateInfoEl.textContent = startDate + ' \u2192 ' + endDate;
+
   if (hoursLeft <= 0) {
     timerEl.textContent = 'Challenge expired!';
     timerEl.className = 'bonus-timer expired';
@@ -653,4 +798,36 @@ function subtractDays(date, n) {
   const d = new Date(date);
   d.setDate(d.getDate() - n);
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function showStatsCard() {
+  const totalXp = stats.totalXp || 0;
+  const rank = getRank(totalXp);
+  const cardHtml = '<div class="stat-card-share">' +
+    '<div class="stat-card-header">' +
+      '<div class="stat-card-rank-icon">' + rankSvgImg(rank.name, 48) + '</div>' +
+      '<div class="stat-card-title">Sudoku Stats</div>' +
+      '<div class="stat-card-rank">' + rank.name + '</div>' +
+    '</div>' +
+    '<div class="stat-card-body">' +
+      '<div class="stat-card-row"><span class="stat-label">XP</span><span class="stat-value">' + totalXp + '</span></div>' +
+      '<div class="stat-card-row"><span class="stat-label">Puzzles Solved</span><span class="stat-value">' + (stats.totalGames || 0) + '</span></div>' +
+      '<div class="stat-card-row"><span class="stat-label">Best Time</span><span class="stat-value">' + formatTime(getBestTime()) + '</span></div>' +
+      '<div class="stat-card-row"><span class="stat-label">Total Mistakes</span><span class="stat-value">' + (stats.totalMistakes || 0) + '</span></div>' +
+      '<div class="stat-card-row"><span class="stat-label">Hints Used</span><span class="stat-value">' + (stats.totalHintsUsed || 0) + '</span></div>' +
+      '<div class="stat-card-row"><span class="stat-label">Streak</span><span class="stat-value">' + (streak.count || 0) + ' days</span></div>' +
+    '</div>' +
+    '<div class="stat-card-footer">Play at: ' + window.location.href.split('?')[0] + '</div>' +
+  '</div>';
+
+  const overlay = document.getElementById('statsCardOverlay');
+  if (!overlay) return;
+  const content = document.getElementById('statsCardContent');
+  if (content) content.innerHTML = cardHtml;
+  overlay.classList.add('open');
+}
+
+function getBestTime() {
+  const times = Object.values(stats.bestTimes || {}).filter(t => t && t < 999999);
+  return times.length > 0 ? Math.min(...times) : 0;
 }

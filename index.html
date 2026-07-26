@@ -18,6 +18,7 @@
 <link rel="stylesheet" href="css/game.css">
 <link rel="stylesheet" href="css/modal.css">
 <link rel="stylesheet" href="css/pages.css">
+<link rel="stylesheet" href="css/inapp-overlay.css">
 <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
@@ -83,6 +84,8 @@
   <symbol id="ico-badge-i" viewBox="0 0 40 40"><path d="M20 2L6 12v8c0 7 5.5 13.5 14 18c8.5-4.5 14-11 14-18v-8z" fill="#8b5cf6" opacity="0.12"/><path d="M20 2L6 12v8c0 7 5.5 13.5 14 18c8.5-4.5 14-11 14-18v-8z" fill="none" stroke="#8b5cf6" stroke-width="2.5" stroke-linejoin="round"/><path d="M20 8l-8 5v5c0 4.5 3.2 8.8 8 11.8c4.8-3 8-7.3 8-11.8v-5z" fill="#8b5cf6" opacity="0.08"/><text x="20" y="25" font-size="14" font-weight="800" fill="#8b5cf6" text-anchor="middle" font-family="Arial,sans-serif">I</text></symbol>
   <symbol id="ico-refresh" viewBox="0 0 24 24"><path d="M1 4v6h6M23 20v-6h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="ico-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M12 6v7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M9 9h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="ico-skip-back" viewBox="0 0 24 24"><path d="M19 5v14l-9-7zM5 5v14" fill="currentColor"/></symbol>
+  <symbol id="ico-skip-forward" viewBox="0 0 24 24"><path d="M5 5v14l9-7zM19 5v14" fill="currentColor"/></symbol>
 </svg>
 
 <div id="app">
@@ -151,6 +154,8 @@
         <span class="card-arrow"><svg width="16" height="16" viewBox="0 0 24 24"><use href="#ico-chevron-right"/></svg></span>
       </div>
 
+
+
       <div class="menu-subcards">
         <div class="menu-card menu-card-compact" id="achieveCard">
           <div class="icon achieve-icon"><svg width="20" height="20" viewBox="0 0 24 24"><use href="#ico-award"/></svg></div>
@@ -216,6 +221,7 @@
     <div class="diff-cards" id="diffCards">
       <div class="diff-card easy" data-diff="easy">
         <div class="diff-icon"><svg width="40" height="40" viewBox="0 0 40 40"><use href="#ico-badge-e"/></svg></div>
+        <div class="diff-thumb" id="diffThumbEasy"></div>
         <div class="diff-stars"><svg width="14" height="14" viewBox="0 0 24 24"><use href="#ico-star"/></svg></div>
         <h3>Easy</h3>
         <p>Relax and unwind</p>
@@ -225,6 +231,7 @@
       </div>
       <div class="diff-card medium" data-diff="medium">
         <div class="diff-icon"><svg width="40" height="40" viewBox="0 0 40 40"><use href="#ico-badge-m"/></svg></div>
+        <div class="diff-thumb" id="diffThumbMedium"></div>
         <div class="diff-stars"><svg width="14" height="14" viewBox="0 0 24 24"><use href="#ico-star"/></svg><svg width="14" height="14" viewBox="0 0 24 24"><use href="#ico-star"/></svg></div>
         <h3>Medium</h3>
         <p>A fair challenge</p>
@@ -234,6 +241,7 @@
       </div>
       <div class="diff-card hard" data-diff="hard">
         <div class="diff-icon"><svg width="40" height="40" viewBox="0 0 40 40"><use href="#ico-badge-h"/></svg></div>
+        <div class="diff-thumb" id="diffThumbHard"></div>
         <div class="diff-stars"><svg width="14" height="14" viewBox="0 0 24 24"><use href="#ico-star"/></svg><svg width="14" height="14" viewBox="0 0 24 24"><use href="#ico-star"/></svg><svg width="14" height="14" viewBox="0 0 24 24"><use href="#ico-star"/></svg></div>
         <h3>Hard</h3>
         <p>Test your skills</p>
@@ -243,6 +251,7 @@
       </div>
       <div class="diff-card impossible" data-diff="impossible">
         <div class="diff-icon"><svg width="40" height="40" viewBox="0 0 40 40"><use href="#ico-badge-i"/></svg></div>
+        <div class="diff-thumb" id="diffThumbImpossible"></div>
         <div class="diff-stars"><svg width="14" height="14" viewBox="0 0 24 24"><use href="#ico-star"/></svg><svg width="14" height="14" viewBox="0 0 24 24"><use href="#ico-star"/></svg><svg width="14" height="14" viewBox="0 0 24 24"><use href="#ico-star"/></svg><svg width="14" height="14" viewBox="0 0 24 24"><use href="#ico-star"/></svg></div>
         <h3>Impossible</h3>
         <p>For the brave only</p>
@@ -312,11 +321,13 @@
           <span class="combo-wrap" id="comboWrap" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24"><use href="#ico-fire"/></svg> <span class="combo-text" id="comboText">x2</span></span>
           <span class="game-level" id="gameLevelBadge" style="display:none"><svg width="12" height="12" viewBox="0 0 24 24"><use href="#ico-target"/></svg> Lv. <span id="gameLevelNum">1</span></span>
         </div>
+        <div class="game-link" id="gameLink"></div>
       </div>
       <div class="game-header-right">
         <button class="game-settings-btn" id="gamePauseBtn" title="Pause"><svg width="18" height="18" viewBox="0 0 24 24"><use href="#ico-pause"/></svg></button>
         <button class="game-settings-btn" id="gameMuteBtn" title="Toggle sound"><svg width="18" height="18" viewBox="0 0 24 24"><use href="#ico-volume"/></svg></button>
-        <button class="game-settings-btn" id="gameAutoBtn" title="Auto-candidates (10 XP)"><svg width="18" height="18" viewBox="0 0 24 24"><use href="#ico-auto"/></svg><span class="auto-badge" id="autoBadge">10</span></button>
+        <button class="game-settings-btn" id="gameAutoBtn" title="Auto-candidates"><svg width="18" height="18" viewBox="0 0 24 24"><use href="#ico-auto"/></svg><span class="auto-badge" id="autoBadge">0</span></button>
+        <button class="game-settings-btn" id="gameAnalyzeBtn" title="Analyze puzzle"><svg width="18" height="18" viewBox="0 0 24 24"><use href="#ico-book"/></svg></button>
       </div>
     </div>
 
@@ -364,6 +375,8 @@
   <div class="page-header">
     <button class="back-btn" id="statsBack"><svg width="20" height="20" viewBox="0 0 24 24"><use href="#ico-chevron-left"/></svg></button>
     <h2>Statistics</h2>
+    <div class="page-header-spacer"></div>
+    <button class="page-header-btn" id="statsShareBtn" title="Share stats card"><svg width="18" height="18" viewBox="0 0 24 24"><use href="#ico-share"/></svg></button>
   </div>
   <div id="statsContent" class="stats-content"></div>
 </div>
@@ -414,6 +427,7 @@
     <div class="win-level-up" id="winLevelUp" style="display:none"></div>
     <div class="win-actions">
       <button class="win-secondary" id="winMenu">Main Menu</button>
+      <button class="win-tertiary" id="winReplay">Replay</button>
       <button class="win-primary" id="winNext">Next Puzzle</button>
     </div>
   </div>
@@ -569,6 +583,17 @@
   </div>
 </div>
 
+<!-- ============ DAILY TASKS MODAL ============ -->
+<div class="daily-tasks-overlay" id="dailyTasksOverlay">
+  <div class="daily-tasks-card">
+    <div class="daily-tasks-header">
+      <h2><svg width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:6px;color:var(--xp-gold)"><use href="#ico-sparkle"/></svg> Today's Tasks</h2>
+      <button class="daily-tasks-close" id="dailyTasksClose"><svg width="20" height="20" viewBox="0 0 24 24"><use href="#ico-x"/></svg></button>
+    </div>
+    <div class="daily-tasks-list" id="dailyTasksList"></div>
+  </div>
+</div>
+
 <!-- ============ WIN EXPLOSION ============ -->
 <div class="explosion-overlay" id="explosionOverlay">
   <div class="explosion-flash"></div>
@@ -626,11 +651,23 @@
   <div class="leader-tabs">
     <button class="leader-tab active" data-lbview="top">Top Scores</button>
     <button class="leader-tab" data-lbview="recent">Recent</button>
+    <button class="leader-tab" id="leaderDailyBtn">Daily</button>
   </div>
   <div class="leaderboard-list" id="leaderboardList"></div>
   <div class="leaderboard-actions">
     <button class="data-btn" id="leaderShareBtn"><svg width="14" height="14" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px"><use href="#ico-share"/></svg> Share</button>
     <button class="data-btn" id="leaderImportBtn"><svg width="14" height="14" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px"><use href="#ico-download"/></svg> Import</button>
+  </div>
+</div>
+
+<!-- ============ DAILY LEADERBOARD OVERLAY ============ -->
+<div class="daily-lb-overlay" id="dailyLeaderboardOverlay">
+  <div class="daily-lb-card">
+    <div class="daily-lb-header-row">
+      <h2><svg width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:6px;"><use href="#ico-trophy"/></svg> Daily Leaderboard</h2>
+      <button class="daily-lb-close" id="dailyLbClose"><svg width="20" height="20" viewBox="0 0 24 24"><use href="#ico-x"/></svg></button>
+    </div>
+    <div id="dailyLeaderboardContent" class="daily-lb-content"></div>
   </div>
 </div>
 
@@ -702,6 +739,87 @@
 <script src="js/reporting.js"></script>
 <script src="js/engine.js"></script>
 <script src="js/rng.js"></script>
+<!-- ============ STATS CARD MODAL ============ -->
+<div class="stats-card-overlay" id="statsCardOverlay">
+  <div class="stats-card-modal">
+    <div class="stats-card-header-row">
+      <h2><svg width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:6px;"><use href="#ico-bar-chart"/></svg> Stat Card</h2>
+      <button class="stats-card-close" id="statsCardClose"><svg width="20" height="20" viewBox="0 0 24 24"><use href="#ico-x"/></svg></button>
+    </div>
+    <div id="statsCardContent" class="stats-card-content"></div>
+    <div class="stats-card-actions">
+      <button class="data-btn" id="statsCardShare"><svg width="14" height="14" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px"><use href="#ico-share"/></svg> Share</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ REPLAY MODAL ============ -->
+<div class="replay-overlay" id="replayOverlay">
+  <div class="replay-card">
+    <div class="replay-header">
+      <h2><svg width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:6px;"><use href="#ico-refresh"/></svg> Game Replay</h2>
+      <button class="replay-close" id="replayClose"><svg width="20" height="20" viewBox="0 0 24 24"><use href="#ico-x"/></svg></button>
+    </div>
+    <div id="replayBoard" class="replay-board"></div>
+    <div class="replay-stats">
+      <span class="replay-stat"><svg width="12" height="12" viewBox="0 0 24 24"><use href="#ico-clock"/></svg> <span id="replayTimer">00:00</span></span>
+      <span class="replay-stat"><svg width="12" height="12" viewBox="0 0 24 24"><use href="#ico-x"/></svg> <span id="replayMistakes">0</span></span>
+      <span class="replay-stat"><svg width="12" height="12" viewBox="0 0 24 24"><use href="#ico-fire"/></svg> <span id="replayCombo">x0</span></span>
+    </div>
+    <div class="replay-move-count" id="replayMoveCount">Move 0 / 0</div>
+    <div class="replay-controls">
+      <button id="replayPrevBtn" class="replay-ctrl-btn" title="Previous move"><svg width="16" height="16" viewBox="0 0 24 24"><use href="#ico-skip-back"/></svg></button>
+      <button id="replayPlayBtn" class="replay-ctrl-btn replay-play-btn"><svg width="16" height="16" viewBox="0 0 24 24"><use href="#ico-play"/></svg> Play</button>
+      <button id="replayNextBtn" class="replay-ctrl-btn" title="Next move"><svg width="16" height="16" viewBox="0 0 24 24"><use href="#ico-skip-forward"/></svg></button>
+    </div>
+    <div class="replay-speeds">
+      <button class="replay-speed-btn" data-speed="0.5">0.5x</button>
+      <button class="replay-speed-btn active" data-speed="1">1x</button>
+      <button class="replay-speed-btn" data-speed="2">2x</button>
+      <button class="replay-speed-btn" data-speed="4">4x</button>
+      <span class="replay-speed-display" id="replaySpeedDisplay">1x</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ANALYZER UNLOCK MODAL ============ -->
+<div class="analyzer-unlock-overlay" id="analyzerUnlockOverlay">
+  <div class="analyzer-unlock-card">
+    <div class="analyzer-unlock-icon"><svg width="28" height="28" viewBox="0 0 24 24"><use href="#ico-book"/></svg></div>
+    <h2>Puzzle Analyzer</h2>
+    <p class="analyzer-unlock-desc">Get step-by-step solving techniques for the current puzzle. See hidden singles, naked pairs, pointing pairs, and more — with coordinates and highlights on the board.</p>
+    <div class="analyzer-unlock-cost">
+      <span class="analyzer-unlock-price">30 XP</span>
+      <span class="analyzer-unlock-note">Valid for this game only</span>
+    </div>
+    <div class="analyzer-unlock-actions">
+      <button class="analyzer-unlock-cancel" id="analyzerUnlockCancel">Cancel</button>
+      <button class="analyzer-unlock-pay" id="analyzerUnlockPay">Unlock for 30 XP</button>
+    </div>
+    <div class="analyzer-unlock-xp" id="analyzerUnlockXp">Your XP: <span id="analyzerUnlockXpVal">0</span></div>
+  </div>
+</div>
+
+<!-- ============ ANALYZER MODAL ============ -->
+<div class="analyzer-overlay" id="analyzerOverlay">
+  <div class="analyzer-card">
+    <div class="analyzer-header">
+      <h2><svg width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:6px;"><use href="#ico-book"/></svg> Puzzle Analyzer</h2>
+      <button class="analyzer-close" id="analyzerClose"><svg width="20" height="20" viewBox="0 0 24 24"><use href="#ico-x"/></svg></button>
+    </div>
+    <div class="analyzer-step-info" id="analyzerStepInfo"></div>
+    <div id="analyzerContent" class="analyzer-content"></div>
+    <div class="analyzer-nav" id="analyzerNav">
+      <button id="analyzerPrevBtn" class="analyzer-nav-btn" disabled><svg width="16" height="16" viewBox="0 0 24 24"><use href="#ico-chevron-left"/></svg> Prev</button>
+      <span id="analyzerPosition">Step 0 / 0</span>
+      <button id="analyzerNextBtn" class="analyzer-nav-btn">Next <svg width="16" height="16" viewBox="0 0 24 24"><use href="#ico-chevron-right"/></svg></button>
+    </div>
+  </div>
+</div>
+
+<script src="js/inapp-detect.js"></script>
+<script src="js/analyzer.js"></script>
+<script src="js/replay.js"></script>
 <script src="js/generator.js"></script>
 <script src="js/grader.js"></script>
 <script src="js/xp.js"></script>

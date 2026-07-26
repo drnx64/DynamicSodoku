@@ -81,6 +81,9 @@ function saveGame() {
       notesUsed: state.notesUsed, currentLevel: state.currentLevel,
       countdownMode: state.countdownMode, countdownTime: state.countdownTime,
       secondChanceUsed: state.secondChanceUsed,
+      _freeUndos: state._freeUndos || 0,
+      _freeAuto: state._freeAuto || 0,
+      _unlimitedHintsUntil: state._unlimitedHintsUntil || 0,
     };
     saveWithVault(LS.game, data, 'game');
     if (state.isDaily) saveDailyGame();
@@ -106,6 +109,9 @@ function loadGame() {
     state.currentLevel = data.currentLevel || 1;
     state.countdownMode = data.countdownMode || false; state.countdownTime = data.countdownTime || 0;
     state.secondChanceUsed = data.secondChanceUsed || false;
+    state._freeUndos = data._freeUndos || 0;
+    state._freeAuto = data._freeAuto || 0;
+    state._unlimitedHintsUntil = data._unlimitedHintsUntil || 0;
     state.gameMode = data.isDaily ? 'daily' : 'normal';
     
     state.completed = { rows: new Set(), cols: new Set(), boxes: new Set() };
@@ -162,6 +168,9 @@ function loadDailyGame() {
     state.gameOver = data.gameOver || false; state.won = data.won || false;
     state.started = data.started || false; state.selectedCell = data.selectedCell || null;
     state.notesUsed = data.notesUsed || false; state.currentLevel = data.currentLevel || 1;
+    state._freeUndos = data._freeUndos || 0;
+    state._freeAuto = data._freeAuto || 0;
+    state._unlimitedHintsUntil = data._unlimitedHintsUntil || 0;
     state.isDaily = true; state.gameMode = 'daily';
     
     state.completed = { rows: new Set(), cols: new Set(), boxes: new Set() };
@@ -337,6 +346,9 @@ const ACHIEVEMENTS = [
   { id: 'legendary', name: 'Legendary', desc: 'Solve 1,000 puzzles', icon: 'ico-crown', cat: 'progress' },
   { id: 'speedOfLight', name: 'Speed of Light', desc: 'Solve Impossible in under 60 seconds', icon: 'ico-zap', cat: 'speed' },
   { id: 'jackpot', name: 'Jackpot', desc: 'Score 80 XP in a single game', icon: 'ico-star', cat: 'misc' },
+  { id: 'task_fighter', name: 'Task Fighter', desc: 'Complete 1 daily task', icon: 'ico-target', cat: 'daily' },
+  { id: 'task_grinder', name: 'Task Grinder', desc: 'Complete 30 daily tasks', icon: 'ico-target', cat: 'daily' },
+  { id: 'task_master', name: 'Task Master', desc: 'Complete all 3 daily tasks in one day', icon: 'ico-crown', cat: 'daily' },
 ];
 
 const ACHIEVE_CATEGORIES = [
@@ -534,6 +546,17 @@ function checkAchievements(difficulty, mistakes, hintsUsed, notesUsed, score, au
   }
 }
 
+function triggerAchievementCheck(id) {
+  const earned = stats.achievements || [];
+  if (!earned.includes(id)) {
+    earned.push(id);
+    stats.achievements = earned;
+    stats._newAchievements = [...(stats._newAchievements || []), id];
+    saveStats();
+    log('[storage] achievement earned:', { id });
+  }
+}
+
 function hasNewAchievements() {
   return (stats._newAchievements || []).length > 0;
 }
@@ -673,6 +696,115 @@ let stats = {
 const BONUS_KEY = 'sudoku_bonus_challenge';
 let bonusChallenge = { startDate: null, gamesPlayed: 0, claimed: false, _claimedMilestones: [] };
 
+const DAILY_CLAIM_KEY = 'sudoku_daily_claim';
+const DAILY_TASKS_KEY = 'sudoku_daily_tasks';
+
+let dailyClaim = { date: '', claimed: false };
+let dailyTasks = { date: '', tasks: [], completed: [] };
+
+function loadDailyClaim() {
+  dailyClaim = loadWithVault(DAILY_CLAIM_KEY, 'dailyClaim', { date: '', claimed: false });
+}
+function saveDailyClaim() {
+  saveWithVault(DAILY_CLAIM_KEY, dailyClaim, 'dailyClaim');
+}
+
+function canClaimDaily() {
+  return dailyClaim.date !== todayStr() || !dailyClaim.claimed;
+}
+
+function claimDailyReward() {
+  if (!canClaimDaily()) return false;
+  dailyClaim.date = todayStr();
+  dailyClaim.claimed = true;
+  state.hintsRemaining += 3;
+  stats.totalXp = (stats.totalXp || 0) + 5;
+  state._freeUndos = (state._freeUndos || 0) + 3;
+  saveDailyClaim();
+  saveStats();
+  saveGame();
+  return true;
+}
+
+const TASK_TYPES = [
+  { id: 'speed_easy', desc: 'Solve Easy in under 3 min', check: (d, t) => d === 'easy' && t < 180, reward: { hints: 1, xp: 5 } },
+  { id: 'speed_medium', desc: 'Solve Medium in under 5 min', check: (d, t) => d === 'medium' && t < 300, reward: { hints: 2, xp: 10 } },
+  { id: 'speed_hard', desc: 'Solve Hard in under 8 min', check: (d, t) => d === 'hard' && t < 480, reward: { hints: 3, xp: 15 } },
+  { id: 'speed_impossible', desc: 'Solve Impossible in under 15 min', check: (d, t) => d === 'impossible' && t < 900, reward: { hints: 5, xp: 25 } },
+  { id: 'flawless_easy', desc: 'Complete Easy with 0 mistakes', check: (d, t, m) => d === 'easy' && m === 0, reward: { autoUse: 1, xp: 8 } },
+  { id: 'flawless_medium', desc: 'Complete Medium with 0 mistakes', check: (d, t, m) => d === 'medium' && m === 0, reward: { hints: 2, xp: 12 } },
+  { id: 'flawless_hard', desc: 'Complete Hard with 0 mistakes', check: (d, t, m) => d === 'hard' && m === 0, reward: { hints: 3, xp: 20 } },
+  { id: 'flawless_impossible', desc: 'Complete Impossible with 0 mistakes', check: (d, t, m) => d === 'impossible' && m === 0, reward: { hints: 5, autoUse: 1, xp: 30 } },
+  { id: 'nohints_easy', desc: 'Complete Easy without hints', check: (d, t, m, h) => d === 'easy' && h === 0, reward: { hints: 2, xp: 6 } },
+  { id: 'nohints_medium', desc: 'Complete Medium without hints', check: (d, t, m, h) => d === 'medium' && h === 0, reward: { hints: 3, xp: 10 } },
+  { id: 'nohints_hard', desc: 'Complete Hard without hints', check: (d, t, m, h) => d === 'hard' && h === 0, reward: { hints: 4, xp: 18 } },
+  { id: 'nohints_impossible', desc: 'Complete Impossible without hints', check: (d, t, m, h) => d === 'impossible' && h === 0, reward: { hints: 8, xp: 35 } },
+  { id: 'combo_easy', desc: 'Get a 5+ combo in Easy', check: (d, t, m, h, c) => d === 'easy' && c >= 5, reward: { xp: 5 } },
+  { id: 'combo_medium', desc: 'Get a 7+ combo in Medium', check: (d, t, m, h, c) => d === 'medium' && c >= 7, reward: { hints: 1, xp: 10 } },
+  { id: 'combo_hard', desc: 'Get a 10+ combo in Hard', check: (d, t, m, h, c) => d === 'hard' && c >= 10, reward: { hints: 2, xp: 15 } },
+  { id: 'combo_impossible', desc: 'Get a 12+ combo in Impossible', check: (d, t, m, h, c) => d === 'impossible' && c >= 12, reward: { hints: 4, xp: 25 } },
+];
+
+function generateDailyTasks() {
+  const shuffled = [...TASK_TYPES].sort(() => Math.random() - 0.5);
+  const selected = [];
+  const usedDiffs = new Set();
+  for (const t of shuffled) {
+    const diff = t.id.split('_')[1];
+    if (!usedDiffs.has(diff) || usedDiffs.size >= 4) {
+      selected.push({ ...t, done: false });
+      usedDiffs.add(diff);
+      if (selected.length >= 3) break;
+    }
+  }
+  return selected;
+}
+
+function loadDailyTasks() {
+  dailyTasks = loadWithVault(DAILY_TASKS_KEY, 'dailyTasks', { date: '', tasks: [], completed: [], _pendingNotifications: [], _claimedNotifications: [] });
+  if (dailyTasks.date !== todayStr()) {
+    dailyTasks.date = todayStr();
+    dailyTasks.tasks = generateDailyTasks();
+    dailyTasks.completed = [];
+    dailyTasks._pendingNotifications = [];
+    dailyTasks._claimedNotifications = [];
+    saveDailyTasks();
+  }
+}
+function saveDailyTasks() {
+  saveWithVault(DAILY_TASKS_KEY, dailyTasks, 'dailyTasks');
+}
+
+function checkDailyTasks(difficulty, timer, mistakes, hintsUsed, maxCombo) {
+  if (dailyTasks.date !== todayStr()) return;
+  const beforeCount = dailyTasks.completed.length;
+  for (let i = 0; i < dailyTasks.tasks.length; i++) {
+    const t = dailyTasks.tasks[i];
+    if (dailyTasks.completed.includes(i)) continue;
+    if (t.check(difficulty, timer, mistakes, hintsUsed, maxCombo)) {
+      dailyTasks.completed.push(i);
+      t.done = true;
+      if (!dailyTasks._pendingNotifications) dailyTasks._pendingNotifications = [];
+      dailyTasks._pendingNotifications.push(i);
+      if (t.reward.hints) state.hintsRemaining += t.reward.hints;
+      if (t.reward.xp) stats.totalXp = (stats.totalXp || 0) + t.reward.xp;
+      if (t.reward.autoUse) state._freeAuto = (state._freeAuto || 0) + t.reward.autoUse;
+      saveDailyTasks();
+      saveStats();
+      saveGame();
+    }
+  }
+  const afterCount = dailyTasks.completed.length;
+  if (afterCount > beforeCount) {
+    const totalTasksDone = dailyTasks.completed.filter((v, i, a) => a.indexOf(v) === i).length;
+    if (totalTasksDone >= 1) triggerAchievementCheck('task_fighter');
+    if (totalTasksDone >= 30) triggerAchievementCheck('task_grinder');
+    if (dailyTasks.tasks.every((_, i) => dailyTasks.completed.includes(i))) {
+      triggerAchievementCheck('task_master');
+    }
+  }
+}
+
 function loadBonus() {
   log('[storage] loadBonus()');
   bonusChallenge = loadWithVault(BONUS_KEY, 'bonus', bonusChallenge);
@@ -710,13 +842,13 @@ function getBonusHoursLeft() {
 
 function startBonusChallenge() {
   if (bonusChallenge.startDate) return;
-  bonusChallenge = { startDate: new Date().toISOString(), gamesPlayed: 1, claimed: false };
+  bonusChallenge = { startDate: new Date().toISOString(), gamesPlayed: 0, claimed: false, _claimedMilestones: [] };
   saveBonus();
 }
 
 function trackBonusGame() {
   if (!bonusChallenge.startDate) {
-    bonusChallenge = { startDate: new Date().toISOString(), gamesPlayed: 1, claimed: false };
+    bonusChallenge = { startDate: new Date().toISOString(), gamesPlayed: 1, claimed: false, _claimedMilestones: [] };
     saveBonus();
     return;
   }
@@ -904,6 +1036,25 @@ function requestNotificationPermission() {
   if ('Notification' in window && Notification.permission === 'default') {
     Notification.requestPermission();
   }
+}
+
+function scheduleDailyReminder() {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const done = isDailyDoneToday();
+  if (done) return;
+  const now = new Date();
+  const target = new Date(now);
+  target.setHours(20, 0, 0, 0);
+  if (now > target) return;
+  const timeout = target.getTime() - now.getTime();
+  setTimeout(() => {
+    if (!isDailyDoneToday()) {
+      new Notification('Daily Sudoku', {
+        body: "Today's daily puzzle is waiting for you!",
+        icon: '/icon-192.png'
+      });
+    }
+  }, timeout);
 }
 
 const LEVEL_PROGRESS_KEY = 'sudoku_level_progress';

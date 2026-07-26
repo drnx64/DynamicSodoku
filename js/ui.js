@@ -21,9 +21,11 @@ function render(opts) {
     for (let c = 0; c < 9; c++) {
       const cell = document.createElement('div');
       cell.className = 'cell';
-      if (opts.entering) {
+      if (opts.entering && !state.settings.reducedAnimations) {
         cell.classList.add('entering');
         cell.style.animationDelay = ((r * 9 + c) * 12) + 'ms';
+      } else if (opts.entering) {
+        cell.style.animation = 'none';
       }
       cell.dataset.row = r; cell.dataset.col = c;
       if (state.givens[r][c]) cell.classList.add('given');
@@ -50,9 +52,9 @@ function render(opts) {
           cell.style.background = 'rgba(34, 197, 94, 0.12)';
         }
         
-        const rowAnim = state.completedAnimated.rows.has(r);
-        const colAnim = state.completedAnimated.cols.has(c);
-        const boxAnim = state.completedAnimated.boxes.has(bi);
+        const rowAnim = state.completedAnimated.rows.has(r) && !state.settings.reducedAnimations;
+        const colAnim = state.completedAnimated.cols.has(c) && !state.settings.reducedAnimations;
+        const boxAnim = state.completedAnimated.boxes.has(bi) && !state.settings.reducedAnimations;
         if (rowAnim || colAnim || boxAnim) {
           let delay = 0;
           if (rowAnim) delay = c * 60;
@@ -77,7 +79,10 @@ function render(opts) {
         }
       }
 
-      if (opts.hintHighlight && opts.hintHighlight.row === r && opts.hintHighlight.col === c) cell.classList.add('hint-cell');
+      if (opts.hintHighlight && opts.hintHighlight.row === r && opts.hintHighlight.col === c) {
+        if (!state.settings.reducedAnimations) cell.classList.add('hint-cell');
+        else cell.style.boxShadow = 'inset 0 0 0 3px var(--accent)';
+      }
       if (opts.hintHighlight && (r === opts.hintHighlight.row || c === opts.hintHighlight.col || (Math.floor(r/3) === Math.floor(opts.hintHighlight.row/3) && Math.floor(c/3) === Math.floor(opts.hintHighlight.col/3)))) {
         if (!(r === opts.hintHighlight.row && c === opts.hintHighlight.col)) cell.classList.add('hint-peer');
       }
@@ -91,23 +96,26 @@ function render(opts) {
       cell.appendChild(valSpan);
 
       if (!state.board[r][c]) {
-        const notesGrid = document.createElement('div');
-        notesGrid.className = 'notes-grid';
-        if (state.settings.autoCandidates && !state.givens[r][c]) {
-          const cands = getCachedCandidates(r, c);
-          for (let n = 1; n <= 9; n++) {
-            const span = document.createElement('span');
-            if (cands.has(n)) span.textContent = n;
-            notesGrid.appendChild(span);
+        const hasNotes = state.notes[r][c] && state.notes[r][c].size > 0;
+        if (hasNotes || state.settings.autoCandidates) {
+          const notesGrid = document.createElement('div');
+          notesGrid.className = 'notes-grid';
+          if (state.settings.autoCandidates && !state.givens[r][c]) {
+            const cands = getCachedCandidates(r, c);
+            for (let n = 1; n <= 9; n++) {
+              const span = document.createElement('span');
+              if (cands.has(n)) span.textContent = n;
+              notesGrid.appendChild(span);
+            }
+          } else {
+            for (let n = 1; n <= 9; n++) {
+              const span = document.createElement('span');
+              if (state.notes[r][c].has(n)) span.textContent = n;
+              notesGrid.appendChild(span);
+            }
           }
-        } else {
-          for (let n = 1; n <= 9; n++) {
-            const span = document.createElement('span');
-            if (state.notes[r][c].has(n)) span.textContent = n;
-            notesGrid.appendChild(span);
-          }
+          cell.appendChild(notesGrid);
         }
-        cell.appendChild(notesGrid);
       }
       cell.addEventListener('click', () => selectCell(r, c));
       boardEl.appendChild(cell);
@@ -123,6 +131,7 @@ function render(opts) {
   updateNotesBtn();
   updateUndoRedo();
   updateTimerIcon();
+  updateGameLink();
 }
 
 function selectCell(row, col) {
@@ -165,6 +174,16 @@ function updateNotesBtn() {
   if (notesBtn) notesBtn.classList.toggle('active', state.notesMode);
   const autoBtn = document.getElementById('gameAutoBtn');
   if (autoBtn) autoBtn.classList.toggle('active', state.settings.autoCandidates);
+  const badge = document.getElementById('autoBadge');
+  if (badge) {
+    if (state._freeAuto > 0) {
+      badge.textContent = 'Free';
+      autoBtn.title = 'Auto-candidates (Free)';
+    } else {
+      badge.textContent = '10';
+      autoBtn.title = 'Auto-candidates (10 XP)';
+    }
+  }
 }
 
 function updateUndoRedo() {
@@ -185,12 +204,17 @@ function updateUndoRedo() {
 
   if (undoCount > 0 && !undo.disabled) {
     if (!undoBadge) { undoBadge = document.createElement('span'); undoBadge.className = 'action-badge'; undo.appendChild(undoBadge); }
-    undoBadge.textContent = '5 XP';
+    undoBadge.textContent = (state._freeUndos > 0) ? 'Free' : '5 XP';
     undoBadge.style.display = '';
   } else if (undoBadge) { undoBadge.style.display = 'none'; }
 
   let hintBadge = hint.querySelector('.action-badge');
-  if (state.hintsRemaining > 0) {
+  const unlimited = Date.now() < state._unlimitedHintsUntil;
+  if (unlimited) {
+    if (!hintBadge) { hintBadge = document.createElement('span'); hintBadge.className = 'action-badge'; hint.appendChild(hintBadge); }
+    hintBadge.textContent = '\u221E';
+    hintBadge.style.display = '';
+  } else if (state.hintsRemaining > 0) {
     if (!hintBadge) { hintBadge = document.createElement('span'); hintBadge.className = 'action-badge'; hint.appendChild(hintBadge); }
     hintBadge.textContent = state.hintsRemaining;
     hintBadge.style.display = '';
@@ -199,6 +223,19 @@ function updateUndoRedo() {
 
 function updateBadges() {
   updateUndoRedo();
+}
+
+function updateGameLink() {
+  const el = document.getElementById('gameLink');
+  if (!el) return;
+  const url = window.location.href.split('?')[0];
+  el.textContent = 'GAME: ' + url;
+  el.title = 'Click to copy game link for your stream';
+  el.onclick = () => {
+    navigator.clipboard.writeText(url).then(() => {
+      showToast('Link copied!');
+    });
+  };
 }
 
 // ============================================================
@@ -261,8 +298,9 @@ function setupInput() {
   });
   const notesBtn = document.getElementById('notesBtn');
   if (notesBtn) {
-    notesBtn.addEventListener('click', () => { state.notesMode = !state.notesMode; log('[ui] click: notesBtn', { notesMode: state.notesMode }); updateNotesBtn(); });
+    notesBtn.addEventListener('click', () => { state.notesMode = !state.notesMode; state.penMode = false; log('[ui] click: notesBtn', { notesMode: state.notesMode }); updateNotesBtn(); });
   }
+
   const hintBtn = document.getElementById('hintBtn');
   if (hintBtn) hintBtn.addEventListener('click', () => { log('[ui] click: hintBtn'); giveHint(); });
 
@@ -272,17 +310,38 @@ function setupInput() {
     function showAutoModal() {
       const overlay = document.getElementById('autoInfoOverlay');
       if (!overlay) return;
-      document.getElementById('autoInfoXp').textContent = stats.totalXp || 0;
+      const xpEl = document.getElementById('autoInfoXp');
+      if (xpEl) {
+        xpEl.textContent = (stats.totalXp || 0) + (state._freeAuto > 0 ? ' (Free uses: ' + state._freeAuto + ')' : '');
+      }
+      const desc = overlay.querySelector('.hint-shop-desc');
+      if (desc) {
+        if (state._freeAuto > 0) {
+          desc.innerHTML = 'Shows <strong>possible numbers</strong> in every empty cell, calculated automatically. <strong>Free use available!</strong>';
+        } else {
+          desc.innerHTML = 'Shows <strong>possible numbers</strong> in every empty cell, calculated automatically. Helps you spot patterns faster &mdash; <strong>10 XP per use</strong>.';
+        }
+      }
+      const buyBtn = document.getElementById('autoInfoBuy');
+      if (buyBtn) {
+        buyBtn.textContent = state._freeAuto > 0 ? 'Use (Free)' : 'Use for 10 XP';
+      }
       overlay.classList.add('open');
     }
     function confirmAuto() {
-      if ((stats.totalXp || 0) < AUTO_COST) {
-        showToast('Not enough XP! (' + AUTO_COST + ' XP required)');
-        document.getElementById('autoInfoOverlay')?.classList.remove('open');
-        return;
+      if (state._freeAuto > 0 || state._devMode) {
+        if (state._freeAuto > 0) state._freeAuto--;
+      } else {
+        if ((stats.totalXp || 0) < AUTO_COST) {
+          showToast('Not enough XP! (' + AUTO_COST + ' XP required)');
+          document.getElementById('autoInfoOverlay')?.classList.remove('open');
+          return;
+        }
+        stats.totalXp = (stats.totalXp || 0) - AUTO_COST;
+        state._autoCandidatesPaid = true;
       }
-      stats.totalXp = (stats.totalXp || 0) - AUTO_COST;
       saveStats();
+      saveGame();
       updateMenuUI();
       state.settings.autoCandidates = true;
       log('[ui] click: gameAutoBtn - confirmed via modal', { autoCandidates: true });

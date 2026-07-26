@@ -11,6 +11,7 @@ const DEFAULT_SETTINGS = {
   hapticFeedback: true, autoDarkMode: true, keyboardShortcuts: true,
   colorTheme: 'default', soundTheme: 'classic', playerName: 'Player',
   showCoordinates: true, showCompleted: true,
+  reducedAnimations: false,
 };
 
 const SETTINGS_CATEGORIES = [
@@ -58,10 +59,40 @@ const SETTINGS_CATEGORIES = [
       { key: 'keyboardShortcuts', label: 'Keyboard shortcuts' },
       { key: 'showCoordinates', label: 'Show coordinates (A1-I9)' },
       { key: 'showCompleted', label: 'Highlight completed rows/cols/boxes' },
+      { key: 'reducedAnimations', label: 'Reduced animations (low-end devices)' },
       { key: 'playerName', label: 'Player name', type: 'text' },
     ],
   },
 ];
+
+function detectDeviceTier() {
+  const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const cores = navigator.hardwareConcurrency || 4;
+  const memory = navigator.deviceMemory || (isMobile ? 2 : 4);
+  const smallScreen = window.innerWidth < 480;
+  let score = 0;
+  if (cores <= 2) score += 1;
+  else if (cores <= 4) score += 2;
+  else if (cores <= 8) score += 3;
+  else score += 4;
+  if (memory <= 1) score += 1;
+  else if (memory <= 2) score += 2;
+  else if (memory <= 4) score += 3;
+  else score += 4;
+  if (isMobile) score -= 1;
+  if (smallScreen) score -= 1;
+  return score <= 3 ? 'low' : score <= 5 ? 'medium' : 'high';
+}
+
+function autoDetectAnimations() {
+  if (state.settings.reducedAnimations) return;
+  const tier = detectDeviceTier();
+  if (tier === 'low') {
+    state.settings.reducedAnimations = true;
+    saveSettings();
+    log('[settings] auto-reduced animations for low-end device', { tier, cores: navigator.hardwareConcurrency, memory: navigator.deviceMemory });
+  }
+}
 
 function haptic(pattern) {
   log('[settings] haptic()', { pattern });
@@ -220,11 +251,11 @@ function setupSettings() {
   autoToggle.addEventListener('click', () => {
     const wantsOn = !state.settings.autoCandidates;
     if (wantsOn) {
-      if ((stats.totalXp || 0) < 10) {
+      if (!state._autoCandidatesPaid && !state._devMode && (stats.totalXp || 0) < 10) {
         showToast('Not enough XP! (10 XP required)');
         return;
       }
-      stats.totalXp = (stats.totalXp || 0) - 10;
+      if (!state._autoCandidatesPaid && !state._devMode) stats.totalXp = (stats.totalXp || 0) - 10;
       saveStats();
       updateMenuUI();
     }
@@ -301,6 +332,7 @@ function setupSettings() {
 
 function applySettings() {
   log('[settings] applySettings()');
+  document.documentElement.classList.toggle('reduced-motion', !!state.settings.reducedAnimations);
   document.body.classList.toggle('dark', state.settings.darkTheme);
   if (state.settings.autoDarkMode) {
     if (!darkModeMedia) {

@@ -236,6 +236,8 @@
 .win-actions .win-primary:hover { background: var(--btn-active-hover); }
 .win-actions .win-secondary { background: var(--btn-bg); color: var(--btn-text); }
 .win-actions .win-secondary:hover { background: var(--btn-hover); }
+.win-actions .win-tertiary { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+.win-actions .win-tertiary:hover { background: var(--btn-bg); }
 
 .confirm-overlay {
   display: none;
@@ -1225,4 +1227,156 @@
 }
 .pause-actions button.pause-quit:hover { background: rgba(255,255,255,0.18); }
 
+/* ============ DAILY TASKS MODAL ============ */
+.daily-tasks-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0,0,0,0.5);
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(6px);
+}
+.daily-tasks-overlay.open { display: flex; }
+.daily-tasks-card {
+  background: var(--bg);
+  border-radius: 16px;
+  padding: 20px;
+  width: min(92vw, 380px);
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  animation: pop 0.25s ease;
+}
+.daily-tasks-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.daily-tasks-header h2 { font-size: 17px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.daily-tasks-close {
+  width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+  background: none; border: none; color: var(--text-muted); cursor: pointer; border-radius: 50%;
+}
+.daily-tasks-close:hover { background: var(--btn-bg); }
+.daily-task-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px; border-radius: 12px;
+  background: var(--btn-bg); margin-bottom: 8px;
+}
+.daily-task-icon {
+  width: 36px; height: 36px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; background: var(--accent); color: #fff;
+}
+.daily-task-item.done .daily-task-icon { background: var(--success); }
+.daily-task-info { flex: 1; min-width: 0; }
+.daily-task-desc { font-size: 13px; font-weight: 600; }
+.daily-task-progress-wrap {
+  width: 100%; height: 4px; background: var(--border);
+  border-radius: 2px; margin-top: 6px; overflow: hidden;
+}
+.daily-task-progress-bar {
+  height: 100%; background: var(--success);
+  border-radius: 2px; transition: width 0.4s ease;
+}
+.daily-task-reward { font-size: 11px; color: var(--xp-gold); margin-top: 4px; }
+.daily-task-claim-btn {
+  padding: 6px 12px; border: none; border-radius: 8px;
+  font-size: 11px; font-weight: 700; cursor: pointer;
+  background: var(--btn-active); color: var(--btn-active-text);
+  flex-shrink: 0; transition: opacity 0.2s;
+}
+.daily-task-claim-btn:disabled { background: var(--btn-bg); color: var(--text-dim); opacity: 0.5; cursor: default; }
+.daily-task-claim-btn:hover:not(:disabled) { background: var(--btn-active-hover); }
 
+.daily-tasks-badge {
+  background: var(--accent); color: #fff; font-size: 10px; font-weight: 700;
+  padding: 1px 6px; border-radius: 8px; vertical-align: middle; margin-left: 4px;
+}
+
+/* ============ DAILY CLAIM CARD ============ */
+/* ============ STATS CARD ============ */
+.stats-card-overlay {
+  display: none; position: fixed; inset: 0; z-index: 350;
+  background: var(--modal-overlay); justify-content: center; align-items: center;
+  backdrop-filter: blur(4px);
+}
+.stats-card-overlay.open { display: flex; }
+.stats-card-modal {
+  background: var(--card-bg); border-radius: var(--radius-lg); padding: 20px;
+  max-width: 340px; width: calc(100% - 32px);
+  box-shadow: var(--card-shadow); animation: pop 0.3s ease;
+}
+.stats-card-header-row {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
+}
+.stats-card-header-row h2 { font-size: 18px; margin: 0; }
+.stats-card-close {
+  background: var(--btn-bg); border: none; border-radius: 50%;
+  width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text-muted);
+}
+.stats-card-close:hover { background: var(--btn-hover); }
+.stats-card-content { }
+.stats-card-actions { margin-top: 12px; display: flex; justify-content: center; }
+.stats-card-actions .data-btn { padding: 8px 20px; }
+
+.stat-card-share {
+  background: linear-gradient(135deg, #1e1b4b, #0f172a);
+  border-radius: 16px; padding: 20px;
+  color: #e2e8f0; text-align: center;
+  border: 1px solid rgba(124,92,252,0.3);
+}
+.stat-card-header { margin-bottom: 16px; }
+.stat-card-rank-icon { margin-bottom: 8px; }
+.stat-card-title { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+.stat-card-rank { font-size: 13px; color: var(--xp-gold); font-weight: 700; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
+.stat-card-body { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.stat-card-row {
+  display: flex; justify-content: space-between; padding: 6px 10px;
+  background: rgba(255,255,255,0.05); border-radius: 8px;
+}
+.stat-card-row .stat-label { font-size: 12px; color: #94a3b8; }
+.stat-card-row .stat-value { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.stat-card-footer { font-size: 9px; color: #64748b; opacity: 0.6; }
+
+/* ============ DAILY LEADERBOARD ============ */
+.daily-lb-overlay {
+  display: none; position: fixed; inset: 0; z-index: 350;
+  background: var(--modal-overlay); justify-content: center; align-items: center;
+  backdrop-filter: blur(4px);
+}
+.daily-lb-overlay.open { display: flex; }
+.daily-lb-card {
+  background: var(--card-bg); border-radius: var(--radius-lg); padding: 20px;
+  max-width: 360px; width: calc(100% - 32px); max-height: 70vh; overflow-y: auto;
+  box-shadow: var(--card-shadow); animation: pop 0.3s ease;
+}
+.daily-lb-header-row {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
+}
+.daily-lb-header-row h2 { font-size: 18px; margin: 0; }
+.daily-lb-close {
+  background: var(--btn-bg); border: none; border-radius: 50%;
+  width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text-muted);
+}
+.daily-lb-close:hover { background: var(--btn-hover); }
+.daily-lb-content { }
+.daily-lb-header {
+  font-size: 12px; color: var(--text-muted); margin-bottom: 10px; text-align: center;
+}
+.daily-lb-empty {
+  text-align: center; padding: 20px; color: var(--text-muted); font-size: 13px;
+}
+.daily-lb-list { display: flex; flex-direction: column; gap: 6px; }
+.daily-lb-entry {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px; background: var(--btn-bg); border-radius: var(--radius-sm);
+}
+.daily-lb-rank { font-size: 16px; width: 24px; text-align: center; }
+.daily-lb-name { flex: 1; font-size: 13px; font-weight: 600; color: var(--text); }
+.daily-lb-time { font-size: 13px; font-family: monospace; color: var(--accent); font-weight: 700; }

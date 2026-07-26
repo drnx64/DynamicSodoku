@@ -36,8 +36,30 @@ function goBack() {
   showPage(_prevPage);
 }
 
+function generateThumbnails() {
+  const diffs = ['easy', 'medium', 'hard', 'impossible'];
+  diffs.forEach(d => {
+    const container = document.getElementById('diffThumb' + d.charAt(0).toUpperCase() + d.slice(1));
+    if (!container || container.hasChildNodes()) return;
+    const puzzle = generatePuzzle(d);
+    if (!puzzle || !puzzle.givens) return;
+    const thumb = document.createElement('div');
+    thumb.className = 'diff-thumb-grid';
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        const cell = document.createElement('div');
+        cell.className = 'diff-thumb-cell';
+        if (puzzle.givens[r][c]) cell.classList.add('filled');
+        thumb.appendChild(cell);
+      }
+    }
+    container.appendChild(thumb);
+  });
+}
+
 function updateDiffBestTimes() {
   log('[nav] updateDiffBestTimes()');
+  generateThumbnails();
   const diffs = ['easy', 'medium', 'hard', 'impossible'];
   diffs.forEach(d => {
     const el = document.getElementById('diffBest' + d.charAt(0).toUpperCase() + d.slice(1));
@@ -103,6 +125,25 @@ function setupNavigation() {
         setupGameSettings();
         overlay.classList.add('open');
       }
+    });
+  }
+
+  const gameAnalyzeBtn = document.getElementById('gameAnalyzeBtn');
+  if (gameAnalyzeBtn) {
+    gameAnalyzeBtn.addEventListener('click', () => {
+      log('[nav] click: gameAnalyzeBtn');
+      if (!state.started || state.won || state.gameOver) { showToast('Start a game first!'); return; }
+      if (!state._analyzerUnlocked) {
+        showAnalyzerUnlock();
+      } else {
+        analyzePuzzle();
+      }
+    });
+    document.getElementById('analyzerClose')?.addEventListener('click', () => {
+      document.getElementById('analyzerOverlay')?.classList.remove('open');
+    });
+    document.getElementById('analyzerOverlay')?.addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) document.getElementById('analyzerOverlay')?.classList.remove('open');
     });
   }
 
@@ -219,6 +260,14 @@ function setupNavigation() {
   if (settingsBack) settingsBack.addEventListener('click', () => { log('[nav] click: settingsBack'); goBack(); });
   const statsBack = document.getElementById('statsBack');
   if (statsBack) statsBack.addEventListener('click', () => { log('[nav] click: statsBack'); goBack(); });
+  const statsShareBtn = document.getElementById('statsShareBtn');
+  if (statsShareBtn) statsShareBtn.addEventListener('click', () => { log('[nav] click: statsShareBtn'); showStatsCard(); });
+  document.getElementById('statsCardClose')?.addEventListener('click', () => {
+    document.getElementById('statsCardOverlay')?.classList.remove('open');
+  });
+  document.getElementById('statsCardOverlay')?.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) document.getElementById('statsCardOverlay')?.classList.remove('open');
+  });
   const archiveBack = document.getElementById('archiveBack');
   if (archiveBack) archiveBack.addEventListener('click', () => { log('[nav] click: archiveBack'); goBack(); });
   const achieveBack = document.getElementById('achieveBack');
@@ -234,6 +283,17 @@ function setupNavigation() {
       if (code) importLeaderboard(code);
     });
   }
+
+  const leaderDailyBtn = document.getElementById('leaderDailyBtn');
+  if (leaderDailyBtn) {
+    leaderDailyBtn.addEventListener('click', () => { log('[nav] click: leaderDailyBtn'); showDailyLeaderboard(); });
+  }
+  document.getElementById('dailyLbClose')?.addEventListener('click', () => {
+    document.getElementById('dailyLeaderboardOverlay')?.classList.remove('open');
+  });
+  document.getElementById('dailyLeaderboardOverlay')?.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) document.getElementById('dailyLeaderboardOverlay')?.classList.remove('open');
+  });
 
   const winNext = document.getElementById('winNext');
   if (winNext) {
@@ -316,4 +376,6 @@ function showGameExitConfirm() {
     log('[nav] cancel clicked');
     cleanup();
   };
+
+  setupReplayUI();
 }

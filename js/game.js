@@ -29,15 +29,26 @@ const state = {
   countdownMode: false, countdownTime: 0,
   secondChanceUsed: false,
   _retryData: null,
+  _freeUndos: 0,
+  _freeAuto: 0,
+  _autoCandidatesPaid: false,
+  _devMode: false,
+  _unlimitedHintsUntil: 0,
+  _archivedSeed: null,
   completed: { rows: new Set(), cols: new Set(), boxes: new Set() },
   completedAnimated: { rows: new Set(), cols: new Set(), boxes: new Set() },
 };
 state.settings = {};
 
+const MAX_HISTORY = 500;
+
 function pushHistory(type, row, col, prevVal, newVal, prevNotes, newNotes) {
   log('[game] pushHistory()', { type, row, col, prevVal, newVal, historyIdx: state.historyIdx });
   state.history = state.history.slice(0, state.historyIdx + 1);
   state.history.push({ type, row, col, prevVal, newVal, prevNotes, newNotes });
+  if (state.history.length > MAX_HISTORY) {
+    state.history.shift();
+  }
   state.historyIdx = state.history.length - 1;
   updateUndoRedo();
 }
@@ -47,13 +58,14 @@ function undo() {
   if (state.historyIdx < 0) { log('[game] undo: nothing to undo'); return; }
   if (state.gameOver) { log('[game] undo: game over'); return; }
   if (state.won) { log('[game] undo: already won'); return; }
-  const cost = 5;
-  if (stats.totalXp < cost) { showToast('Not enough XP to undo!'); return; }
-  stats.totalXp -= cost;
   const move = state.history[state.historyIdx];
+  const cost = (state._freeUndos > 0) ? 0 : (state._devMode ? 0 : 5);
+  if (cost > 0 && stats.totalXp < cost) { showToast('Not enough XP to undo!'); return; }
+  if (cost > 0) stats.totalXp -= cost;
+  else { state._freeUndos--; }
   state.historyIdx--;
   const { row, col, prevVal, newVal, prevNotes, newNotes } = move;
-  log('[game] undo: applying', { row, col, prevVal, newVal, moveType: move.type });
+  log('[game] undo: applying', { row, col, prevVal, newVal, moveType: move.type, cost });
   state.board[row][col] = prevVal;
   state.notes[row][col] = new Set(prevNotes);
   if (move.type === 'mistake') state.mistakes--;
@@ -99,6 +111,7 @@ function placeNumber(row, col, num) {
 
   if (num !== state.solution[row][col]) {
     log('[game] placeNumber: invalid placement - mistake');
+    showToast('Wrong!');
     state.combo = 0;
     hideCombo();
     state.mistakes++;
@@ -108,9 +121,11 @@ function placeNumber(row, col, num) {
     render({ shakeCell: [row, col], mistakeCell: [row, col] });
     saveGame(); playSound('error');
     haptic([80, 30, 100, 30, 120, 30, 150]);
-    const boardWrap = document.getElementById('boardWrap');
-    if (boardWrap) { boardWrap.classList.remove('mistake-shake'); void boardWrap.offsetWidth; boardWrap.classList.add('mistake-shake'); }
-    document.body.classList.remove('body-shake'); void document.body.offsetWidth; document.body.classList.add('body-shake');
+    if (!state.settings.reducedAnimations) {
+      const boardWrap = document.getElementById('boardWrap');
+      if (boardWrap) { boardWrap.classList.remove('mistake-shake'); void boardWrap.offsetWidth; boardWrap.classList.add('mistake-shake'); }
+      document.body.classList.remove('body-shake'); void document.body.offsetWidth; document.body.classList.add('body-shake');
+    }
     const mo = document.getElementById('mistakeOverlay');
     if (mo) { mo.classList.remove('open'); void mo.offsetWidth; mo.classList.add('open'); setTimeout(() => { mo.classList.remove('open'); document.body.classList.remove('body-shake'); }, 1100); }
     if (state.mistakes >= 3) {
@@ -198,7 +213,8 @@ function giveHint() {
   log('[game] giveHint() called', { gameOver: state.gameOver, won: state.won });
   if (state.gameOver) { log('[game] giveHint: blocked - game over'); return; }
   if (state.won) { log('[game] giveHint: blocked - already won'); return; }
-  if (state.hintsRemaining <= 0) {
+  const unlimited = Date.now() < state._unlimitedHintsUntil;
+  if (state.hintsRemaining <= 0 && !unlimited) {
     showHintShopModal();
     return;
   }
@@ -213,17 +229,21 @@ function giveHint() {
   state.board[row][col] = correctVal;
   state.notes[row][col] = new Set();
   pushHistory('hint', row, col, prevVal, correctVal, prevNotes, []);
-  if ((bonusChallenge.bonusHints || 0) > 0) {
-    bonusChallenge.bonusHints--;
-    saveBonus();
-    log('[game] giveHint: used bonus hint', { remaining: bonusChallenge.bonusHints });
+  if (!unlimited) {
+    if ((bonusChallenge.bonusHints || 0) > 0) {
+      bonusChallenge.bonusHints--;
+      saveBonus();
+      log('[game] giveHint: used bonus hint', { remaining: bonusChallenge.bonusHints });
+    } else {
+      state.hintsUsed++;
+      stats.totalHintsUsedAll = (stats.totalHintsUsedAll || 0) + 1;
+      saveStats();
+      log('[game] giveHint: hint counted', { totalHints: state.hintsUsed });
+    }
+    state.hintsRemaining--;
   } else {
-    state.hintsUsed++;
-    stats.totalHintsUsedAll = (stats.totalHintsUsedAll || 0) + 1;
-    saveStats();
-    log('[game] giveHint: hint counted', { totalHints: state.hintsUsed });
+    log('[game] giveHint: unlimited hints active, not consuming');
   }
-  state.hintsRemaining--;
   updateBadges();
   if (!state.started) { state.started = true; startTimer(); }
   state.combo++;
@@ -241,14 +261,14 @@ function showHintShopModal() {
   const buyBtn = document.getElementById('hintShopBuy');
   const cancelBtn = document.getElementById('hintShopCancel');
   const xpDisplay = document.getElementById('hintShopXp');
-  const buyCost = 50;
+  const buyCost = state._devMode ? 0 : 50;
   if (xpDisplay) xpDisplay.textContent = String(stats.totalXp);
   modal.classList.add('open');
   if (buyBtn) {
     buyBtn.onclick = () => {
-      if (stats.totalXp >= buyCost) {
+      if (stats.totalXp >= buyCost || state._devMode) {
         const prevXp = stats.totalXp;
-        stats.totalXp -= buyCost;
+        if (!state._devMode) stats.totalXp -= buyCost;
         state.hintsRemaining += 3;
         stats.hintsBought = (stats.hintsBought || 0) + 3;
         saveStats();
@@ -307,11 +327,34 @@ function checkCompleted(row, col) {
   }
 }
 
+function activateUnlimitedHints(durationMin) {
+  state._unlimitedHintsUntil = Date.now() + durationMin * 60 * 1000;
+  saveGame();
+  const timeStr = durationMin >= 60 ? (durationMin/60) + ' HOURS' : durationMin + ' MINUTES';
+  showToast('<div style="background:linear-gradient(135deg,#7c3aed,#2563eb);border:2px solid #fbbf24;border-radius:12px;padding:12px 16px;text-align:center;box-shadow:0 8px 32px rgba(251,191,36,0.4);">' +
+    '<div style="font-size:20px;margin-bottom:2px;">&#129323; EASTER EGG UNLOCKED!</div>' +
+    '<div style="font-size:14px;">UNLIMITED HINTS for <strong>' + timeStr + '</strong></div>' +
+    '</div>', true);
+  log('[game] UNLIMITED HINTS ACTIVATED', { durationMin, until: new Date(state._unlimitedHintsUntil).toISOString() });
+}
+
+function checkEasterEgg() {
+  if (state.difficulty !== 'impossible') return;
+  const prevUnlimited = state._unlimitedHintsUntil;
+  if (state.timer < 180) {
+    activateUnlimitedHints(60);
+  } else if (state.timer < 300) {
+    activateUnlimitedHints(15);
+  }
+}
+
 function checkWin() {
   for (let r = 0; r < 9; r++)
     for (let c = 0; c < 9; c++)
       if (state.board[r][c] !== state.solution[r][c]) return;
   log('[game] checkWin: puzzle solved!');
+  checkEasterEgg();
+  checkDailyTasks(state.difficulty, state.timer, state.mistakes, state.hintsUsed, state.maxCombo);
   state.won = true;
   state.timerRunning = false;
   if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
@@ -429,15 +472,15 @@ function showRetryOverlay() {
         useSecondChance();
       };
     } else {
-      const cost = 150;
+      const cost = state._devMode ? 0 : 150;
       scBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><use href="#ico-gift"/></svg> Buy 3 for ' + cost + ' XP (' + stats.totalXp + ' XP)';
-      scInfo.textContent = 'No daily second chances left';
-      scBtn.disabled = stats.totalXp < cost;
+      scInfo.textContent = state._devMode ? 'Dev mode — free' : 'No daily second chances left';
+      scBtn.disabled = !state._devMode && stats.totalXp < cost;
       scBtn.onclick = () => {
         log('[game] buy second chance clicked');
-        if (stats.totalXp >= cost) {
+        if (stats.totalXp >= cost || state._devMode) {
           const prevXp = stats.totalXp;
-          stats.totalXp -= cost;
+          if (!state._devMode) stats.totalXp -= cost;
           saveStats();
           checkRankDown(prevXp);
           useSecondChance();
@@ -461,6 +504,8 @@ function retryLevel() {
   state.gameOver = false; state.won = false;
   state.combo = 0; state.maxCombo = 0;
   state.secondChanceUsed = false;
+  state._freeUndos = state._freeUndos || 0;
+  state._freeAuto = state._freeAuto || 0;
 state.completed = { rows: new Set(), cols: new Set(), boxes: new Set() };
   state.completedAnimated = { rows: new Set(), cols: new Set(), boxes: new Set() };
   state._hintCell = null; state._lastMistakeCell = null;
@@ -497,8 +542,8 @@ function formatTime(secs) {
   return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
 }
 
-function initNewGame(difficulty, isDaily, startLevel) {
-  log('[game] initNewGame()', { difficulty, isDaily, startLevel });
+function initNewGame(difficulty, isDaily, startLevel, seedDate) {
+  log('[game] initNewGame()', { difficulty, isDaily, startLevel, seedDate });
   document.getElementById('page-game')?.classList.remove('paused');
   document.getElementById('pauseOverlay')?.classList.remove('open');
   document.getElementById('timerWrap')?.classList.remove('paused');
@@ -562,11 +607,11 @@ function initNewGame(difficulty, isDaily, startLevel) {
   const puzzleReady = () => {
     let puzzle;
     if (isDaily) {
-      const today = new Date();
-      const seed = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+      const seed = seedDate || (new Date().getFullYear() + '-' + String(new Date().getMonth()+1).padStart(2,'0') + '-' + String(new Date().getDate()).padStart(2,'0'));
+      state._archivedSeed = seedDate || null;
       const rng = createSeededRng(seed);
       puzzle = generatePuzzle('medium', rng);
-      log('[game] generated daily puzzle with seed', { seed });
+      log('[game] generated daily puzzle with seed', { seed, archived: !!seedDate });
     } else {
       puzzle = generatePuzzle(state.difficulty);
     }
@@ -585,18 +630,22 @@ function initNewGame(difficulty, isDaily, startLevel) {
     state.givens = puzzle.givens.map(r => [...r]);
     state.notes = Array.from({length: 9}, () => Array.from({length: 9}, () => new Set()));
     state.history = []; state.historyIdx = -1;
-    state.selectedCell = null; state.notesMode = false;
-    state.timer = state.countdownMode ? state.countdownTime : 0; state.timerRunning = false;
-    state.mistakes = 0; state.hintsUsed = 0; state.hintsRemaining = 3; state.started = false;
-    state.gameOver = false; state.won = false; state.notesUsed = false;
+  state.selectedCell = null; state.notesMode = false;
+  state.timer = state.countdownMode ? state.countdownTime : 0; state.timerRunning = false;
+  state.mistakes = 0; state.hintsUsed = 0; state.hintsRemaining = 3; state.started = false;
+  state.gameOver = false; state.won = false; state.notesUsed = false;
     state.combo = 0; state.maxCombo = 0;
     state.secondChanceUsed = false;
     state._retryData = null; state._lastMistakeCell = null;
+    state._freeUndos = state._freeUndos || 0;
+    state._freeAuto = state._freeAuto || 0;
+    state._autoCandidatesPaid = false;
+    state._analyzerUnlocked = false;
 state.completed = { rows: new Set(), cols: new Set(), boxes: new Set() };
   state.completedAnimated = { rows: new Set(), cols: new Set(), boxes: new Set() };
     document.getElementById('timer').textContent = formatTime(state.countdownMode ? state.countdownTime : 0);
     document.getElementById('mistakes').textContent = '0';
-    document.getElementById('gameLabel').textContent = state.isDaily ? 'Daily Challenge' : capitalize(state.difficulty);
+    document.getElementById('gameLabel').textContent = state.isDaily ? (state._archivedSeed ? 'Archive ' + state._archivedSeed : 'Daily Challenge') : capitalize(state.difficulty);
     document.getElementById('winOverlay').classList.remove('open');
     const gameBadge = document.getElementById('gameLevelBadge');
     if (gameBadge) gameBadge.style.display = state.isDaily ? 'none' : 'inline-flex';
@@ -643,11 +692,14 @@ function showCombo(count) {
   if (!wrap || !text) return;
   text.textContent = 'x' + count;
   wrap.style.display = 'inline-flex';
-  wrap.classList.remove('combo-pop');
-  void wrap.offsetWidth;
-  wrap.classList.add('combo-pop');
+  if (!state.settings.reducedAnimations) {
+    wrap.classList.remove('combo-pop');
+    void wrap.offsetWidth;
+    wrap.classList.add('combo-pop');
+  }
   if (count % 5 === 0) playSound('combo');
 
+  if (state.settings.reducedAnimations) return;
   const boardWrap = document.getElementById('boardWrap');
   if (!boardWrap) return;
   const floater = document.createElement('div');
@@ -701,10 +753,11 @@ function triggerWinExplosion(callback) {
   }, 1000);
 }
 
-function showToast(msg) {
+function showToast(msg, isHtml) {
   const toast = document.getElementById('toast');
   if (!toast) return;
-  toast.textContent = msg;
+  if (isHtml) toast.innerHTML = msg;
+  else toast.textContent = msg;
   toast.classList.add('open');
-  setTimeout(() => toast.classList.remove('open'), 2000);
+  setTimeout(() => toast.classList.remove('open'), 3000);
 }
