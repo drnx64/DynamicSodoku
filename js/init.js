@@ -28,6 +28,8 @@ function init() {
   showPage('page-menu');
   updateMenuUI();
   log('[init] init() complete');
+  var sk = document.getElementById('skeleton');
+  if (sk) { sk.classList.add('hide'); setTimeout(function () { sk.style.display = 'none'; }, 500); }
 }
 
 setInterval(() => {
