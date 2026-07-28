@@ -59,10 +59,10 @@ function getMockLeaderboard() {
   if (cached && Array.isArray(cached) && cached.length > 0) return cached;
 
   const mockNames = [
-    'GrandmasterZen', 'SageOfSudoku', 'NumberWizard', 'LogicOverlord', 'GridDeity',
-    'SudokuSamurai', 'PuzzleTitan', 'CellSorcerer', 'BoxMagician', 'RowEnforcer',
+    'GrandmasterZen', 'SageOfLogic', 'NumberWizard', 'LogicOverlord', 'GridDeity',
+    'AscendSamurai', 'PuzzleTitan', 'CellSorcerer', 'BoxMagician', 'RowEnforcer',
     'DigitMystic', 'RiddleMaster', 'BrainStorm', 'SolverElite', 'PuzzleProphet',
-    'SudokuMaster', 'LogicQueen', 'NumberNinja', 'GridWizard', 'CellKing',
+    'AscendMaster', 'LogicQueen', 'NumberNinja', 'GridWizard', 'CellKing',
     'PuzzleWhiz', 'DigitDancer', 'RowRuler', 'BoxBoss', 'CageBreaker',
     'SolverSam', 'BrainAce', 'PencilMark', 'XWingFox', 'Swordfish',
     'NakedPair', 'HiddenTriple', 'SkyScraper', 'WXYZwing', 'BugHunter',
