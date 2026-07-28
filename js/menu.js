@@ -806,7 +806,7 @@ function showStatsCard() {
   const cardHtml = '<div class="stat-card-share">' +
     '<div class="stat-card-header">' +
       '<div class="stat-card-rank-icon">' + rankSvgImg(rank.name, 48) + '</div>' +
-      '<div class="stat-card-title">Sudoku Stats</div>' +
+      '<div class="stat-card-title">Ascendoku Stats</div>' +
       '<div class="stat-card-rank">' + rank.name + '</div>' +
     '</div>' +
     '<div class="stat-card-body">' +

@@ -153,7 +153,7 @@ function setupNavigation() {
       log('[nav] click: gameShareBtn');
       const url = window.location.href.split('?')[0];
       if (navigator.share) {
-        navigator.share({ title: 'Sudoku', text: 'Playing Sudoku on Dynamic Sodoku! 🧩', url: url }).catch(() => {});
+        navigator.share({ title: 'Ascendoku', text: 'Playing Ascendoku! Climb the ranks 🧩', url: url }).catch(() => {});
       } else {
         navigator.clipboard.writeText(url).then(() => {
           showToast('Link copied!');

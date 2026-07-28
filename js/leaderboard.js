@@ -193,8 +193,8 @@ function shareLeaderboard() {
   try {
     const code = btoa(JSON.stringify(board));
     const shareData = {
-      title: 'Sudoku Leaderboard',
-      text: 'My Sudoku leaderboard! ' + board.length + ' entries.',
+      title: 'Ascendoku Leaderboard',
+      text: 'My Ascendoku leaderboard! ' + board.length + ' entries.',
     };
     if (navigator.share) {
       navigator.share(shareData);

@@ -1049,7 +1049,7 @@ function scheduleDailyReminder() {
   const timeout = target.getTime() - now.getTime();
   setTimeout(() => {
     if (!isDailyDoneToday()) {
-      new Notification('Daily Sudoku', {
+      new Notification('Ascendoku', {
         body: "Today's daily puzzle is waiting for you!",
         icon: '/icon-192.png'
       });

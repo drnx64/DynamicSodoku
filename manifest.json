@@ -1,8 +1,8 @@
 {
-  "name": "Dynamic Sodoku",
-  "short_name": "Sodoku",
-  "description": "A dynamic Sudoku puzzle game with levels, combos, and themes",
-  "start_url": "/DynamicSodoku/",
+  "name": "Ascendoku",
+  "short_name": "Ascendoku",
+  "description": "Climb the ranks with dynamic Sudoku puzzles, XP, combos, and themes",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#0f0f1a",
   "theme_color": "#7c5cfc",

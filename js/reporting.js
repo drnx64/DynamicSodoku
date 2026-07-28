@@ -27,7 +27,7 @@ function reportError(context, err) {
   const payload = {
     content: null,
     embeds: [{
-      title: 'DynamicSodoku Error Report',
+      title: 'Ascendoku Error Report',
       color: 0xef4444,
       fields: [
         { name: 'Context', value: (context || '').slice(0, 256), inline: true },
