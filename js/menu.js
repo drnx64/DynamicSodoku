@@ -376,7 +376,7 @@ function setupDialogs() {
       const numBadge = document.getElementById('gameLevelNum');
       if (numBadge) numBadge.textContent = state.currentLevel;
       updateUndoRedo();
-      render({ entering: true });
+      requestRender({ entering: true });
       if (state.timer > 0 && !state.won && !state.gameOver) startTimer();
       showPage('page-game');
     }

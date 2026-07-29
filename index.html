@@ -23,38 +23,17 @@
 <link rel="stylesheet" href="css/inapp-overlay.css">
 <link rel="stylesheet" href="css/responsive.css">
 <style>
-#skeleton{position:fixed;inset:0;z-index:99999;background:var(--bg,#0f0f1a);display:flex;flex-direction:column;overflow:hidden;transition:opacity .4s ease}
+#skeleton{position:fixed;inset:0;z-index:99999;background:#0f0f1a;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;transition:opacity .4s ease}
 #skeleton.hide{opacity:0;pointer-events:none}
-.sk-header{height:120px;background:linear-gradient(135deg,#1a1040,#2d1b69);padding:40px 20px 16px;display:flex;flex-direction:column;justify-content:flex-end}
-.sk-title{width:160px;height:28px;border-radius:8px;background:rgba(255,255,255,0.08);margin-bottom:6px}
-.sk-sub{width:100px;height:14px;border-radius:6px;background:rgba(255,255,255,0.06)}
-.sk-body{flex:1;padding:20px;display:flex;flex-direction:column;gap:10px}
-.sk-card{height:56px;border-radius:14px;background:rgba(255,255,255,0.04)}
-.sk-card.h50{height:50px}
-.sk-card.h44{height:44px}
-.sk-bottom{padding:12px 20px 24px}
-.sk-bar{height:32px;border-radius:16px;background:rgba(255,255,255,0.05)}
-@keyframes sk-shimmer{0%{opacity:0.4}50%{opacity:0.8}100%{opacity:0.4}}
-.sk-shimmer{animation:sk-shimmer 1.5s ease-in-out infinite}
+.sk-spinner{width:40px;height:40px;border:4px solid rgba(255,255,255,0.1);border-top-color:#7c5cfc;border-radius:50%;animation:sk-spin .8s linear infinite;margin-bottom:16px}
+.sk-label{color:rgba(255,255,255,0.4);font:500 14px/1.4 Outfit,sans-serif;letter-spacing:.3px}
+@keyframes sk-spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
 <div id="skeleton">
-  <div class="sk-header">
-    <div class="sk-title sk-shimmer"></div>
-    <div class="sk-sub sk-shimmer"></div>
-  </div>
-  <div class="sk-body">
-    <div class="sk-card sk-shimmer"></div>
-    <div class="sk-card h44 sk-shimmer"></div>
-    <div class="sk-card h50 sk-shimmer"></div>
-    <div class="sk-card h44 sk-shimmer"></div>
-    <div class="sk-card h50 sk-shimmer"></div>
-    <div class="sk-card sk-shimmer"></div>
-  </div>
-  <div class="sk-bottom">
-    <div class="sk-bar sk-shimmer"></div>
-  </div>
+  <div class="sk-spinner"></div>
+  <div class="sk-label">Loading…</div>
 </div>
 
 <svg style="display:none" xmlns="http://www.w3.org/2000/svg">
@@ -868,11 +847,6 @@
 <script src="js/leaderboard.js"></script>
 <script src="js/dev.js"></script>
 <script src="js/init.js"></script>
-<script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(function(e) { console.log('[pwa] SW registration failed', e); });
-}
-</script>
 <div id="mistakeOverlay">
   <div class="mistake-ring"></div>
   <div class="mistake-ring2"></div>

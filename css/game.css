@@ -125,6 +125,7 @@
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: 3px;
+  contain: layout style paint;
 }
 
 #board {
@@ -135,6 +136,7 @@
   width: 100%;
   height: 100%;
   gap: 0;
+  contain: strict;
 }
 #board.blurred {
   pointer-events: none;
@@ -154,6 +156,7 @@
   background: transparent;
   transition: background 0.12s;
   font-variant-numeric: tabular-nums;
+  contain: layout style paint;
 }
 .cell.given { font-weight: 700; color: var(--given); }
 .cell.user { color: var(--user); }
@@ -161,6 +164,7 @@
   background: var(--selected) !important;
   box-shadow: inset 0 0 0 2.5px var(--accent);
   z-index: 2;
+  will-change: transform;
 }
 .cell.peer { background: var(--peer); }
 .cell.same-num {

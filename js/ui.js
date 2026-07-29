@@ -1,11 +1,44 @@
 // ============================================================
-// 7. Rendering
+// 7. Rendering — Virtual DOM Diff (reuses cell elements)
 // ============================================================
+let _cellRefs = null;
+
+function _buildCells(boardEl) {
+  _cellRefs = Array.from({ length: 9 }, () => Array(9));
+  const frag = document.createDocumentFragment();
+  for (let r = 0; r < 9; r++) {
+    for (let c = 0; c < 9; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.dataset.row = r;
+      cell.dataset.col = c;
+
+      const vs = document.createElement('span');
+      vs.className = 'cell-value';
+      cell.appendChild(vs);
+
+      const ng = document.createElement('div');
+      ng.className = 'notes-grid';
+      for (let i = 0; i < 9; i++) ng.appendChild(document.createElement('span'));
+      cell.appendChild(ng);
+
+      cell.addEventListener('click', () => selectCell(r, c));
+      frag.appendChild(cell);
+      _cellRefs[r][c] = cell;
+    }
+  }
+  boardEl.appendChild(frag);
+}
+
+const _completedColor = 'rgba(34, 197, 94, 0.12)';
+
 function render(opts) {
   opts = opts || {};
   const boardEl = document.getElementById('board');
   if (!boardEl) { log('[ui] render: WARN #board not found'); return; }
-  boardEl.innerHTML = '';
+
+  if (!_cellRefs) _buildCells(boardEl);
+
   const conflicts = state.settings.highlightConflicts ? findConflicts(state.board) : new Set();
   const wrongCells = state.settings.highlightWrong ? getWrongCells(state.board, state.solution) : new Set();
   const selectedVal = state.selectedCell ? state.board[state.selectedCell[0]][state.selectedCell[1]] : 0;
@@ -19,108 +52,103 @@ function render(opts) {
 
   for (let r = 0; r < 9; r++) {
     for (let c = 0; c < 9; c++) {
-      const cell = document.createElement('div');
-      cell.className = 'cell';
-      if (opts.entering && !state.settings.reducedAnimations) {
-        cell.classList.add('entering');
-        cell.style.animationDelay = ((r * 9 + c) * 12) + 'ms';
-      } else if (opts.entering) {
-        cell.style.animation = 'none';
+      const cell = _cellRefs[r][c];
+      const valSpan = cell.firstChild;
+      const notesGrid = valSpan.nextSibling;
+      const val = state.board[r][c];
+      const isGiven = state.givens[r][c];
+      const isSelected = state.selectedCell && state.selectedCell[0] === r && state.selectedCell[1] === c;
+
+      const cls = ['cell'];
+
+      if (opts.entering) {
+        if (!state.settings.reducedAnimations) {
+          cls.push('entering');
+          cell.style.animationDelay = ((r * 9 + c) * 12) + 'ms';
+        } else {
+          cell.style.animation = 'none';
+        }
       }
-      cell.dataset.row = r; cell.dataset.col = c;
-      if (state.givens[r][c]) cell.classList.add('given');
-      else if (state.board[r][c]) cell.classList.add('user');
-      if (state.selectedCell && state.selectedCell[0] === r && state.selectedCell[1] === c) cell.classList.add('selected');
+
+      if (isGiven) cls.push('given');
+      else if (val) cls.push('user');
+      if (isSelected) cls.push('selected');
 
       if (state.settings.highlightPeers && state.selectedCell) {
         const [sr, sc] = state.selectedCell;
-        if ((r === sr || c === sc || (Math.floor(r/3) === Math.floor(sr/3) && Math.floor(c/3) === Math.floor(sc/3))) && !(r === sr && c === sc))
-          cell.classList.add('peer');
+        if ((r === sr || c === sc || (Math.floor(r / 3) === Math.floor(sr / 3) && Math.floor(c / 3) === Math.floor(sc / 3))) && !(r === sr && c === sc))
+          cls.push('peer');
       }
-      if (state.settings.highlightSame && selectedVal && state.board[r][c] === selectedVal && !(state.selectedCell && state.selectedCell[0] === r && state.selectedCell[1] === c))
-        cell.classList.add('same-num');
-      if (conflicts.has(r+','+c)) cell.classList.add('conflict');
-      if (wrongCells.has(r+','+c)) cell.classList.add('wrong-cell');
+      if (state.settings.highlightSame && selectedVal && val === selectedVal && !isSelected)
+        cls.push('same-num');
+      if (conflicts.has(r + ',' + c)) cls.push('conflict');
+      if (wrongCells.has(r + ',' + c)) cls.push('wrong-cell');
 
-      if (state.settings.showCompleted && state.board[r][c]) {
-        const bi = boxIndexOf(r, c);
-        const rowDone = state.completed.rows.has(r);
-        const colDone = state.completed.cols.has(c);
-        const boxDone = state.completed.boxes.has(bi);
-        
-        if (rowDone || colDone || boxDone) {
-          cell.style.background = 'rgba(34, 197, 94, 0.12)';
-        }
-        
-        const rowAnim = state.completedAnimated.rows.has(r) && !state.settings.reducedAnimations;
-        const colAnim = state.completedAnimated.cols.has(c) && !state.settings.reducedAnimations;
-        const boxAnim = state.completedAnimated.boxes.has(bi) && !state.settings.reducedAnimations;
-        if (rowAnim || colAnim || boxAnim) {
-          let delay = 0;
-          if (rowAnim) delay = c * 60;
-          else if (colAnim) delay = r * 60;
-          else {
-            const sr = Math.floor(bi / 3) * 3;
-            const sc = (bi % 3) * 3;
-            delay = ((r - sr) * 3 + (c - sc)) * 60;
-          }
-          
-          log('[ui] animating cell', { r, c, rowAnim, colAnim, boxAnim, delay });
-          
-          setTimeout(() => {
-            cell.animate([
-              { transform: 'scale(1)', background: 'rgba(34, 197, 94, 0.12)', boxShadow: 'none' },
-              { transform: 'scale(1.25)', background: 'rgba(34, 197, 94, 0.35)', boxShadow: '0 0 20px rgba(34, 197, 94, 0.5)' },
-              { transform: 'scale(0.92)', background: 'rgba(34, 197, 94, 0.12)', boxShadow: 'none' },
-              { transform: 'scale(1.05)', background: 'rgba(34, 197, 94, 0.08)', boxShadow: 'none' },
-              { transform: 'scale(1)', background: 'rgba(34, 197, 94, 0.12)', boxShadow: 'none' }
-            ], { duration: 700, easing: 'ease', fill: 'forwards' });
-          }, delay);
-        }
-      }
-
+      if (opts.popCell && opts.popCell[0] === r && opts.popCell[1] === c) cls.push('pop');
+      if (opts.shakeCell && opts.shakeCell[0] === r && opts.shakeCell[1] === c) cls.push('shake');
+      if (opts.mistakeCell && opts.mistakeCell[0] === r && opts.mistakeCell[1] === c) cls.push('mistake-cell');
       if (opts.hintHighlight && opts.hintHighlight.row === r && opts.hintHighlight.col === c) {
-        if (!state.settings.reducedAnimations) cell.classList.add('hint-cell');
-        else cell.style.boxShadow = 'inset 0 0 0 3px var(--accent)';
+        cls.push(state.settings.reducedAnimations ? '' : 'hint-cell');
+        if (state.settings.reducedAnimations) cell.style.boxShadow = 'inset 0 0 0 3px var(--accent)';
       }
-      if (opts.hintHighlight && (r === opts.hintHighlight.row || c === opts.hintHighlight.col || (Math.floor(r/3) === Math.floor(opts.hintHighlight.row/3) && Math.floor(c/3) === Math.floor(opts.hintHighlight.col/3)))) {
-        if (!(r === opts.hintHighlight.row && c === opts.hintHighlight.col)) cell.classList.add('hint-peer');
+      if (opts.hintHighlight && (r === opts.hintHighlight.row || c === opts.hintHighlight.col || (Math.floor(r / 3) === Math.floor(opts.hintHighlight.row / 3) && Math.floor(c / 3) === Math.floor(opts.hintHighlight.col / 3)))) {
+        if (!(r === opts.hintHighlight.row && c === opts.hintHighlight.col)) cls.push('hint-peer');
       }
-      if (opts.popCell && opts.popCell[0] === r && opts.popCell[1] === c) cell.classList.add('pop');
-      if (opts.shakeCell && opts.shakeCell[0] === r && opts.shakeCell[1] === c) cell.classList.add('shake');
-      if (opts.mistakeCell && opts.mistakeCell[0] === r && opts.mistakeCell[1] === c) cell.classList.add('mistake-cell');
 
-      const valSpan = document.createElement('span');
-      valSpan.className = 'cell-value';
-      if (state.board[r][c]) valSpan.textContent = state.board[r][c];
-      cell.appendChild(valSpan);
+      cell.className = cls.join(' ');
 
-      if (!state.board[r][c]) {
-        const hasNotes = state.notes[r][c] && state.notes[r][c].size > 0;
-        if (hasNotes || state.settings.autoCandidates) {
-          const notesGrid = document.createElement('div');
-          notesGrid.className = 'notes-grid';
-          if (state.settings.autoCandidates && !state.givens[r][c]) {
-            const cands = getCachedCandidates(r, c);
-            for (let n = 1; n <= 9; n++) {
-              const span = document.createElement('span');
-              if (cands.has(n)) span.textContent = n;
-              notesGrid.appendChild(span);
-            }
-          } else {
-            for (let n = 1; n <= 9; n++) {
-              const span = document.createElement('span');
-              if (state.notes[r][c].has(n)) span.textContent = n;
-              notesGrid.appendChild(span);
-            }
-          }
-          cell.appendChild(notesGrid);
+      valSpan.textContent = val || '';
+
+      const bi = boxIndexOf(r, c);
+      const showCompleted = state.settings.showCompleted && val && (state.completed.rows.has(r) || state.completed.cols.has(c) || state.completed.boxes.has(bi));
+      cell.style.background = showCompleted ? _completedColor : '';
+
+      const hasNotes = !val && state.notes[r][c] && state.notes[r][c].size > 0;
+      const useAuto = !val && state.settings.autoCandidates && !isGiven;
+      if (hasNotes || useAuto) {
+        notesGrid.style.display = 'grid';
+        const spans = notesGrid.children;
+        if (useAuto) {
+          const cands = getCachedCandidates(r, c);
+          for (let n = 0; n < 9; n++) spans[n].textContent = cands.has(n + 1) ? String(n + 1) : '';
+        } else {
+          for (let n = 0; n < 9; n++) spans[n].textContent = state.notes[r][c].has(n + 1) ? String(n + 1) : '';
         }
+      } else {
+        notesGrid.style.display = 'none';
       }
-      cell.addEventListener('click', () => selectCell(r, c));
-      boardEl.appendChild(cell);
     }
   }
+
+  for (let r = 0; r < 9; r++) {
+    for (let c = 0; c < 9; c++) {
+      const bi = boxIndexOf(r, c);
+      const rowAnim = state.completedAnimated.rows.has(r) && !state.settings.reducedAnimations;
+      const colAnim = state.completedAnimated.cols.has(c) && !state.settings.reducedAnimations;
+      const boxAnim = state.completedAnimated.boxes.has(bi) && !state.settings.reducedAnimations;
+      if (rowAnim || colAnim || boxAnim) {
+        const cell = _cellRefs[r][c];
+        let delay = 0;
+        if (rowAnim) delay = c * 60;
+        else if (colAnim) delay = r * 60;
+        else {
+          const sr = Math.floor(bi / 3) * 3;
+          const sc = (bi % 3) * 3;
+          delay = ((r - sr) * 3 + (c - sc)) * 60;
+        }
+        ((cr) => setTimeout(() => {
+          cr.animate([
+            { transform: 'scale(1)', background: _completedColor, boxShadow: 'none' },
+            { transform: 'scale(1.25)', background: 'rgba(34, 197, 94, 0.35)', boxShadow: '0 0 20px rgba(34, 197, 94, 0.5)' },
+            { transform: 'scale(0.92)', background: _completedColor, boxShadow: 'none' },
+            { transform: 'scale(1.05)', background: 'rgba(34, 197, 94, 0.08)', boxShadow: 'none' },
+            { transform: 'scale(1)', background: _completedColor, boxShadow: 'none' }
+          ], { duration: 700, easing: 'ease', fill: 'forwards' });
+        }, delay))(cell);
+      }
+    }
+  }
+
   const timerEl = document.getElementById('timer');
   if (timerEl) timerEl.textContent = formatTime(state.timer);
   const tw = document.getElementById('timerWrap');
@@ -134,11 +162,32 @@ function render(opts) {
   updateGameLink();
 }
 
+// Batching — coalesce multiple render calls into one microtask
+let _renderPending = false;
+let _renderOpts = {};
+
+function requestRender(opts) {
+  if (opts) {
+    if (opts.entering) _renderOpts.entering = true;
+    if (opts.popCell) _renderOpts.popCell = opts.popCell;
+    if (opts.shakeCell) _renderOpts.shakeCell = opts.shakeCell;
+    if (opts.mistakeCell) _renderOpts.mistakeCell = opts.mistakeCell;
+    if (opts.hintHighlight) _renderOpts.hintHighlight = opts.hintHighlight;
+  }
+  if (_renderPending) return;
+  _renderPending = true;
+  queueMicrotask(() => {
+    _renderPending = false;
+    render(_renderOpts);
+    _renderOpts = {};
+  });
+}
+
 function selectCell(row, col) {
   log('[ui] selectCell()', { row, col, prevSelected: state.selectedCell });
   state.selectedCell = [row, col];
   state._lastMistakeCell = null;
-  render();
+  requestRender();
   saveGame();
 }
 
@@ -345,7 +394,7 @@ function setupInput() {
       updateMenuUI();
       state.settings.autoCandidates = true;
       log('[ui] click: gameAutoBtn - confirmed via modal', { autoCandidates: true });
-      render();
+      requestRender();
       saveSettings();
       updateNotesBtn();
       document.getElementById('autoInfoOverlay')?.classList.remove('open');
@@ -354,7 +403,7 @@ function setupInput() {
       if (state.settings.autoCandidates) {
         state.settings.autoCandidates = false;
         log('[ui] click: gameAutoBtn - toggle off', { autoCandidates: false });
-        render();
+        requestRender();
         saveSettings();
         updateNotesBtn();
       } else {

@@ -21,3 +21,42 @@ function generatePuzzle(difficulty, rand) {
     if (oldRandom) Math.random = oldRandom;
   }
 }
+
+let _puzzleWorker = null;
+let _puzzleWorkerId = 0;
+const _puzzleCallbacks = {};
+
+function generatePuzzleAsync(difficulty, seed) {
+  return new Promise((resolve, reject) => {
+    if (!_puzzleWorker) {
+      try {
+        _puzzleWorker = new Worker('js/puzzle-worker.js');
+        _puzzleWorker.onmessage = (e) => {
+          const { type, id } = e.data;
+          const cb = _puzzleCallbacks[id];
+          if (!cb) return;
+          delete _puzzleCallbacks[id];
+          if (type === 'result') {
+            cb.resolve(e.data);
+          } else {
+            cb.reject(new Error(e.data.error || 'Unknown worker error'));
+          }
+        };
+        _puzzleWorker.onerror = (err) => {
+          const ids = Object.keys(_puzzleCallbacks);
+          for (const id of ids) {
+            _puzzleCallbacks[id].reject(err);
+            delete _puzzleCallbacks[id];
+          }
+          _puzzleWorker = null;
+        };
+      } catch (e) {
+        reject(e);
+        return;
+      }
+    }
+    const id = ++_puzzleWorkerId;
+    _puzzleCallbacks[id] = { resolve, reject };
+    _puzzleWorker.postMessage({ type: 'generate', difficulty, seed, id });
+  });
+}

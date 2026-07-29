@@ -72,7 +72,7 @@ function undo() {
   stats.totalUndosUsed = (stats.totalUndosUsed || 0) + 1;
   saveStats();
   updateUndoRedo();
-  render();
+  requestRender();
   saveGame();
 }
 
@@ -101,7 +101,7 @@ function placeNumber(row, col, num) {
     state.completedAnimated.boxes.delete(boxIndexOf(row, col));
     pushHistory('clear', row, col, prevVal, 0, prevNotes, []);
     if (!state.started) { state.started = true; startTimer(); }
-    render(); saveGame(); playSound('place');
+    requestRender(); saveGame(); playSound('place');
     return;
   }
 
@@ -118,7 +118,7 @@ function placeNumber(row, col, num) {
     state._lastMistakeCell = [row, col];
     pushHistory('mistake', row, col, prevVal, num, prevNotes, []);
     if (!state.started) { state.started = true; startTimer(); }
-    render({ shakeCell: [row, col], mistakeCell: [row, col] });
+    requestRender({ shakeCell: [row, col], mistakeCell: [row, col] });
     saveGame(); playSound('error');
     haptic([80, 30, 100, 30, 120, 30, 150]);
     if (!state.settings.reducedAnimations) {
@@ -143,7 +143,7 @@ function placeNumber(row, col, num) {
   if (state.combo >= 2) showCombo(state.combo);
   pushHistory('place', row, col, prevVal, num, prevNotes, []);
   if (!state.started) { state.started = true; startTimer(); }
-  render({ popCell: [row, col] }); saveGame(); playSound('place');
+  requestRender({ popCell: [row, col] }); saveGame(); playSound('place');
   haptic(8);
   if (state.settings.autoClearNotes) autoClearNotes(row, col, num);
   checkCompleted(row, col);
@@ -163,7 +163,7 @@ function toggleNote(row, col, num) {
   }
   pushHistory('note', row, col, 0, 0, prevNotes, [...state.notes[row][col]]);
   if (!state.started) { state.started = true; startTimer(); }
-  render(); saveGame(); playSound('place');
+  requestRender(); saveGame(); playSound('place');
 }
 
 function autoClearNotes(row, col, num) {
@@ -249,7 +249,7 @@ function giveHint() {
   state.combo++;
   if (state.combo > state.maxCombo) state.maxCombo = state.combo;
   if (state.combo >= 2) showCombo(state.combo);
-  render({ popCell: [row, col] }); saveGame(); playSound('place');
+  requestRender({ popCell: [row, col] }); saveGame(); playSound('place');
   checkCompleted(row, col);
   checkWin();
 }
@@ -316,7 +316,7 @@ function checkCompleted(row, col) {
     log('[game] completedAnimated rows:', [...state.completedAnimated.rows]);
     log('[game] completedAnimated cols:', [...state.completedAnimated.cols]);
     log('[game] completedAnimated boxes:', [...state.completedAnimated.boxes]);
-    render();
+    requestRender();
     setTimeout(() => {
       newCompleted.forEach(h => {
         if (h.type === 'row') state.completedAnimated.rows.delete(h.index);
@@ -358,7 +358,7 @@ function checkWin() {
   state.won = true;
   state.timerRunning = false;
   if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
-  render(); playSound('win');
+  requestRender(); playSound('win');
   triggerWinExplosion(() => showWinDialog());
 }
 
@@ -367,7 +367,7 @@ function gameOver() {
   state.gameOver = true;
   state.timerRunning = false;
   if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
-  render();
+  requestRender();
 }
 
 function useSecondChance() {
@@ -382,7 +382,7 @@ function useSecondChance() {
   }
   if (state.countdownMode && state.timer <= 0) return;
   document.getElementById('timer').textContent = formatTime(state.timer);
-  render();
+  requestRender();
   startTimer();
 }
 
@@ -512,7 +512,7 @@ state.completed = { rows: new Set(), cols: new Set(), boxes: new Set() };
   document.getElementById('timer').textContent = formatTime(state.timer);
   document.getElementById('mistakes').textContent = '0';
   updateUndoRedo();
-  render({ entering: true });
+  requestRender({ entering: true });
   saveGame();
   playSound('place');
   if (!state.isDaily) showLevelAnimation(state.currentLevel);
@@ -590,7 +590,7 @@ function initNewGame(difficulty, isDaily, startLevel, seedDate) {
         const numBadge = document.getElementById('gameLevelNum');
         if (numBadge) numBadge.textContent = state.currentLevel;
         updateUndoRedo();
-        render({ entering: true });
+        requestRender({ entering: true });
         if (state.timer > 0 && !state.won && !state.gameOver) startTimer();
         showPage('page-game');
         return;
@@ -602,20 +602,18 @@ function initNewGame(difficulty, isDaily, startLevel, seedDate) {
 
   showPage('page-game');
   if (boardEl) boardEl.classList.add('blurred');
-  render();
+  requestRender();
 
-  const puzzleReady = () => {
-    let puzzle;
-    if (isDaily) {
-      const seed = seedDate || (new Date().getFullYear() + '-' + String(new Date().getMonth()+1).padStart(2,'0') + '-' + String(new Date().getDate()).padStart(2,'0'));
-      state._archivedSeed = seedDate || null;
-      const rng = createSeededRng(seed);
-      puzzle = generatePuzzle('medium', rng);
-      log('[game] generated daily puzzle with seed', { seed, archived: !!seedDate });
-    } else {
-      puzzle = generatePuzzle(state.difficulty);
-    }
+  const seed = isDaily
+    ? (seedDate || (new Date().getFullYear() + '-' + String(new Date().getMonth()+1).padStart(2,'0') + '-' + String(new Date().getDate()).padStart(2,'0')))
+    : null;
+  if (seed) state._archivedSeed = seedDate || null;
 
+  const genPromise = isDaily
+    ? generatePuzzleAsync('medium', seed)
+    : generatePuzzleAsync(state.difficulty);
+
+  genPromise.then(puzzle => {
     if (!puzzle || !puzzle.solution) {
       log('[game] ERROR: puzzle generation failed');
       if (boardEl) boardEl.classList.remove('blurred');
@@ -654,7 +652,7 @@ state.completed = { rows: new Set(), cols: new Set(), boxes: new Set() };
     updateUndoRedo();
 
     if (boardEl) boardEl.classList.remove('blurred');
-    render({ entering: true });
+    requestRender({ entering: true });
     saveGame();
     playSound('place');
 
@@ -677,9 +675,13 @@ state.completed = { rows: new Set(), cols: new Set(), boxes: new Set() };
       state.started = true;
       startTimer();
     }, 1200);
-  };
+  }).catch(err => {
+    log('[game] ERROR: puzzle generation failed', err);
+    showToast('Failed to generate puzzle. Retrying...');
+    if (boardEl) boardEl.classList.remove('blurred');
+    if (levelOverlay) levelOverlay.classList.remove('open');
+  });
 
-  setTimeout(puzzleReady, 50);
   if (levelNum) levelNum.textContent = state.currentLevel;
   if (!state.isDaily && levelOverlay) levelOverlay.classList.add('open');
 }

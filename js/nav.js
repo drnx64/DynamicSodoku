@@ -41,19 +41,20 @@ function generateThumbnails() {
   diffs.forEach(d => {
     const container = document.getElementById('diffThumb' + d.charAt(0).toUpperCase() + d.slice(1));
     if (!container || container.hasChildNodes()) return;
-    const puzzle = generatePuzzle(d);
-    if (!puzzle || !puzzle.givens) return;
-    const thumb = document.createElement('div');
-    thumb.className = 'diff-thumb-grid';
-    for (let r = 0; r < 9; r++) {
-      for (let c = 0; c < 9; c++) {
-        const cell = document.createElement('div');
-        cell.className = 'diff-thumb-cell';
-        if (puzzle.givens[r][c]) cell.classList.add('filled');
-        thumb.appendChild(cell);
+    generatePuzzleAsync(d).then(puzzle => {
+      if (!puzzle || !puzzle.givens) return;
+      const thumb = document.createElement('div');
+      thumb.className = 'diff-thumb-grid';
+      for (let r = 0; r < 9; r++) {
+        for (let c = 0; c < 9; c++) {
+          const cell = document.createElement('div');
+          cell.className = 'diff-thumb-cell';
+          if (puzzle.givens[r][c]) cell.classList.add('filled');
+          thumb.appendChild(cell);
+        }
       }
-    }
-    container.appendChild(thumb);
+      container.appendChild(thumb);
+    });
   });
 }
 

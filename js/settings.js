@@ -263,7 +263,7 @@ function setupSettings() {
     autoToggle.classList.toggle('on', wantsOn);
     applySettings();
     saveSettings();
-    render();
+    requestRender();
     updateNotesBtn();
     const xpSpan = autoStatus.querySelector('span:last-child');
     if (xpSpan) xpSpan.textContent = (stats.totalXp || 0) + ' XP';
@@ -358,7 +358,7 @@ function applySettings() {
   }
   const bc = document.getElementById('boardArea');
   if (bc) bc.classList.toggle('hidden-coords', !state.settings.showCoordinates);
-  if (state.board && state.board.length === 9) render();
+  if (state.board && state.board.length === 9) requestRender();
 }
 
 function rebuildSettingsUI() {
