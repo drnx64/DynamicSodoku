@@ -277,12 +277,13 @@ function updateBadges() {
 function updateGameLink() {
   const el = document.getElementById('gameLink');
   if (!el) return;
-  const url = window.location.href.split('?')[0];
-  el.textContent = 'GAME: ' + url;
-  el.title = 'Click to copy game link for your stream';
+  const fullUrl = window.location.href;
+  const displayUrl = fullUrl.split('?')[0].replace(/^https?:\/\//, '').replace(/\/?$/, '') + '/…';
+  el.textContent = 'GAME: ' + displayUrl;
+  el.title = 'Click to copy shareable referral link';
   el.onclick = () => {
-    navigator.clipboard.writeText(url).then(() => {
-      showToast('Link copied!');
+    navigator.clipboard.writeText(fullUrl).then(() => {
+      showToast('Referral link copied!');
     });
   };
 }
