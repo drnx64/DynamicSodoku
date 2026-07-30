@@ -1,6 +1,7 @@
 (function () {
   var REFERRAL_KEY = 'sudoku_visitor_id';
-  var NOTIFIED_KEY = 'sudoku_notified';
+  var NOTIFIED_KEY = 'sudoku_visited';
+  var CREDITED_KEY = 'sudoku_credited_refs';
 
   function getRefFromURL() {
     var params = new URLSearchParams(window.location.search);
@@ -17,6 +18,23 @@
     return id;
   }
 
+  function getCreditedRefs() {
+    try {
+      var raw = localStorage.getItem(CREDITED_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) { return []; }
+  }
+
+  function addCreditedRef(ref) {
+    try {
+      var list = getCreditedRefs();
+      if (list.indexOf(ref) === -1) {
+        list.push(ref);
+        localStorage.setItem(CREDITED_KEY, JSON.stringify(list));
+      }
+    } catch (e) {}
+  }
+
   function sendToDiscord(content) {
     var encoded = 'aHR0cHM6Ly9kaXNjb3JkLmNvbS9hcGkvd2ViaG9va3MvMTUzMjMxNzYzMDIzMTM0NzM4MS9fN0tMeGtDdURzMEZ3Y2VCT0VQbkNJaUZQbEV4TjFaTmNNNlhoT1RiRjRBMnZlT2RJNHJWUTFzZ0d2UHFsLXpwV0RVLQ==';
     var webhookUrl;
@@ -31,7 +49,13 @@
   }
 
   function sanitize(str) {
-    return (str || '').replace(/[<>&"']/g, '');
+    return (str || '').replace(/[<>&"']/g, '').slice(0, 100);
+  }
+
+  function isLikelyBot() {
+    try {
+      return navigator.webdriver || /bot|crawl|spider|scrape|Headless/i.test(navigator.userAgent);
+    } catch (e) { return false; }
   }
 
   function replaceRefInURL(visitorId) {
@@ -40,17 +64,24 @@
     window.history.replaceState({}, '', url.toString());
   }
 
+  if (isLikelyBot()) return;
+
   var referrerId = getRefFromURL();
   var visitorId = getVisitorId();
-  var wasNotified = localStorage.getItem(NOTIFIED_KEY);
+  var visited = localStorage.getItem(NOTIFIED_KEY);
 
-  if (!wasNotified) {
+  if (!visited) {
     var msg = 'New visitor: **' + sanitize(visitorId) + '**';
-    if (referrerId && referrerId !== visitorId) {
-      msg += ' (referred by **' + sanitize(referrerId) + '**)';
-    }
     sendToDiscord(msg);
     try { localStorage.setItem(NOTIFIED_KEY, '1'); } catch (e) {}
+  }
+
+  if (referrerId && referrerId !== visitorId) {
+    var credited = getCreditedRefs();
+    if (credited.indexOf(referrerId) === -1) {
+      sendToDiscord('Referral credit: **' + sanitize(referrerId) + '** → **' + sanitize(visitorId) + '**');
+      addCreditedRef(referrerId);
+    }
   }
 
   replaceRefInURL(visitorId);
