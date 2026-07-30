@@ -1,5 +1,6 @@
 (function () {
   var REFERRAL_KEY = 'sudoku_visitor_id';
+  var NAME_KEY = 'sudoku_visitor_name';
   var NOTIFIED_KEY = 'sudoku_visited';
   var CREDITED_KEY = 'sudoku_credited_refs';
 
@@ -15,7 +16,7 @@
     'Cole','Dune','Echo','Fern','Gray','Haze','Ione','Jazz','Kestrel','Lake'
   ];
 
-  function genId() {
+  function genName() {
     var name = NAMES[Math.floor(Math.random() * NAMES.length)];
     var tag = Math.random().toString(36).substring(2, 5);
     return name + '-' + tag;
@@ -24,15 +25,29 @@
   function getVisitorId() {
     var id = localStorage.getItem(REFERRAL_KEY);
     if (!id) {
-      id = genId();
+      id = crypto.randomUUID();
       localStorage.setItem(REFERRAL_KEY, id);
     }
     return id;
   }
 
+  function getDisplayName() {
+    var name = localStorage.getItem(NAME_KEY);
+    if (!name) {
+      name = genName();
+      localStorage.setItem(NAME_KEY, name);
+    }
+    return name;
+  }
+
   function getRefFromURL() {
     var params = new URLSearchParams(window.location.search);
     return params.get('ref') || null;
+  }
+
+  function getRefNameFromURL() {
+    var params = new URLSearchParams(window.location.search);
+    return params.get('n') || null;
   }
 
   function getCreditedRefs() {
@@ -75,30 +90,34 @@
     } catch (e) { return false; }
   }
 
-  function replaceRefInURL(visitorId) {
+  function replaceRefInURL(visitorId, displayName) {
     var url = new URL(window.location.href);
     url.searchParams.set('ref', visitorId);
+    url.searchParams.set('n', displayName);
     window.history.replaceState({}, '', url.toString());
   }
 
   if (isLikelyBot()) return;
 
   var referrerId = getRefFromURL();
+  var referrerName = getRefNameFromURL();
   var visitorId = getVisitorId();
+  var visitorName = getDisplayName();
   var visited = localStorage.getItem(NOTIFIED_KEY);
 
   if (!visited) {
-    sendToDiscord('🆕 **' + sanitize(visitorId) + '** visited the site!');
+    sendToDiscord('🆕 **' + sanitize(visitorName) + '** visited the site!');
     try { localStorage.setItem(NOTIFIED_KEY, '1'); } catch (e) {}
   }
 
   if (referrerId && referrerId !== visitorId) {
     var credited = getCreditedRefs();
     if (credited.indexOf(referrerId) === -1) {
-      sendToDiscord('🔗 **' + sanitize(referrerId) + '** referred **' + sanitize(visitorId) + '**');
+      var shownName = referrerName || referrerId;
+      sendToDiscord('🔗 **' + sanitize(shownName) + '** referred **' + sanitize(visitorName) + '**');
       addCreditedRef(referrerId);
     }
   }
 
-  replaceRefInURL(visitorId);
+  replaceRefInURL(visitorId, visitorName);
 })();
