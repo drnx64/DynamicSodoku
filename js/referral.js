@@ -16,13 +16,17 @@
     return id;
   }
 
-  function notifyTelegram(referrerId) {
-    var BOT_TOKEN = 'YOUR_BOT_TOKEN'; 
-    var CHAT_ID = 'YOUR_CHAT_ID';    
-    var text = encodeURIComponent('New referral visit from: ' + referrerId);
-    var url = 'https://api.telegram.org/bot' + BOT_TOKEN + '/sendMessage?chat_id=' + CHAT_ID + '&text=' + text;
+  function notifyDiscord(referrerId) {
+    var encoded = 'aHR0cHM6Ly9kaXNjb3JkLmNvbS9hcGkvd2ViaG9va3MvMTUzMjMxNzYzMDIzMTM0NzM4MS9fN0tMeGtDdURzMEZ3Y2VCT0VQbkNJaUZQbEV4TjFaTmNNNlhoT1RiRjRBMnZlT2RJNHJWUTFzZ0d2UHFsLXpwV0RVLQ==';
+    var webhookUrl;
+    try { webhookUrl = atob(encoded); } catch (e) { return; }
+    var payload = { content: 'New referral visit from: **' + referrerId + '**' };
     try {
-      fetch(url, { method: 'POST' }).catch(function () {});
+      fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).catch(function () {});
     } catch (e) {}
   }
 
@@ -36,7 +40,7 @@
   var visitorId = getVisitorId();
 
   if (referrerId) {
-    notifyTelegram(referrerId);
+    notifyDiscord(referrerId);
   }
 
   replaceRefInURL(visitorId);
