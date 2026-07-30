@@ -16,11 +16,13 @@
     return id;
   }
 
-  function notifyDiscord(referrerId) {
+  function notifyDiscord(referrerId, visitorId) {
     var encoded = 'aHR0cHM6Ly9kaXNjb3JkLmNvbS9hcGkvd2ViaG9va3MvMTUzMjMxNzYzMDIzMTM0NzM4MS9fN0tMeGtDdURzMEZ3Y2VCT0VQbkNJaUZQbEV4TjFaTmNNNlhoT1RiRjRBMnZlT2RJNHJWUTFzZ0d2UHFsLXpwV0RVLQ==';
     var webhookUrl;
     try { webhookUrl = atob(encoded); } catch (e) { return; }
-    var payload = { content: 'New referral visit from: **' + referrerId + '**' };
+    var safeRef = (referrerId || '').replace(/[<>&"']/g, '');
+    var safeVis = (visitorId || '').replace(/[<>&"']/g, '');
+    var payload = { content: 'Referral: **' + safeRef + '** → **' + safeVis + '**' };
     try {
       fetch(webhookUrl, {
         method: 'POST',
@@ -39,8 +41,8 @@
   var referrerId = getRefFromURL();
   var visitorId = getVisitorId();
 
-  if (referrerId) {
-    notifyDiscord(referrerId);
+  if (referrerId && referrerId !== visitorId) {
+    notifyDiscord(referrerId, visitorId);
   }
 
   replaceRefInURL(visitorId);
