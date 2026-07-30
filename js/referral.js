@@ -1,5 +1,6 @@
 (function () {
   var REFERRAL_KEY = 'sudoku_visitor_id';
+  var NOTIFIED_KEY = 'sudoku_notified';
 
   function getRefFromURL() {
     var params = new URLSearchParams(window.location.search);
@@ -16,20 +17,21 @@
     return id;
   }
 
-  function notifyDiscord(referrerId, visitorId) {
+  function sendToDiscord(content) {
     var encoded = 'aHR0cHM6Ly9kaXNjb3JkLmNvbS9hcGkvd2ViaG9va3MvMTUzMjMxNzYzMDIzMTM0NzM4MS9fN0tMeGtDdURzMEZ3Y2VCT0VQbkNJaUZQbEV4TjFaTmNNNlhoT1RiRjRBMnZlT2RJNHJWUTFzZ0d2UHFsLXpwV0RVLQ==';
     var webhookUrl;
     try { webhookUrl = atob(encoded); } catch (e) { return; }
-    var safeRef = (referrerId || '').replace(/[<>&"']/g, '');
-    var safeVis = (visitorId || '').replace(/[<>&"']/g, '');
-    var payload = { content: 'Referral: **' + safeRef + '** → **' + safeVis + '**' };
     try {
       fetch(webhookUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ content: content })
       }).catch(function () {});
     } catch (e) {}
+  }
+
+  function sanitize(str) {
+    return (str || '').replace(/[<>&"']/g, '');
   }
 
   function replaceRefInURL(visitorId) {
@@ -40,9 +42,15 @@
 
   var referrerId = getRefFromURL();
   var visitorId = getVisitorId();
+  var wasNotified = localStorage.getItem(NOTIFIED_KEY);
 
-  if (referrerId && referrerId !== visitorId) {
-    notifyDiscord(referrerId, visitorId);
+  if (!wasNotified) {
+    var msg = 'New visitor: **' + sanitize(visitorId) + '**';
+    if (referrerId && referrerId !== visitorId) {
+      msg += ' (referred by **' + sanitize(referrerId) + '**)';
+    }
+    sendToDiscord(msg);
+    try { localStorage.setItem(NOTIFIED_KEY, '1'); } catch (e) {}
   }
 
   replaceRefInURL(visitorId);
