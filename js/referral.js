@@ -3,19 +3,34 @@
   var NOTIFIED_KEY = 'sudoku_visited';
   var CREDITED_KEY = 'sudoku_credited_refs';
 
-  function getRefFromURL() {
-    var params = new URLSearchParams(window.location.search);
-    return params.get('ref') || null;
+  var NAMES = [
+    'Mario','Angelica','Ael','Sam','Josh','Luna','Nova','Kai','Zara','Rex',
+    'Ivy','Jade','Orion','Vega','Cleo','Finn','Gia','Hugo','Iris','Jax',
+    'Kira','Leo','Mila','Nash','Onyx','Piper','Quinn','Remy','Sage','Tess',
+    'Uma','Vince','Wren','Xena','Yuki','Zion','Aria','Blaise','Cora','Dax',
+    'Elio','Faye','Gale','Halo','Indy','Jules','Kade','Lux','Moxie','Noir',
+    'Olive','Pace','Rune','Skye','True','Vale','Witt','Zuri','Arlo','Bree',
+    'Cyra','Dove','Eden','Frost','Gwen','Haven','Isla','Jett','Koa','Leaf',
+    'Moss','Nyx','Oaks','Prim','Rain','Shay','Thorn','Wolf','Ash','Blue',
+    'Cole','Dune','Echo','Fern','Gray','Haze','Ione','Jazz','Kestrel','Lake'
+  ];
+
+  function pickName() {
+    return NAMES[Math.floor(Math.random() * NAMES.length)];
   }
 
   function getVisitorId() {
     var id = localStorage.getItem(REFERRAL_KEY);
     if (!id) {
-      id = (crypto.randomUUID && crypto.randomUUID()) ||
-        'v_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+      id = pickName();
       localStorage.setItem(REFERRAL_KEY, id);
     }
     return id;
+  }
+
+  function getRefFromURL() {
+    var params = new URLSearchParams(window.location.search);
+    return params.get('ref') || null;
   }
 
   function getCreditedRefs() {
@@ -49,7 +64,7 @@
   }
 
   function sanitize(str) {
-    return (str || '').replace(/[<>&"']/g, '').slice(0, 100);
+    return (str || '').replace(/[<>&"']/g, '').slice(0, 50);
   }
 
   function isLikelyBot() {
@@ -71,15 +86,14 @@
   var visited = localStorage.getItem(NOTIFIED_KEY);
 
   if (!visited) {
-    var msg = 'New visitor: **' + sanitize(visitorId) + '**';
-    sendToDiscord(msg);
+    sendToDiscord('🆕 **' + sanitize(visitorId) + '** visited the site!');
     try { localStorage.setItem(NOTIFIED_KEY, '1'); } catch (e) {}
   }
 
   if (referrerId && referrerId !== visitorId) {
     var credited = getCreditedRefs();
     if (credited.indexOf(referrerId) === -1) {
-      sendToDiscord('Referral credit: **' + sanitize(referrerId) + '** → **' + sanitize(visitorId) + '**');
+      sendToDiscord('🔗 **' + sanitize(referrerId) + '** referred **' + sanitize(visitorId) + '**');
       addCreditedRef(referrerId);
     }
   }
