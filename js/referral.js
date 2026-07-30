@@ -15,14 +15,20 @@
     'Cole','Dune','Echo','Fern','Gray','Haze','Ione','Jazz','Kestrel','Lake'
   ];
 
-  function pickName() {
-    return NAMES[Math.floor(Math.random() * NAMES.length)];
+  function genId() {
+    var name = NAMES[Math.floor(Math.random() * NAMES.length)];
+    var tag = Math.random().toString(36).substring(2, 6);
+    return name + '-' + tag;
+  }
+
+  function displayName(id) {
+    return id ? id.split('-')[0] : '?';
   }
 
   function getVisitorId() {
     var id = localStorage.getItem(REFERRAL_KEY);
     if (!id) {
-      id = pickName();
+      id = genId();
       localStorage.setItem(REFERRAL_KEY, id);
     }
     return id;
@@ -86,14 +92,14 @@
   var visited = localStorage.getItem(NOTIFIED_KEY);
 
   if (!visited) {
-    sendToDiscord('🆕 **' + sanitize(visitorId) + '** visited the site!');
+    sendToDiscord('🆕 **' + displayName(visitorId) + '** visited the site!');
     try { localStorage.setItem(NOTIFIED_KEY, '1'); } catch (e) {}
   }
 
   if (referrerId && referrerId !== visitorId) {
     var credited = getCreditedRefs();
     if (credited.indexOf(referrerId) === -1) {
-      sendToDiscord('🔗 **' + sanitize(referrerId) + '** referred **' + sanitize(visitorId) + '**');
+      sendToDiscord('🔗 **' + displayName(referrerId) + '** referred **' + displayName(visitorId) + '**');
       addCreditedRef(referrerId);
     }
   }
