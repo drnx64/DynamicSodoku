@@ -17,12 +17,8 @@
 
   function genId() {
     var name = NAMES[Math.floor(Math.random() * NAMES.length)];
-    var tag = Math.random().toString(36).substring(2, 6);
+    var tag = Math.random().toString(36).substring(2, 5);
     return name + '-' + tag;
-  }
-
-  function displayName(id) {
-    return id ? id.split('-')[0] : '?';
   }
 
   function getVisitorId() {
@@ -92,14 +88,14 @@
   var visited = localStorage.getItem(NOTIFIED_KEY);
 
   if (!visited) {
-    sendToDiscord('🆕 **' + displayName(visitorId) + '** visited the site!');
+    sendToDiscord('🆕 **' + sanitize(visitorId) + '** visited the site!');
     try { localStorage.setItem(NOTIFIED_KEY, '1'); } catch (e) {}
   }
 
   if (referrerId && referrerId !== visitorId) {
     var credited = getCreditedRefs();
     if (credited.indexOf(referrerId) === -1) {
-      sendToDiscord('🔗 **' + displayName(referrerId) + '** referred **' + displayName(visitorId) + '**');
+      sendToDiscord('🔗 **' + sanitize(referrerId) + '** referred **' + sanitize(visitorId) + '**');
       addCreditedRef(referrerId);
     }
   }
