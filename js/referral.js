@@ -2,7 +2,7 @@
   var REFERRAL_KEY = 'sudoku_visitor_id';
   var NAME_KEY = 'sudoku_visitor_name';
   var NOTIFIED_KEY = 'sudoku_visited';
-  var CREDITED_KEY = 'sudoku_credited_refs';
+  var REFERRED_BY_KEY = 'sudoku_referred_by';
 
   var NAMES = [
     'Mario','Angelica','Ael','Sam','Josh','Luna','Nova','Kai','Zara','Rex',
@@ -50,21 +50,14 @@
     return params.get('n') || null;
   }
 
-  function getCreditedRefs() {
+  function getReferredBy() {
     try {
-      var raw = localStorage.getItem(CREDITED_KEY);
-      return raw ? JSON.parse(raw) : [];
-    } catch (e) { return []; }
+      return localStorage.getItem(REFERRED_BY_KEY) || null;
+    } catch (e) { return null; }
   }
 
-  function addCreditedRef(ref) {
-    try {
-      var list = getCreditedRefs();
-      if (list.indexOf(ref) === -1) {
-        list.push(ref);
-        localStorage.setItem(CREDITED_KEY, JSON.stringify(list));
-      }
-    } catch (e) {}
+  function setReferredBy(ref) {
+    try { localStorage.setItem(REFERRED_BY_KEY, ref); } catch (e) {}
   }
 
   function sendToDiscord(content) {
@@ -110,13 +103,10 @@
     try { localStorage.setItem(NOTIFIED_KEY, '1'); } catch (e) {}
   }
 
-  if (referrerId && referrerId !== visitorId) {
-    var credited = getCreditedRefs();
-    if (credited.indexOf(referrerId) === -1) {
-      var shownName = referrerName || referrerId;
-      sendToDiscord('🔗 **' + sanitize(shownName) + '** referred **' + sanitize(visitorName) + '**');
-      addCreditedRef(referrerId);
-    }
+  if (referrerId && referrerId !== visitorId && !getReferredBy()) {
+    var shownName = referrerName || referrerId;
+    sendToDiscord('🔗 **' + sanitize(shownName) + '** referred **' + sanitize(visitorName) + '**');
+    setReferredBy(referrerId);
   }
 
   replaceRefInURL(visitorId, visitorName);
