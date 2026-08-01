@@ -58,6 +58,14 @@ function updateMenuUI() {
     if (use) use.setAttribute('href', '#' + fire.icon);
   }
 
+  const freezeBadge = document.getElementById('streakFreezeBadge');
+  if (freezeBadge) {
+    const fz = getStreakFreezes();
+    const fzCount = document.getElementById('streakFreezeBadgeCount');
+    if (fzCount) fzCount.textContent = fz;
+    freezeBadge.style.display = fz > 0 ? 'inline-flex' : 'none';
+  }
+
   const totalGamesCount = document.getElementById('totalGamesCount');
   if (totalGamesCount) totalGamesCount.textContent = stats.totalGames || 0;
 
@@ -365,6 +373,8 @@ function setupDialogs() {
   if (xpBarWrap) xpBarWrap.addEventListener('click', () => { log('[menu] click: xpBarWrap'); showRankJourney(); });
   const streakBadge = document.getElementById('streakBadge');
   if (streakBadge) streakBadge.addEventListener('click', () => { log('[menu] click: streakBadge'); showStreakJourney(); });
+  const freezeBadge = document.getElementById('streakFreezeBadge');
+  if (freezeBadge) freezeBadge.addEventListener('click', () => { log('[menu] click: streakFreezeBadge'); showStreakJourney(); });
   const continueCard = document.getElementById('continueCard');
   if (continueCard) continueCard.addEventListener('click', () => {
     log('[menu] click: continueCard');
@@ -419,6 +429,25 @@ function setupDialogs() {
   document.getElementById('streakOverlay').addEventListener('click', (e) => {
     if (e.target === e.currentTarget) document.getElementById('streakOverlay').classList.remove('open');
   });
+
+  const streakFreezeBuy = document.getElementById('streakFreezeBuy');
+  if (streakFreezeBuy) {
+    streakFreezeBuy.addEventListener('click', () => {
+      log('[menu] click: streakFreezeBuy');
+      const cost = 75;
+      if ((stats.totalXp || 0) < cost) {
+        showToast('Not enough XP!');
+        return;
+      }
+      stats.totalXp -= cost;
+      saveStats();
+      grantStreakFreeze(1);
+      const freezeCountEl = document.getElementById('streakFreezeCount');
+      if (freezeCountEl) freezeCountEl.textContent = getStreakFreezes();
+      showToast('Streak freeze purchased!');
+      playSound('place');
+    });
+  }
 
   document.querySelectorAll('.achieve-tab').forEach(tab => {
     tab.addEventListener('click', () => {
@@ -742,6 +771,9 @@ function showStreakJourney() {
   const s = streak.count || 0;
   document.getElementById('streakBigCount').textContent = s;
   document.getElementById('streakBestCount').textContent = stats.bestStreak || s || 0;
+
+  const freezeCountEl = document.getElementById('streakFreezeCount');
+  if (freezeCountEl) freezeCountEl.textContent = getStreakFreezes();
 
   const fire = getStreakFire(s);
   const wrap = document.getElementById('streakFireWrap');

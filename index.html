@@ -101,6 +101,7 @@
   <symbol id="ico-circle-2" viewBox="0 0 24 24"><circle cx="8" cy="12" r="3" fill="currentColor"/><circle cx="16" cy="12" r="3" fill="currentColor"/></symbol>
   <symbol id="ico-diamond" viewBox="0 0 24 24"><path d="M12 2l7 7-7 13-7-13z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
   <symbol id="ico-flame" viewBox="0 0 24 24"><path d="M12 22c-3 0-5-2-5-5 0-3 2-6 4.5-8.5.4-.4 1.2 0 1.2.6V11c0 1.2.5 2.5 2 2.5 1 0 1.5-.8 1.5-1.7 0-.4.3-.7.6-.9.6-.2 1 .2 1.3.6A5 5 0 0 1 17 17c0 3-2 5-5 5z" fill="currentColor"/></symbol>
+  <symbol id="ico-snowflake" viewBox="0 0 24 24"><path d="M12 2v20M2 12h20M12 2l-2 2M12 2l2 2M12 22l-2-2M12 22l2-2M2 12l2 2M2 12l2-2M22 12l-2 2M22 12l-2-2M4.9 4.9l2.1 2.1M4.9 4.9l.7 2.9M19.1 4.9l-2.1 2.1M19.1 4.9l-.7 2.9M4.9 19.1l2.1-2.1M4.9 19.1l2.9-.7M19.1 19.1l-2.1-2.1M19.1 19.1l-2.9.7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
   <symbol id="ico-pause" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1" fill="currentColor"/><rect x="14" y="4" width="4" height="16" rx="1" fill="currentColor"/></symbol>
   <symbol id="ico-auto" viewBox="0 0 24 24"><path d="M9 3l1 2h4l1-2M12 7v10M5 12H3M21 12h-2M7 17l2 2 2-2M15 7l2-2 2 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
   <symbol id="ico-loader" viewBox="0 0 48 48"><circle cx="24" cy="24" r="18" fill="none" stroke="#e4e7ec" stroke-width="4"/><circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="4" stroke-dasharray="28 85" stroke-linecap="round"/></symbol>
@@ -158,6 +159,10 @@
         <div class="streak-badge zero level-0" id="streakBadge">
           <svg width="18" height="18" viewBox="0 0 24 24"><use href="#ico-fire"/></svg>
           <span class="count" id="streakCount">0</span>
+        </div>
+        <div class="streak-freeze-badge" id="streakFreezeBadge" style="display:none" title="Streak freezes">
+          <svg width="13" height="13" viewBox="0 0 24 24"><use href="#ico-snowflake"/></svg>
+          <span id="streakFreezeBadgeCount">0</span>
         </div>
         <div class="level-badge" id="levelBadge">
           <span id="levelName">Wood I</span>
@@ -582,6 +587,13 @@
       <div class="streak-daily-icon" id="streakDailyIcon"><svg width="18" height="18" viewBox="0 0 24 24"><use href="#ico-calendar"/></svg></div>
       <span id="streakDailyText">Complete today's Daily Challenge to continue your streak</span>
     </div>
+    <div class="streak-freezes" id="streakFreezes">
+      <div class="streak-freeze-info">
+        <span class="streak-freeze-icon"><svg width="16" height="16" viewBox="0 0 24 24"><use href="#ico-snowflake"/></svg></span>
+        <span><b id="streakFreezeCount">0</b> streak freezes</span>
+      </div>
+      <button id="streakFreezeBuy"><svg width="14" height="14" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px"><use href="#ico-snowflake"/></svg> Buy (75 XP)</button>
+    </div>
     <div class="streak-calendar" id="streakCalendar"></div>
     <div class="streak-rewards">
       <div class="streak-reward-title">Streak Rewards</div>
@@ -589,6 +601,7 @@
       <div class="streak-reward-row"><span>3 days</span><span>+5 XP bonus per game</span></div>
       <div class="streak-reward-row"><span>7 days</span><span>+10 XP bonus per game</span></div>
       <div class="streak-reward-row"><span>30 days</span><span>+25 XP bonus per game</span></div>
+      <div class="streak-reward-row"><span>Milestones</span><span>+XP &amp; ❄️ streak freeze</span></div>
     </div>
   </div>
 </div>

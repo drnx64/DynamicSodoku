@@ -978,7 +978,7 @@ function loadWithVault(key, type, defaults) {
   } catch(e) { log('[storage] loadWithVault error', e, { key, type }); return defaults; }
 }
 
-let streak = { count: 0, lastDate: null, _vault: '', _milestones: [] };
+let streak = { count: 0, lastDate: null, freezes: 0, _vault: '', _milestones: [] };
 
 const STREAK_MILESTONES = [
   { days: 10,  xp: 100,  label: '10-Day Streak' },
@@ -1025,12 +1025,21 @@ function checkStreak() {
   const diffMs = now.getTime() - last.getTime();
   const diffDays = Math.round(diffMs / 86400000);
   if (diffDays > 1) {
-    const lostStreak = streak.count;
-    log('[storage] streak lost!', { lostStreak, diffDays });
-    streak.count = 0;
-    streak.lastDate = null;
-    saveStreak();
-    if (lostStreak > 0) showStreakLost(lostStreak);
+    if ((streak.freezes || 0) > 0) {
+      const saved = streak.count;
+      streak.freezes--;
+      streak.lastDate = today;
+      saveStreak();
+      log('[storage] streak freeze used', { saved, freezesLeft: streak.freezes });
+      showStreakFreezeToast(saved);
+    } else {
+      const lostStreak = streak.count;
+      log('[storage] streak lost!', { lostStreak, diffDays });
+      streak.count = 0;
+      streak.lastDate = null;
+      saveStreak();
+      if (lostStreak > 0) showStreakLost(lostStreak);
+    }
   }
 }
 
@@ -1039,6 +1048,21 @@ function showStreakLost(count) {
   document.getElementById('oldStreakCount').textContent = count;
   document.getElementById('streakLostOverlay').classList.add('open');
   document.getElementById('streakLostOk').onclick = () => document.getElementById('streakLostOverlay').classList.remove('open');
+}
+
+function showStreakFreezeToast(saved) {
+  log('[storage] showStreakFreezeToast()', { saved });
+  showToast('\u2744\ufe0f Streak freeze used! Your ' + saved + '-day streak is safe.');
+}
+
+function getStreakFreezes() {
+  return streak.freezes || 0;
+}
+
+function grantStreakFreeze(n) {
+  streak.freezes = (streak.freezes || 0) + (n || 1);
+  saveStreak();
+  log('[storage] streak freeze granted', { freezes: streak.freezes });
 }
 
 function requestNotificationPermission() {

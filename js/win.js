@@ -267,6 +267,7 @@ function updateStreak() {
       log('[win] streak milestone reached', { days: m.days, xp: m.xp });
       bonusChallenge._claimedMilestones.push(m.days);
       stats.totalXp = (stats.totalXp || 0) + m.xp;
+      grantStreakFreeze(1);
       saveStats();
       saveBonus();
       showMilestoneRewardToast(m);
@@ -288,6 +289,7 @@ function showMilestoneRewardToast(m) {
     '<div style="font-size:28px;margin-bottom:4px;"><svg width="28" height="28" viewBox="0 0 24 24"><use href="#ico-party"/></svg></div>' +
     '<div style="font-size:15px;font-weight:800;color:var(--xp-gold);">' + m.label + '</div>' +
     '<div style="font-size:13px;color:#ccc;margin-top:2px;">+' + m.xp + ' XP Bonus!</div>' +
+    '<div style="font-size:12px;color:#9be3ff;margin-top:2px;">\u2744\ufe0f +1 Streak Freeze</div>' +
     '</div>';
   toast.classList.add('open');
   setTimeout(() => toast.classList.remove('open'), 3000);
