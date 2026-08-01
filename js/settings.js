@@ -12,6 +12,7 @@ const DEFAULT_SETTINGS = {
   colorTheme: 'default', soundTheme: 'classic', playerName: 'Player',
   showCoordinates: true, showCompleted: true,
   reducedAnimations: false,
+  dailyReminder: false, dailyReminderTime: '20:00',
 };
 
 const SETTINGS_CATEGORIES = [
@@ -60,6 +61,14 @@ const SETTINGS_CATEGORIES = [
       { key: 'showCoordinates', label: 'Show coordinates (A1-I9)' },
       { key: 'showCompleted', label: 'Highlight completed rows/cols/boxes' },
       { key: 'reducedAnimations', label: 'Reduced animations (low-end devices)' },
+      { key: 'dailyReminder', label: 'Daily reminder (browser notifications)', type: 'toggle' },
+      { key: 'dailyReminderTime', label: 'Reminder time', type: 'select', options: [
+        { value: '09:00', label: '9:00 AM' },
+        { value: '12:00', label: '12:00 PM' },
+        { value: '17:00', label: '5:00 PM' },
+        { value: '20:00', label: '8:00 PM' },
+        { value: '21:00', label: '9:00 PM' },
+      ]},
       { key: 'playerName', label: 'Player name', type: 'text' },
     ],
   },
@@ -214,6 +223,7 @@ function setupSettings() {
           toggle.classList.toggle('on', state.settings[def.key]);
           applySettings();
           saveSettings();
+          if (def.key === 'dailyReminder' && state.settings[def.key]) requestNotificationPermission();
         });
         row.appendChild(label); row.appendChild(toggle);
         section.appendChild(row);
@@ -359,6 +369,7 @@ function applySettings() {
   const bc = document.getElementById('boardArea');
   if (bc) bc.classList.toggle('hidden-coords', !state.settings.showCoordinates);
   if (state.board && state.board.length === 9) requestRender();
+  scheduleDailyReminder();
 }
 
 function rebuildSettingsUI() {

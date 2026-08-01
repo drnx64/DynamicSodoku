@@ -1066,27 +1066,40 @@ function grantStreakFreeze(n) {
 }
 
 function requestNotificationPermission() {
-  if ('Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission();
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'default') {
+    Notification.requestPermission().then((perm) => {
+      if (perm === 'granted') scheduleDailyReminder();
+    }).catch(() => {});
+  } else if (Notification.permission === 'granted') {
+    scheduleDailyReminder();
   }
 }
 
+let _reminderTimer = null;
+
 function scheduleDailyReminder() {
+  if (_reminderTimer) { clearTimeout(_reminderTimer); _reminderTimer = null; }
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  if (!state.settings || !state.settings.dailyReminder) return;
   const done = isDailyDoneToday();
   if (done) return;
+  const timeStr = state.settings.dailyReminderTime || '20:00';
+  const parts = timeStr.split(':').map(Number);
   const now = new Date();
   const target = new Date(now);
-  target.setHours(20, 0, 0, 0);
-  if (now > target) return;
+  target.setHours(parts[0] || 20, parts[1] || 0, 0, 0);
+  if (now >= target) return;
   const timeout = target.getTime() - now.getTime();
-  setTimeout(() => {
+  log('[storage] daily reminder scheduled', { at: timeStr, inMs: timeout });
+  _reminderTimer = setTimeout(() => {
     if (!isDailyDoneToday()) {
       new Notification('Ascendoku', {
         body: "Today's daily puzzle is waiting for you!",
         icon: '/icon-192.png'
       });
     }
+    _reminderTimer = null;
   }, timeout);
 }
 
