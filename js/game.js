@@ -37,6 +37,8 @@ const state = {
   _unlimitedHintsUntil: 0,
   _archivedSeed: null,
   _seed: null,
+  _customOptions: null,
+  _customTier: null,
   completed: { rows: new Set(), cols: new Set(), boxes: new Set() },
   completedAnimated: { rows: new Set(), cols: new Set(), boxes: new Set() },
 };
@@ -345,7 +347,7 @@ function activateUnlimitedHints(durationMin) {
 }
 
 function checkEasterEgg() {
-  if (state.difficulty !== 'impossible') return;
+  if (resolveCustomDifficulty() !== 'impossible') return;
   const prevUnlimited = state._unlimitedHintsUntil;
   if (state.timer < 180) {
     activateUnlimitedHints(60);
@@ -360,7 +362,7 @@ function checkWin() {
       if (state.board[r][c] !== state.solution[r][c]) return;
   log('[game] checkWin: puzzle solved!');
   checkEasterEgg();
-  checkDailyTasks(state.difficulty, state.timer, state.mistakes, state.hintsUsed, state.maxCombo);
+  checkDailyTasks(resolveCustomDifficulty(), state.timer, state.mistakes, state.hintsUsed, state.maxCombo);
   state.won = true;
   state.timerRunning = false;
   if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
@@ -592,7 +594,7 @@ function initNewGame(difficulty, isDaily, startLevel, seedDate, challengeData) {
         loadGame();
         state.isDaily = false;
         state.gameMode = 'normal';
-        document.getElementById('gameLabel').textContent = capitalize(difficulty);
+        document.getElementById('gameLabel').textContent = difficulty === 'custom' ? 'Custom' : capitalize(difficulty);
         document.getElementById('winOverlay').classList.remove('open');
         const gameBadge = document.getElementById('gameLevelBadge');
         if (gameBadge) gameBadge.style.display = 'inline-flex';
@@ -621,7 +623,7 @@ function initNewGame(difficulty, isDaily, startLevel, seedDate, challengeData) {
 
   const genPromise = isDaily
     ? generatePuzzleAsync('medium', seed)
-    : generatePuzzleAsync(state.difficulty, seed);
+    : generatePuzzleAsync(state.difficulty, seed, (state.difficulty === 'custom' && state._customOptions) ? state._customOptions : undefined);
 
   genPromise.then(puzzle => {
     if (!puzzle || !puzzle.solution) {
@@ -636,6 +638,10 @@ function initNewGame(difficulty, isDaily, startLevel, seedDate, challengeData) {
     state.solution = puzzle.solution.map(r => [...r]);
     state.board = puzzle.board.map(r => [...r]);
     state.givens = puzzle.givens.map(r => [...r]);
+    if (state.difficulty === 'custom') {
+      state._customTier = puzzle.tier || state._customOptions?.tier || null;
+      log('[game] custom puzzle tier', { tier: state._customTier });
+    }
     state.notes = Array.from({length: 9}, () => Array.from({length: 9}, () => new Set()));
     state.history = []; state.historyIdx = -1;
   state.selectedCell = null; state.notesMode = false;
@@ -649,11 +655,13 @@ function initNewGame(difficulty, isDaily, startLevel, seedDate, challengeData) {
     state._freeAuto = state._freeAuto || 0;
     state._autoCandidatesPaid = false;
     state._analyzerUnlocked = false;
+    if (state.difficulty !== 'custom') state._customTier = null;
+    if (state.difficulty !== 'custom') state._customOptions = null;
 state.completed = { rows: new Set(), cols: new Set(), boxes: new Set() };
   state.completedAnimated = { rows: new Set(), cols: new Set(), boxes: new Set() };
     document.getElementById('timer').textContent = formatTime(state.countdownMode ? state.countdownTime : 0);
     document.getElementById('mistakes').textContent = '0';
-    document.getElementById('gameLabel').textContent = state.isDaily ? (state._archivedSeed ? 'Archive ' + state._archivedSeed : 'Daily Challenge') : (state.isChallenge ? 'Challenge' : capitalize(state.difficulty));
+    document.getElementById('gameLabel').textContent = state.isDaily ? (state._archivedSeed ? 'Archive ' + state._archivedSeed : 'Daily Challenge') : (state.isChallenge ? 'Challenge' : (state.difficulty === 'custom' ? 'Custom' : capitalize(state.difficulty)));
     document.getElementById('winOverlay').classList.remove('open');
     const gameBadge = document.getElementById('gameLevelBadge');
     if (gameBadge) gameBadge.style.display = state.isDaily || state.isChallenge ? 'none' : 'inline-flex';

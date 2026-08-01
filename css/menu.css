@@ -385,10 +385,23 @@
 .diff-card.medium { border-color: rgba(245,158,11,0.3); }
 .diff-card.hard { border-color: rgba(220,38,38,0.3); }
 .diff-card.impossible { border-color: rgba(139,92,246,0.3); }
+.diff-card.custom { border-color: rgba(14,165,233,0.3); }
 .diff-card.easy:hover { border-color: #16a34a; }
 .diff-card.medium:hover { border-color: #f59e0b; }
 .diff-card.hard:hover { border-color: #dc2626; }
 .diff-card.impossible:hover { border-color: #8b5cf6; }
+.diff-card.custom:hover { border-color: #0ea5e9; }
+.diff-card.custom .diff-icon svg { color: #0ea5e9; }
+
+.diff-thumb-custom {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: #0ea5e9;
+  opacity: 0.85;
+}
 
 .diff-card .diff-best {
   font-size: 10px;

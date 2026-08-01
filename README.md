@@ -6,6 +6,7 @@ A fully dynamic Sudoku web app with multi-page menu flow, difficulty selection, 
 
 ### Gameplay
 - **4 Difficulty Levels** — Easy, Medium, Hard, Impossible (21–46 clue ranges)
+- **Custom Difficulty** — Build your own puzzle: pick a tier and clue range, then start a tailored game
 - **Pencil Marks** — Toggle notes mode to annotate candidates per cell
 - **Undo / Redo** — Full move history with keyboard shortcuts (Ctrl+Z / Ctrl+Shift+Z)
 - **Auto-Clear Notes** — Automatically remove pencil marks for a placed number across row, column, and box

@@ -1,6 +1,16 @@
 // ============================================================
 // 5. XP / Ranking System
 // ============================================================
+const TIER_DIFF_NAMES = { 1: 'easy', 2: 'medium', 3: 'hard', 4: 'impossible' };
+
+function resolveCustomDifficulty() {
+  if (state && state.difficulty === 'custom') {
+    const t = state._customTier || state._customOptions?.tier || 2;
+    return TIER_DIFF_NAMES[t] || 'medium';
+  }
+  return state && state.difficulty ? state.difficulty : 'easy';
+}
+
 const RANKS = [
   { name: 'Wood IV', xp: 0 },
   { name: 'Wood III', xp: 80 },

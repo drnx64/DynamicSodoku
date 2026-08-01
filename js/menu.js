@@ -381,7 +381,7 @@ function setupDialogs() {
     if (loadGame()) {
       state.isDaily = false;
       state.gameMode = state.isChallenge ? 'challenge' : 'normal';
-      document.getElementById('gameLabel').textContent = state.isChallenge ? 'Challenge' : capitalize(state.difficulty);
+      document.getElementById('gameLabel').textContent = state.isChallenge ? 'Challenge' : (state.difficulty === 'custom' ? 'Custom' : capitalize(state.difficulty));
       document.getElementById('winOverlay').classList.remove('open');
       const gameBadge = document.getElementById('gameLevelBadge');
       if (gameBadge) gameBadge.style.display = state.isChallenge ? 'none' : 'inline-flex';

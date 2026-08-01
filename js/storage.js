@@ -88,6 +88,8 @@ function saveGame() {
       _freeUndos: state._freeUndos || 0,
       _freeAuto: state._freeAuto || 0,
       _unlimitedHintsUntil: state._unlimitedHintsUntil || 0,
+      _customOptions: state._customOptions || null,
+      _customTier: state._customTier || null,
     };
     saveWithVault(LS.game, data, 'game');
     if (state.isDaily) saveDailyGame();
@@ -120,6 +122,8 @@ function loadGame() {
     state._freeUndos = data._freeUndos || 0;
     state._freeAuto = data._freeAuto || 0;
     state._unlimitedHintsUntil = data._unlimitedHintsUntil || 0;
+    state._customOptions = data._customOptions || null;
+    state._customTier = data._customTier || null;
     state.gameMode = data.isChallenge ? 'challenge' : (data.isDaily ? 'daily' : 'normal');
     
     state.completed = { rows: new Set(), cols: new Set(), boxes: new Set() };

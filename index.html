@@ -84,6 +84,7 @@
   <symbol id="ico-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 10h18M8 2v4M16 2v4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
   <symbol id="ico-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></symbol>
   <symbol id="ico-gear" viewBox="0 0 24 24"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="ico-sliders" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
   <symbol id="ico-chevron-right" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="ico-chevron-left" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="ico-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
@@ -315,6 +316,16 @@
         <div class="diff-best" id="diffBestImpossible">Best: --</div>
         <div class="diff-xp">~25 XP avg</div>
       </div>
+      <div class="diff-card custom" data-diff="custom">
+        <div class="diff-icon"><svg width="40" height="40" viewBox="0 0 24 24"><use href="#ico-gear"/></svg></div>
+        <div class="diff-thumb"><div class="diff-thumb-custom"><svg width="28" height="28" viewBox="0 0 24 24"><use href="#ico-sliders"/></svg></div></div>
+        <div class="diff-stars"><svg width="14" height="14" viewBox="0 0 24 24"><use href="#ico-star"/></svg><svg width="14" height="14" viewBox="0 0 24 24"><use href="#ico-star"/></svg><svg width="14" height="14" viewBox="0 0 24 24"><use href="#ico-star"/></svg><svg width="14" height="14" viewBox="0 0 24 24"><use href="#ico-star"/></svg><svg width="14" height="14" viewBox="0 0 24 24"><use href="#ico-star"/></svg></div>
+        <h3>Custom</h3>
+        <p>Your rules, your tier</p>
+        <div class="diff-clues">Pick clue range</div>
+        <div class="diff-best">Best: --</div>
+        <div class="diff-xp">XP varies</div>
+      </div>
   </div>
       <div class="countdown-section">
         <div class="countdown-label">Timer Mode</div>
@@ -445,6 +456,52 @@
   </div>
   <div id="archiveContent" class="archive-content"></div>
 </div>
+</div>
+
+<!-- ============ CUSTOM DIFFICULTY MODAL ============ -->
+<div class="modal-overlay" id="customDiffOverlay">
+  <div class="custom-diff-card">
+    <div class="custom-diff-header">
+      <div class="custom-diff-icon"><svg width="36" height="36" viewBox="0 0 24 24"><use href="#ico-sliders"/></svg></div>
+      <h2>Custom Difficulty</h2>
+      <p>Fine-tune your own puzzle before starting.</p>
+    </div>
+    <div class="custom-diff-body">
+      <div class="custom-diff-section">
+        <div class="custom-diff-label">Tier</div>
+        <div class="custom-tier-options" id="customTierOptions">
+          <label class="custom-tier-opt active" data-tier="1"><input type="radio" name="customTier" value="1" checked><span>Easy</span></label>
+          <label class="custom-tier-opt" data-tier="2"><input type="radio" name="customTier" value="2"><span>Medium</span></label>
+          <label class="custom-tier-opt" data-tier="3"><input type="radio" name="customTier" value="3"><span>Hard</span></label>
+          <label class="custom-tier-opt" data-tier="4"><input type="radio" name="customTier" value="4"><span>Impossible</span></label>
+        </div>
+      </div>
+      <div class="custom-diff-section">
+        <div class="custom-diff-label">Clue range <span class="custom-diff-hint">(lower = harder)</span></div>
+        <div class="custom-clue-row">
+          <div class="custom-clue-field">
+            <label for="customMinClues">Min</label>
+            <input type="number" id="customMinClues" min="17" max="46" value="24">
+          </div>
+          <span class="custom-clue-sep">&ndash;</span>
+          <div class="custom-clue-field">
+            <label for="customMaxClues">Max</label>
+            <input type="number" id="customMaxClues" min="17" max="46" value="36">
+          </div>
+        </div>
+        <div class="custom-clue-presets">
+          <button class="custom-clue-preset" data-min="40" data-max="46">Relaxed</button>
+          <button class="custom-clue-preset" data-min="32" data-max="39">Balanced</button>
+          <button class="custom-clue-preset" data-min="26" data-max="31">Tough</button>
+          <button class="custom-clue-preset" data-min="21" data-max="25">Brutal</button>
+        </div>
+      </div>
+    </div>
+    <div class="custom-diff-actions">
+      <button class="custom-diff-cancel" id="customDiffCancel"><svg width="16" height="16" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:6px"><use href="#ico-x"/></svg> Cancel</button>
+      <button class="custom-diff-start" id="customDiffStart"><svg width="16" height="16" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:6px"><use href="#ico-play"/></svg> Start Game</button>
+    </div>
+  </div>
 </div>
 
 <!-- ============ WIN MODAL ============ -->

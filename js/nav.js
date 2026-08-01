@@ -88,6 +88,95 @@ function updateDiffBestTimes() {
   });
 }
 
+function startNewGame(diff) {
+  log('[nav] startNewGame()', { diff });
+  state.difficulty = diff;
+  const sel = document.querySelector('#countdownOptions .countdown-option.active');
+  let cdTime = 0;
+  if (sel) {
+    if (sel.dataset.time === 'custom') {
+      const inp = document.getElementById('countdownCustomInput');
+      cdTime = (parseInt(inp?.value, 10) || 1) * 60;
+    } else {
+      cdTime = parseInt(sel.dataset.time, 10);
+    }
+  }
+  state.countdownMode = cdTime > 0;
+  state.countdownTime = cdTime;
+  initNewGame(diff, false);
+}
+
+let _customDiffWired = false;
+function wireCustomDiffModal() {
+  log('[nav] wireCustomDiffModal()');
+  if (_customDiffWired) return;
+  _customDiffWired = true;
+
+  const overlay = document.getElementById('customDiffOverlay');
+  const tierOpts = document.querySelectorAll('#customTierOptions .custom-tier-opt');
+  const minInput = document.getElementById('customMinClues');
+  const maxInput = document.getElementById('customMaxClues');
+  const cancel = document.getElementById('customDiffCancel');
+  const start = document.getElementById('customDiffStart');
+
+  if (overlay) {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) overlay.classList.remove('open');
+    });
+  }
+
+  tierOpts.forEach(opt => {
+    opt.addEventListener('click', () => {
+      tierOpts.forEach(o => o.classList.remove('active'));
+      opt.classList.add('active');
+      opt.querySelector('input').checked = true;
+    });
+  });
+
+  const presetBtns = document.querySelectorAll('.custom-clue-preset');
+  presetBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (minInput) minInput.value = btn.dataset.min;
+      if (maxInput) maxInput.value = btn.dataset.max;
+    });
+  });
+
+  if (cancel) cancel.addEventListener('click', () => overlay?.classList.remove('open'));
+  if (start) start.addEventListener('click', () => {
+    const activeTier = document.querySelector('#customTierOptions .custom-tier-opt.active');
+    const tier = activeTier ? parseInt(activeTier.dataset.tier, 10) || 1 : 1;
+    let min = parseInt(minInput?.value, 10) || 24;
+    let max = parseInt(maxInput?.value, 10) || 36;
+    min = Math.max(17, Math.min(46, min));
+    max = Math.max(17, Math.min(46, max));
+    if (min > max) { const t = min; min = max; max = t; }
+    state._customOptions = { tier, minClues: min, maxClues: max };
+    log('[nav] custom difficulty confirmed', state._customOptions);
+    overlay?.classList.remove('open');
+    startNewGame('custom');
+  });
+}
+
+function openCustomDiffModal() {
+  log('[nav] openCustomDiffModal()');
+  const overlay = document.getElementById('customDiffOverlay');
+  if (!overlay) return;
+  const last = state._customOptions;
+  if (last) {
+    const tierOpt = document.querySelector('#customTierOptions .custom-tier-opt[data-tier="' + last.tier + '"]');
+    if (tierOpt) {
+      document.querySelectorAll('#customTierOptions .custom-tier-opt').forEach(o => o.classList.remove('active'));
+      tierOpt.classList.add('active');
+      tierOpt.querySelector('input').checked = true;
+    }
+    const minInput = document.getElementById('customMinClues');
+    const maxInput = document.getElementById('customMaxClues');
+    if (minInput) minInput.value = last.minClues;
+    if (maxInput) maxInput.value = last.maxClues;
+  }
+  overlay.classList.add('open');
+}
+
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     document.querySelectorAll('.open').forEach(el => el.classList.remove('open'));
@@ -174,23 +263,16 @@ function setupNavigation() {
         const diff = card.dataset.diff;
         log('[nav] click: diffCard', { diff });
         if (!diff) { log('[nav] WARN: diff card missing data-diff'); return; }
-        state.difficulty = diff;
-        const sel = document.querySelector('#countdownOptions .countdown-option.active');
-        let cdTime = 0;
-        if (sel) {
-          if (sel.dataset.time === 'custom') {
-            const inp = document.getElementById('countdownCustomInput');
-            cdTime = (parseInt(inp?.value, 10) || 1) * 60;
-          } else {
-            cdTime = parseInt(sel.dataset.time, 10);
-          }
+        if (diff === 'custom') {
+          openCustomDiffModal();
+          return;
         }
-        state.countdownMode = cdTime > 0;
-        state.countdownTime = cdTime;
-        initNewGame(diff, false);
+        startNewGame(diff);
       });
     });
   } else { log('[nav] WARN: no .diff-card elements found'); }
+
+  wireCustomDiffModal();
 
   const dailyCard = document.getElementById('dailyCard');
   if (dailyCard) {

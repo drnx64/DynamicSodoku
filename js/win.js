@@ -24,7 +24,8 @@ function fireConfetti() {
 
 function showWinDialog() {
   log('[win] showWinDialog()');
-  const score = calcScore(state.difficulty, state.timer, state.mistakes, state.hintsUsed);
+  const baseDiff = resolveCustomDifficulty();
+  const score = calcScore(baseDiff, state.timer, state.mistakes, state.hintsUsed);
   const comboMult = Math.min(state.maxCombo || 0, 9) / 10;
   const comboBonus = Math.round(score * comboMult);
   let totalEarned = score + comboBonus;
@@ -36,6 +37,7 @@ function showWinDialog() {
   document.getElementById('winHints').textContent = String(state.hintsUsed);
 
   const diffNames = { easy: 'Easy', medium: 'Medium', hard: 'Hard', impossible: 'Impossible' };
+  const customLabel = state.difficulty === 'custom' ? 'Custom' : null;
 
   if (state.isDaily) {
     totalEarned += calcDailyBonus();
@@ -59,7 +61,7 @@ function showWinDialog() {
       document.getElementById('winSubtitle').textContent = targetName + ' beat you (' + formatTime(state.challengeTarget.time) + ')';
     }
   } else {
-    document.getElementById('winSubtitle').textContent = diffNames[state.difficulty] + ' puzzle solved!';
+    document.getElementById('winSubtitle').textContent = (customLabel || diffNames[baseDiff]) + ' puzzle solved!';
   }
 
   const levelInfo = document.getElementById('winLevelInfo');
@@ -67,7 +69,7 @@ function showWinDialog() {
   if (!state.isDaily && !state.isChallenge) {
     levelInfo.style.display = 'inline-block';
     levelNum.textContent = state.currentLevel;
-    const diff = state.difficulty;
+    const diff = baseDiff;
     if (state.currentLevel > stats.highestLevel) stats.highestLevel = state.currentLevel;
     if (state.currentLevel > (stats.highestLevelByDifficulty[diff] || 0)) stats.highestLevelByDifficulty[diff] = state.currentLevel;
     state.currentLevel++;
@@ -81,9 +83,9 @@ function showWinDialog() {
   stats._lastRankName = prevRank.name;
   stats.totalXp += totalEarned;
   stats.totalTime += state.timer;
-  stats.gamesByDifficulty[state.difficulty] = (stats.gamesByDifficulty[state.difficulty] || 0) + 1;
+  stats.gamesByDifficulty[baseDiff] = (stats.gamesByDifficulty[baseDiff] || 0) + 1;
   stats.totalMistakes = (stats.totalMistakes || 0) + state.mistakes;
-  if (state.timer < stats.bestTimes[state.difficulty]) stats.bestTimes[state.difficulty] = state.timer;
+  if (state.timer < stats.bestTimes[baseDiff]) stats.bestTimes[baseDiff] = state.timer;
   if (streak.count > stats.bestStreak) stats.bestStreak = streak.count;
   if (state.mistakes === 0) stats.flawlessCount = (stats.flawlessCount || 0) + 1;
   if (state.mistakes === 0) earnSecondChance();
@@ -149,8 +151,8 @@ function showWinDialog() {
   if (window.AscendokuChallenge) window.AscendokuChallenge.setupWinUI();
 
   clearGame();
-  checkAchievements(state.difficulty, state.mistakes, state.hintsUsed, state.notesUsed, totalEarned, state.settings.autoCandidates);
-  addScoreToLeaderboard(state.settings.playerName || 'Player', Math.round(totalEarned), state.difficulty);
+  checkAchievements(baseDiff, state.mistakes, state.hintsUsed, state.notesUsed, totalEarned, state.settings.autoCandidates);
+  addScoreToLeaderboard(state.settings.playerName || 'Player', Math.round(totalEarned), baseDiff);
   fireConfetti();
 
   function animateBar(from, to, dur, maxXp, onDone) {

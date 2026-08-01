@@ -1,7 +1,7 @@
 importScripts('engine.js', 'rng.js', 'generator.js');
 
 self.addEventListener('message', (e) => {
-  const { type, difficulty, seed, id } = e.data;
+  const { type, difficulty, seed, id, options } = e.data;
   if (type !== 'generate') return;
   const oldRandom = Math.random;
   if (seed) {
@@ -9,13 +9,14 @@ self.addEventListener('message', (e) => {
     Math.random = rng;
   }
   try {
-    const result = generatePuzzle(difficulty);
+    const result = generatePuzzle(difficulty, null, options || {});
     self.postMessage({
       type: 'result', id,
       difficulty,
       solution: result.solution,
       givens: result.givens,
-      board: result.board
+      board: result.board,
+      tier: result.tier
     });
   } catch (err) {
     self.postMessage({ type: 'error', id, error: err.message });

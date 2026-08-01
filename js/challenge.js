@@ -27,7 +27,7 @@
     var url = new URL(base);
     url.searchParams.set('challenge', '1');
     url.searchParams.set('cs', state._seed || state.challengeSeed || '');
-    url.searchParams.set('cd', state.difficulty);
+    url.searchParams.set('cd', resolveCustomDifficulty());
     url.searchParams.set('ct', String(Math.round(_lastWinTime || state.timer || 0)));
     var name = window.AscendokuReferral && window.AscendokuReferral.getDisplayName ? window.AscendokuReferral.getDisplayName() : 'Friend';
     url.searchParams.set('cn', name);

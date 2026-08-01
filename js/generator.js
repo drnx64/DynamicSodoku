@@ -4,19 +4,20 @@
 
 const DIFFICULTY_TIER_MAP = { easy: 1, medium: 2, hard: 3, impossible: 4 };
 
-function generatePuzzle(difficulty, rand) {
-  const targetTier = DIFFICULTY_TIER_MAP[difficulty];
+function generatePuzzle(difficulty, rand, options) {
+  const customTier = options && options.tier;
+  const targetTier = customTier || DIFFICULTY_TIER_MAP[difficulty];
   if (!targetTier) throw new Error('Unknown difficulty: ' + difficulty);
 
   const oldRandom = rand ? Math.random : null;
   if (rand) Math.random = rand;
 
   try {
-    const result = generateGamePuzzle(targetTier);
+    const result = generateGamePuzzle(targetTier, options || {});
     const solution = result.solution;
     const givens = solution.map((r, ri) => r.map((v, ci) => result.puzzle[ri][ci] !== 0));
     const board = result.puzzle.map(r => [...r]);
-    return { solution, givens, board };
+    return { solution, givens, board, tier: result.difficulty };
   } finally {
     if (oldRandom) Math.random = oldRandom;
   }
@@ -26,7 +27,7 @@ let _puzzleWorker = null;
 let _puzzleWorkerId = 0;
 const _puzzleCallbacks = {};
 
-function generatePuzzleAsync(difficulty, seed) {
+function generatePuzzleAsync(difficulty, seed, options) {
   return new Promise((resolve, reject) => {
     if (!_puzzleWorker) {
       try {
@@ -57,6 +58,6 @@ function generatePuzzleAsync(difficulty, seed) {
     }
     const id = ++_puzzleWorkerId;
     _puzzleCallbacks[id] = { resolve, reject };
-    _puzzleWorker.postMessage({ type: 'generate', difficulty, seed, id });
+    _puzzleWorker.postMessage({ type: 'generate', difficulty, seed, options: options || {}, id });
   });
 }
