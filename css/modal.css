@@ -115,7 +115,27 @@
   position: relative;
   overflow: hidden;
 }
-.win-card .win-icon { font-size: 48px; margin-bottom: 8px; }
+.win-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: linear-gradient(90deg, var(--accent), var(--xp-gold), var(--success));
+  opacity: 0.85;
+}
+.win-card .win-icon {
+  font-size: 48px;
+  margin-bottom: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(99,102,241,0.16), rgba(245,158,11,0.14));
+}
 .win-card h2 { font-size: 24px; margin-bottom: 4px; }
 .win-card .win-subtitle { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; }
 
@@ -125,6 +145,7 @@
   gap: 8px;
   margin-bottom: 16px;
 }
+
 .win-challenge {
   background: linear-gradient(135deg, rgba(124,92,252,0.12), rgba(37,99,235,0.08));
   border: 1px solid rgba(124,92,252,0.35);
@@ -161,19 +182,22 @@
 .win-stat {
   background: var(--btn-bg);
   border-radius: var(--radius-sm);
-  padding: 10px 8px;
+  padding: 12px 8px;
+  border: 1px solid transparent;
 }
-.win-stat .val { font-size: 18px; font-weight: 700; }
-.win-stat .lbl { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+.win-stat .val { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.win-stat .lbl { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 3px; }
 
 .win-xp {
   font-size: 14px;
   font-weight: 600;
   color: var(--xp-gold);
   margin-bottom: 16px;
-  padding: 8px;
-  background: rgba(245,158,11,0.1);
+  padding: 10px;
+  background: linear-gradient(135deg, rgba(245,158,11,0.12), rgba(245,158,11,0.05));
+  border: 1px solid rgba(245,158,11,0.2);
   border-radius: var(--radius-sm);
+  font-variant-numeric: tabular-nums;
 }
 .win-xp span { font-size: 22px; }
 
@@ -252,21 +276,36 @@
 
 .win-actions {
   display: flex;
+  flex-direction: column;
   gap: 8px;
-  justify-content: center;
+  margin-top: 4px;
+}
+.win-actions .win-primary {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 14px;
+  background: var(--btn-active);
+  color: var(--btn-active-text);
+}
+.win-actions .win-primary:hover { background: var(--btn-active-hover); }
+.win-actions-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+.win-actions-row button {
+  flex: 1;
+  padding: 10px 10px;
+  font-size: 12px;
 }
 .win-actions button {
-  flex: 1;
-  padding: 10px 16px;
-  font-size: 13px;
   font-weight: 600;
   border: none;
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: background 0.15s;
+  font-family: var(--font-body);
 }
-.win-actions .win-primary { background: var(--btn-active); color: var(--btn-active-text); }
-.win-actions .win-primary:hover { background: var(--btn-active-hover); }
 .win-actions .win-secondary { background: var(--btn-bg); color: var(--btn-text); }
 .win-actions .win-secondary:hover { background: var(--btn-hover); }
 .win-actions .win-tertiary { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
