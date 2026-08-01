@@ -3,6 +3,7 @@
   var NAME_KEY = 'sudoku_visitor_name';
   var NOTIFIED_KEY = 'sudoku_visited';
   var REFERRED_BY_KEY = 'sudoku_referred_by';
+  var SOURCE_KEY = 'sudoku_source';
 
   var NAMES = [
     'Mario','Angelica','Ael','Sam','Josh','Luna','Nova','Kai','Zara','Rex',
@@ -25,7 +26,11 @@
   function getVisitorId() {
     var id = localStorage.getItem(REFERRAL_KEY);
     if (!id) {
-      id = crypto.randomUUID();
+      id = (crypto.randomUUID && crypto.randomUUID()) ||
+        'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+          var r = Math.random() * 16 | 0;
+          return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+        });
       localStorage.setItem(REFERRAL_KEY, id);
     }
     return id;
@@ -83,11 +88,79 @@
     } catch (e) { return false; }
   }
 
+  function getUTMSource() {
+    var params = new URLSearchParams(window.location.search);
+    return params.get('utm_source') || null;
+  }
+
+  function detectReferrerSource() {
+    var ref = document.referrer;
+    if (!ref) return 'Direct';
+    try {
+      var host = new URL(ref).hostname.replace(/^www\./, '');
+      if (/facebook/.test(host)) return 'Facebook';
+      if (/instagram/.test(host)) return 'Instagram';
+      if (/t\.me|telegram/.test(host)) return 'Telegram';
+      if (/whatsapp/.test(host)) return 'WhatsApp';
+      if (/x\.com|twitter/.test(host)) return 'X (Twitter)';
+      if (/linkedin/.test(host)) return 'LinkedIn';
+      if (/youtube|youtu\.be/.test(host)) return 'YouTube';
+      if (/reddit/.test(host)) return 'Reddit';
+      if (/pinterest/.test(host)) return 'Pinterest';
+      if (/google|bing|yahoo|duckduckgo/.test(host)) return 'Search';
+      return host;
+    } catch (e) { return 'Direct'; }
+  }
+
+  function getArrivalSource() {
+    return getUTMSource() || detectReferrerSource();
+  }
+
+  function getFirstSource() {
+    try {
+      var stored = localStorage.getItem(SOURCE_KEY);
+      if (stored) return stored;
+    } catch (e) {}
+    var source = getArrivalSource();
+    try { localStorage.setItem(SOURCE_KEY, source); } catch (e) {}
+    return source;
+  }
+
+  function getDeviceInfo() {
+    var ua = navigator.userAgent;
+    var device = /iPad|Tablet|PlayBook/i.test(ua) ? 'Tablet'
+      : /Mobi|Android|iPhone/i.test(ua) ? 'Mobile' : 'Desktop';
+    var browser = 'Browser';
+    if (/Edg\//.test(ua)) browser = 'Edge';
+    else if (/OPR\/|Opera/.test(ua)) browser = 'Opera';
+    else if (/Firefox\//.test(ua)) browser = 'Firefox';
+    else if (/Chrome\//.test(ua)) browser = 'Chrome';
+    else if (/Safari\//.test(ua)) browser = 'Safari';
+    var os = 'OS';
+    if (/Windows/.test(ua)) os = 'Windows';
+    else if (/Mac OS/.test(ua)) os = 'macOS';
+    else if (/Android/.test(ua)) os = 'Android';
+    else if (/iPhone|iPad|iOS/.test(ua)) os = 'iOS';
+    else if (/Linux/.test(ua)) os = 'Linux';
+    return device + ' · ' + browser + ' · ' + os;
+  }
+
   function replaceRefInURL(visitorId, displayName) {
     var url = new URL(window.location.href);
     url.searchParams.set('ref', visitorId);
     url.searchParams.set('n', displayName);
     window.history.replaceState({}, '', url.toString());
+  }
+
+  function buildShareUrl(source) {
+    var url = new URL(window.location.href);
+    url.searchParams.set('ref', getVisitorId());
+    url.searchParams.set('n', getDisplayName());
+    if (source) {
+      url.searchParams.set('utm_source', source);
+      url.searchParams.set('utm_medium', 'social');
+    }
+    return url.toString();
   }
 
   if (isLikelyBot()) return;
@@ -96,18 +169,36 @@
   var referrerName = getRefNameFromURL();
   var visitorId = getVisitorId();
   var visitorName = getDisplayName();
+  var arrivalSource = getArrivalSource();
   var visited = localStorage.getItem(NOTIFIED_KEY);
 
   if (!visited) {
-    sendToDiscord('🆕 **' + sanitize(visitorName) + '** visited the site!');
+    var devInfo = getDeviceInfo();
+    var msg = '🆕 **' + sanitize(visitorName) + '** visited the site! (' + devInfo + ')';
+    if (arrivalSource && arrivalSource !== 'Direct') {
+      msg += ' via **' + sanitize(arrivalSource) + '**';
+    }
+    sendToDiscord(msg);
     try { localStorage.setItem(NOTIFIED_KEY, '1'); } catch (e) {}
+    getFirstSource();
   }
 
   if (referrerId && referrerId !== visitorId && !getReferredBy()) {
     var shownName = referrerName || referrerId;
-    sendToDiscord('🔗 **' + sanitize(shownName) + '** referred **' + sanitize(visitorName) + '**');
+    var refMsg = '🔗 **' + sanitize(shownName) + '** referred **' + sanitize(visitorName) + '**';
+    if (arrivalSource && arrivalSource !== 'Direct') {
+      refMsg += ' via **' + sanitize(arrivalSource) + '**';
+    }
+    sendToDiscord(refMsg);
     setReferredBy(referrerId);
+    getFirstSource();
   }
 
   replaceRefInURL(visitorId, visitorName);
+
+  window.AscendokuReferral = {
+    getShareUrl: buildShareUrl,
+    getVisitorId: getVisitorId,
+    getDisplayName: getDisplayName
+  };
 })();
