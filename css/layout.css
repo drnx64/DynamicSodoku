@@ -209,6 +209,21 @@
 }
 .data-btn:hover { background: var(--btn-hover); }
 
+.data-actions.cloud-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.cloud-actions .data-btn { width: 100%; padding: 9px 10px; }
+.cloud-save-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 10px 2px 2px;
+  line-height: 1.4;
+  text-align: left;
+}
+
 .game-level {
   display: inline-flex;
   align-items: center;

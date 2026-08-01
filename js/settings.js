@@ -288,21 +288,35 @@ function setupSettings() {
   dataSection.className = 'settings-section settings-section-tertiary';
   const dataHeader = document.createElement('div');
   dataHeader.className = 'settings-category-header';
-  dataHeader.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24"><use href="#ico-download"/></svg> Data';
+  dataHeader.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24"><use href="#ico-download"/></svg> Cloud Save';
   dataSection.appendChild(dataHeader);
   const dataRow = document.createElement('div');
-  dataRow.className = 'setting-row data-actions';
+  dataRow.className = 'setting-row data-actions cloud-actions';
   const exportBtn = document.createElement('button');
-  exportBtn.textContent = 'Export Data';
+  exportBtn.textContent = 'Export File';
   exportBtn.className = 'data-btn';
   exportBtn.addEventListener('click', () => { log('[settings] click: exportData'); exportData(); });
+  const copyBtn = document.createElement('button');
+  copyBtn.textContent = 'Copy Backup';
+  copyBtn.className = 'data-btn';
+  copyBtn.addEventListener('click', () => { log('[settings] click: copyBackup'); copyBackup(); });
   const importBtn = document.createElement('button');
-  importBtn.textContent = 'Import Data';
+  importBtn.textContent = 'Import File';
   importBtn.className = 'data-btn';
   importBtn.addEventListener('click', () => { log('[settings] click: importData'); importData(); });
+  const pasteBtn = document.createElement('button');
+  pasteBtn.textContent = 'Paste Backup';
+  pasteBtn.className = 'data-btn';
+  pasteBtn.addEventListener('click', () => { log('[settings] click: pasteBackup'); pasteBackup(); });
   dataRow.appendChild(exportBtn);
+  dataRow.appendChild(copyBtn);
   dataRow.appendChild(importBtn);
+  dataRow.appendChild(pasteBtn);
   dataSection.appendChild(dataRow);
+  const dataDesc = document.createElement('div');
+  dataDesc.className = 'cloud-save-desc';
+  dataDesc.textContent = 'Back up all progress, streaks, achievements and settings. Restore on any device.';
+  dataSection.appendChild(dataDesc);
   container.appendChild(dataSection);
 
   // Version & About section - tertiary
@@ -509,61 +523,177 @@ function setupGameSettings() {
   body.appendChild(soundRow);
 }
 
+const CLOUD_SAVE_PREFIX = 'sudoku_';
+const CLOUD_SAVE_VERSION = 1;
+
+function _collectCloudSave() {
+  const data = {};
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.indexOf(CLOUD_SAVE_PREFIX) === 0) {
+        data[key] = localStorage.getItem(key);
+      }
+    }
+  } catch(e) { log('[settings] cloud collect error', e); }
+  return data;
+}
+
+function _buildBackupPayload() {
+  return {
+    app: 'Ascendoku',
+    type: 'cloud-save',
+    version: CLOUD_SAVE_VERSION,
+    appVersion: APP_VERSION,
+    exportedAt: new Date().toISOString(),
+    data: _collectCloudSave(),
+  };
+}
+
+function _downloadBackup(payload) {
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'ascendoku-backup-' + todayStr() + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function _copyBackupText(payload) {
+  const text = JSON.stringify(payload);
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('Backup copied to clipboard!');
+    }).catch(() => {
+      _fallbackCopy(text);
+    });
+  } else {
+    _fallbackCopy(text);
+  }
+}
+
+function _fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); showToast('Backup copied to clipboard!'); }
+  catch(e) { showToast('Copy failed — use Export file instead'); }
+  document.body.removeChild(ta);
+}
+
 function exportData() {
   log('[settings] exportData()');
   try {
-    const data = { stats, streak, settings: state.settings, exportedAt: new Date().toISOString() };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'sudoku-backup-' + todayStr() + '.json';
-    a.click();
-    URL.revokeObjectURL(url);
-    log('[settings] data exported');
+    const payload = _buildBackupPayload();
+    const keyCount = Object.keys(payload.data).length;
+    _downloadBackup(payload);
+    showToast('Backup exported (' + keyCount + ' keys)');
+    log('[settings] data exported', { keyCount });
   } catch(e) { log('[settings] export failed', e); alert('Export failed: ' + e.message); }
+}
+
+function copyBackup() {
+  log('[settings] copyBackup()');
+  try {
+    const payload = _buildBackupPayload();
+    _copyBackupText(payload);
+  } catch(e) { log('[settings] copy backup failed', e); alert('Copy failed: ' + e.message); }
+}
+
+function _restoreCloudSave(data) {
+  const keys = Object.keys(data);
+  let restored = 0;
+  for (const key of keys) {
+    if (key.indexOf(CLOUD_SAVE_PREFIX) !== 0) {
+      log('[settings] import: skipping non-app key', { key });
+      continue;
+    }
+    if (typeof data[key] !== 'string') {
+      log('[settings] import: skipping non-string key', { key });
+      continue;
+    }
+    try {
+      localStorage.setItem(key, data[key]);
+      restored++;
+    } catch(e) { log('[settings] import: failed to set', { key, error: e }); }
+  }
+  return restored;
+}
+
+function _validateBackup(payload) {
+  if (!payload || typeof payload !== 'object') return 'Not a valid backup object';
+  if (payload.app !== 'Ascendoku' || payload.type !== 'cloud-save') return 'Not an Ascendoku cloud save';
+  if (!payload.data || typeof payload.data !== 'object') return 'Backup has no data';
+  return null;
+}
+
+function _reloadAppStateAfterImport() {
+  state.settings = Object.assign({}, DEFAULT_SETTINGS, loadWithVault(LS.settings, 'settings', state.settings));
+  applySettings();
+  stats = loadWithVault(LS.stats, 'stats', stats);
+  streak = loadWithVault(LS.streak, 'streak', streak);
+  bonusChallenge = loadWithVault(BONUS_KEY, 'bonus', bonusChallenge);
+  updateMenuUI();
+}
+
+function _applyImportedPayload(payload) {
+  const err = _validateBackup(payload);
+  if (err) { showToast(err); alert(err); return false; }
+  const restored = _restoreCloudSave(payload.data);
+  _reloadAppStateAfterImport();
+  showToast('Imported ' + restored + ' save entries');
+  log('[settings] import: applied', { restored });
+  return true;
 }
 
 function importData() {
   log('[settings] importData()');
   const input = document.createElement('input');
   input.type = 'file';
-  input.accept = '.json';
+  input.accept = '.json,application/json';
   input.addEventListener('change', () => {
     const file = input.files[0];
     if (!file) { log('[settings] import: no file selected'); return; }
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
-        const data = JSON.parse(e.target.result);
-        log('[settings] import: data parsed', { hasStats: !!data.stats, hasStreak: !!data.streak, hasSettings: !!data.settings });
-        if (data.stats) {
-          if (typeof data.stats.totalGames === 'number' && typeof data.stats.totalXp === 'number') {
-            stats = Object.assign({}, stats, data.stats);
-            saveStats();
-          } else { throw new Error('Invalid stats data'); }
-        }
-        if (data.streak) {
-          if (typeof data.streak.count === 'number') {
-            streak = Object.assign({}, streak, data.streak);
-            saveStreak();
-          } else { throw new Error('Invalid streak data'); }
-        }
-        if (data.settings) {
-          if (typeof data.settings === 'object') {
-            for (const key of Object.keys(data.settings)) {
-              if (key in DEFAULT_SETTINGS) state.settings[key] = data.settings[key];
-            }
-            saveSettings();
-            applySettings();
-          }
-        }
-        updateMenuUI();
-        showPage('page-menu');
-        alert('Data imported successfully!');
+        const payload = JSON.parse(e.target.result);
+        _applyImportedPayload(payload);
       } catch(err) { log('[settings] import parse error', err); alert('Import failed: ' + err.message); }
     };
     reader.readAsText(file);
   });
   input.click();
+}
+
+function pasteBackup() {
+  log('[settings] pasteBackup()');
+  if (navigator.clipboard && navigator.clipboard.readText) {
+    navigator.clipboard.readText().then(text => {
+      if (!text || !text.trim()) { showToast('Clipboard is empty'); return; }
+      try {
+        const payload = JSON.parse(text);
+        _applyImportedPayload(payload);
+      } catch(err) { log('[settings] paste parse error', err); alert('Invalid backup text: ' + err.message); }
+    }).catch(() => {
+      _promptPaste();
+    });
+  } else {
+    _promptPaste();
+  }
+}
+
+function _promptPaste() {
+  const text = prompt('Paste your Ascendoku backup JSON here:');
+  if (!text) return;
+  try {
+    const payload = JSON.parse(text);
+    _applyImportedPayload(payload);
+  } catch(err) { alert('Invalid backup text: ' + err.message); }
 }
