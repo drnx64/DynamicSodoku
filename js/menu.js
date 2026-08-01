@@ -98,7 +98,9 @@ function updateMenuUI() {
       continueCard.style.display = '';
       const diff = saved.difficulty || 'easy';
       const timer = saved.timer || 0;
-      if (continueSub) continueSub.textContent = 'Resume ' + capitalize(diff) + ' game \u2022 ' + formatTime(timer);
+      if (saved.isChallenge) {
+        if (continueSub) continueSub.textContent = 'Resume Challenge \u2022 ' + formatTime(timer);
+      } else if (continueSub) continueSub.textContent = 'Resume ' + capitalize(diff) + ' game \u2022 ' + formatTime(timer);
     } else {
       continueCard.style.display = 'none';
     }
@@ -368,11 +370,11 @@ function setupDialogs() {
     log('[menu] click: continueCard');
     if (loadGame()) {
       state.isDaily = false;
-      state.gameMode = 'normal';
-      document.getElementById('gameLabel').textContent = capitalize(state.difficulty);
+      state.gameMode = state.isChallenge ? 'challenge' : 'normal';
+      document.getElementById('gameLabel').textContent = state.isChallenge ? 'Challenge' : capitalize(state.difficulty);
       document.getElementById('winOverlay').classList.remove('open');
       const gameBadge = document.getElementById('gameLevelBadge');
-      if (gameBadge) gameBadge.style.display = 'inline-flex';
+      if (gameBadge) gameBadge.style.display = state.isChallenge ? 'none' : 'inline-flex';
       const numBadge = document.getElementById('gameLevelNum');
       if (numBadge) numBadge.textContent = state.currentLevel;
       updateUndoRedo();

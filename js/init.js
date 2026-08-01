@@ -25,6 +25,28 @@ function init() {
       clearGame();
     }
   }
+
+  const challenge = window.AscendokuChallenge ? AscendokuChallenge.parse() : null;
+  if (challenge) {
+    const resumeMatch = state.isChallenge && state.challengeSeed === challenge.seed && !state.won && !state.gameOver;
+    log('[init] challenge link detected', { challenge, resumeMatch });
+    if (!resumeMatch) { window.AscendokuChallenge.start(challenge); }
+    else {
+      document.getElementById('gameLabel').textContent = 'Challenge';
+      document.getElementById('winOverlay').classList.remove('open');
+      const gameBadge = document.getElementById('gameLevelBadge');
+      if (gameBadge) gameBadge.style.display = 'none';
+      updateUndoRedo();
+      requestRender({ entering: true });
+      if (state.timer > 0 && !state.won && !state.gameOver) startTimer();
+      showPage('page-game');
+    }
+    log('[init] init() complete (challenge)');
+    var sk = document.getElementById('skeleton');
+    if (sk) { sk.classList.add('hide'); setTimeout(function () { sk.style.display = 'none'; }, 500); }
+    return;
+  }
+
   showPage('page-menu');
   updateMenuUI();
   log('[init] init() complete');

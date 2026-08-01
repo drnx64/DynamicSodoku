@@ -78,6 +78,10 @@ function saveGame() {
       hintsRemaining: state.hintsRemaining,
       difficulty: state.difficulty, gameOver: state.gameOver, won: state.won,
       started: state.started, selectedCell: state.selectedCell, isDaily: state.isDaily,
+      isChallenge: state.isChallenge || false,
+      challengeSeed: state.challengeSeed || null,
+      challengeTarget: state.challengeTarget || null,
+      _seed: state._seed || null,
       notesUsed: state.notesUsed, currentLevel: state.currentLevel,
       countdownMode: state.countdownMode, countdownTime: state.countdownTime,
       secondChanceUsed: state.secondChanceUsed,
@@ -106,13 +110,17 @@ function loadGame() {
     state.gameOver = data.gameOver || false; state.won = data.won || false;
     state.started = data.started || false; state.selectedCell = data.selectedCell || null;
     state.isDaily = data.isDaily || false; state.notesUsed = data.notesUsed || false;
+    state.isChallenge = data.isChallenge || false;
+    state.challengeSeed = data.challengeSeed || null;
+    state.challengeTarget = data.challengeTarget || null;
+    state._seed = data._seed || null;
     state.currentLevel = data.currentLevel || 1;
     state.countdownMode = data.countdownMode || false; state.countdownTime = data.countdownTime || 0;
     state.secondChanceUsed = data.secondChanceUsed || false;
     state._freeUndos = data._freeUndos || 0;
     state._freeAuto = data._freeAuto || 0;
     state._unlimitedHintsUntil = data._unlimitedHintsUntil || 0;
-    state.gameMode = data.isDaily ? 'daily' : 'normal';
+    state.gameMode = data.isChallenge ? 'challenge' : (data.isDaily ? 'daily' : 'normal');
     
     state.completed = { rows: new Set(), cols: new Set(), boxes: new Set() };
     state.completedAnimated = { rows: new Set(), cols: new Set(), boxes: new Set() };

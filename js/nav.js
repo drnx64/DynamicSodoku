@@ -282,9 +282,9 @@ function setupNavigation() {
   const winNext = document.getElementById('winNext');
   if (winNext) {
     winNext.addEventListener('click', () => {
-      log('[nav] click: winNext', { isDaily: state.isDaily, nextLevel: state.currentLevel });
+      log('[nav] click: winNext', { isDaily: state.isDaily, isChallenge: state.isChallenge, nextLevel: state.currentLevel });
       document.getElementById('winOverlay').classList.remove('open');
-      if (state.isDaily) {
+      if (state.isDaily || state.isChallenge) {
         showPage('page-menu');
         updateMenuUI();
       } else {

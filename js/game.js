@@ -23,6 +23,7 @@ const state = {
   mistakes: 0, hintsUsed: 0, hintsRemaining: 3, started: false,
   difficulty: 'easy', gameOver: false, won: false,
   isDaily: false, gameMode: 'normal',
+  isChallenge: false, challengeSeed: null, challengeTarget: null,
   currentLevel: 1,
   notesUsed: false,
   combo: 0, maxCombo: 0,
@@ -35,6 +36,7 @@ const state = {
   _devMode: false,
   _unlimitedHintsUntil: 0,
   _archivedSeed: null,
+  _seed: null,
   completed: { rows: new Set(), cols: new Set(), boxes: new Set() },
   completedAnimated: { rows: new Set(), cols: new Set(), boxes: new Set() },
 };
@@ -515,7 +517,7 @@ state.completed = { rows: new Set(), cols: new Set(), boxes: new Set() };
   requestRender({ entering: true });
   saveGame();
   playSound('place');
-  if (!state.isDaily) showLevelAnimation(state.currentLevel);
+  if (!state.isDaily && !state.isChallenge) showLevelAnimation(state.currentLevel);
 }
 
 function showLevelAnimation(level) {
@@ -542,15 +544,18 @@ function formatTime(secs) {
   return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
 }
 
-function initNewGame(difficulty, isDaily, startLevel, seedDate) {
-  log('[game] initNewGame()', { difficulty, isDaily, startLevel, seedDate });
+function initNewGame(difficulty, isDaily, startLevel, seedDate, challengeData) {
+  log('[game] initNewGame()', { difficulty, isDaily, startLevel, seedDate, challengeData });
   document.getElementById('page-game')?.classList.remove('paused');
   document.getElementById('pauseOverlay')?.classList.remove('open');
   document.getElementById('timerWrap')?.classList.remove('paused');
   if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
   state.difficulty = difficulty || 'easy';
   state.isDaily = !!isDaily;
-  state.gameMode = isDaily ? 'daily' : 'normal';
+  state.isChallenge = !!challengeData;
+  state.challengeSeed = challengeData ? challengeData.seed : null;
+  state.challengeTarget = challengeData ? { name: challengeData.name, time: challengeData.time } : null;
+  state.gameMode = isDaily ? 'daily' : (challengeData ? 'challenge' : 'normal');
   state.currentLevel = startLevel || loadLevelProgress(difficulty) || 1;
 
   const boardEl = document.getElementById('board');
@@ -575,10 +580,10 @@ function initNewGame(difficulty, isDaily, startLevel, seedDate) {
     return;
   }
 
-  if (!isDaily) {
+  if (!isDaily && !challengeData) {
     const saved = loadWithVault(LS.game, 'game', null);
     if (saved) {
-      if (saved.difficulty === difficulty && !saved.won && !saved.gameOver && saved.mistakes < 3) {
+      if (saved.difficulty === difficulty && !saved.won && !saved.gameOver && saved.mistakes < 3 && !saved.isChallenge) {
         log('[game] restoring saved game', { difficulty, mistakes: saved.mistakes });
         loadGame();
         state.isDaily = false;
@@ -606,12 +611,13 @@ function initNewGame(difficulty, isDaily, startLevel, seedDate) {
 
   const seed = isDaily
     ? (seedDate || (new Date().getFullYear() + '-' + String(new Date().getMonth()+1).padStart(2,'0') + '-' + String(new Date().getDate()).padStart(2,'0')))
-    : null;
+    : (challengeData ? challengeData.seed : ('r' + Math.random().toString(36).slice(2) + Date.now().toString(36)));
   if (seed) state._archivedSeed = seedDate || null;
+  state._seed = seed;
 
   const genPromise = isDaily
     ? generatePuzzleAsync('medium', seed)
-    : generatePuzzleAsync(state.difficulty);
+    : generatePuzzleAsync(state.difficulty, seed);
 
   genPromise.then(puzzle => {
     if (!puzzle || !puzzle.solution) {
@@ -643,10 +649,10 @@ state.completed = { rows: new Set(), cols: new Set(), boxes: new Set() };
   state.completedAnimated = { rows: new Set(), cols: new Set(), boxes: new Set() };
     document.getElementById('timer').textContent = formatTime(state.countdownMode ? state.countdownTime : 0);
     document.getElementById('mistakes').textContent = '0';
-    document.getElementById('gameLabel').textContent = state.isDaily ? (state._archivedSeed ? 'Archive ' + state._archivedSeed : 'Daily Challenge') : capitalize(state.difficulty);
+    document.getElementById('gameLabel').textContent = state.isDaily ? (state._archivedSeed ? 'Archive ' + state._archivedSeed : 'Daily Challenge') : (state.isChallenge ? 'Challenge' : capitalize(state.difficulty));
     document.getElementById('winOverlay').classList.remove('open');
     const gameBadge = document.getElementById('gameLevelBadge');
-    if (gameBadge) gameBadge.style.display = state.isDaily ? 'none' : 'inline-flex';
+    if (gameBadge) gameBadge.style.display = state.isDaily || state.isChallenge ? 'none' : 'inline-flex';
     const numBadge = document.getElementById('gameLevelNum');
     if (numBadge) numBadge.textContent = state.currentLevel;
     updateUndoRedo();
@@ -683,7 +689,7 @@ state.completed = { rows: new Set(), cols: new Set(), boxes: new Set() };
   });
 
   if (levelNum) levelNum.textContent = state.currentLevel;
-  if (!state.isDaily && levelOverlay) levelOverlay.classList.add('open');
+  if (!state.isDaily && !state.isChallenge && levelOverlay) levelOverlay.classList.add('open');
 }
 
 function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }

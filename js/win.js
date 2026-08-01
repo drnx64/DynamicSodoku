@@ -49,13 +49,22 @@ function showWinDialog() {
     }
     document.getElementById('winSubtitle').textContent = 'Daily Challenge completed!';
     updateStreak();
+  } else if (state.isChallenge && state.challengeTarget) {
+    const targetName = state.challengeTarget.name || 'Friend';
+    if (!state.challengeTarget.time) {
+      document.getElementById('winSubtitle').textContent = 'Challenge complete!';
+    } else if (state.timer < state.challengeTarget.time) {
+      document.getElementById('winSubtitle').textContent = 'You beat ' + targetName + '!';
+    } else {
+      document.getElementById('winSubtitle').textContent = targetName + ' beat you (' + formatTime(state.challengeTarget.time) + ')';
+    }
   } else {
     document.getElementById('winSubtitle').textContent = diffNames[state.difficulty] + ' puzzle solved!';
   }
 
   const levelInfo = document.getElementById('winLevelInfo');
   const levelNum = document.getElementById('winLevelNum');
-  if (!state.isDaily) {
+  if (!state.isDaily && !state.isChallenge) {
     levelInfo.style.display = 'inline-block';
     levelNum.textContent = state.currentLevel;
     const diff = state.difficulty;
@@ -131,11 +140,13 @@ function showWinDialog() {
   }
 
   const nextBtn = document.getElementById('winNext');
-  if (!state.isDaily) {
+  if (!state.isDaily && !state.isChallenge) {
     nextBtn.textContent = 'Next Level';
   } else {
     nextBtn.textContent = 'Back to Menu';
   }
+
+  if (window.AscendokuChallenge) window.AscendokuChallenge.setupWinUI();
 
   clearGame();
   checkAchievements(state.difficulty, state.mistakes, state.hintsUsed, state.notesUsed, totalEarned, state.settings.autoCandidates);

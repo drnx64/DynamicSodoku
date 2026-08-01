@@ -125,6 +125,39 @@
   gap: 8px;
   margin-bottom: 16px;
 }
+.win-challenge {
+  background: linear-gradient(135deg, rgba(124,92,252,0.12), rgba(37,99,235,0.08));
+  border: 1px solid rgba(124,92,252,0.35);
+  border-radius: var(--radius-sm);
+  padding: 12px 12px 14px;
+  margin-bottom: 16px;
+}
+.win-challenge-times {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.win-challenge-times b { color: var(--text); font-size: 15px; }
+.win-ch-t { white-space: nowrap; }
+.win-ch-vs { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
+.win-challenge-result { font-size: 13px; line-height: 1.4; color: var(--text); margin-bottom: 10px; }
+.win-challenge-back {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  background: var(--btn-active);
+  color: var(--btn-active-text);
+}
+.win-challenge-back:hover { opacity: 0.9; }
 .win-stat {
   background: var(--btn-bg);
   border-radius: var(--radius-sm);
