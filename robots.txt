@@ -1,3 +1,4 @@
 User-agent: *
 Allow: /
-Sitemap: https://drnx64.github.io/DynamicSodoku/sitemap.xml
+
+Sitemap: https://ascendoku-classic.vercel.app/sitemap.xml

@@ -1,12 +1,16 @@
 {
-  "name": "Ascendoku",
+  "id": "/",
+  "name": "Ascendoku — Free Online Sudoku",
   "short_name": "Ascendoku",
   "description": "Climb the ranks with dynamic Sudoku puzzles, XP, combos, and themes",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#0f0f1a",
   "theme_color": "#7c5cfc",
   "orientation": "portrait",
+  "categories": ["games", "puzzle", "entertainment"],
+  "lang": "en",
   "icons": [
     {
       "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='192' height='192' viewBox='0 0 24 24'%3E%3Crect x='2' y='2' width='20' height='20' rx='3' fill='%237c5cfc'/%3E%3Ctext x='12' y='18' text-anchor='middle' font-size='14' font-weight='bold' fill='white' font-family='sans-serif'%3ES%3C/text%3E%3C/svg%3E",

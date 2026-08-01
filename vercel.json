@@ -1,0 +1,20 @@
+{
+  "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=2592000, immutable" }]
+    },
+    {
+      "source": "/css/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400" }]
+    },
+    {
+      "source": "/js/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400" }]
+    },
+    {
+      "source": "/sitemap.xml",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=3600" }]
+    }
+  ]
+}
