@@ -216,7 +216,7 @@ function giveHint() {
   if (state.gameOver) { log('[game] giveHint: blocked - game over'); return; }
   if (state.won) { log('[game] giveHint: blocked - already won'); return; }
   const unlimited = Date.now() < state._unlimitedHintsUntil;
-  if (state.hintsRemaining <= 0 && !unlimited) {
+  if (state.hintsRemaining <= 0 && !unlimited && (stats._freeHints || 0) <= 0) {
     showHintShopModal();
     return;
   }
@@ -232,7 +232,11 @@ function giveHint() {
   state.notes[row][col] = new Set();
   pushHistory('hint', row, col, prevVal, correctVal, prevNotes, []);
   if (!unlimited) {
-    if ((bonusChallenge.bonusHints || 0) > 0) {
+    if ((stats._freeHints || 0) > 0) {
+      stats._freeHints--;
+      saveStats();
+      log('[game] giveHint: used free hint', { remaining: stats._freeHints });
+    } else if ((bonusChallenge.bonusHints || 0) > 0) {
       bonusChallenge.bonusHints--;
       saveBonus();
       log('[game] giveHint: used bonus hint', { remaining: bonusChallenge.bonusHints });

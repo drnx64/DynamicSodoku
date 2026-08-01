@@ -12,6 +12,17 @@ function init() {
   loadBonus();
   checkStreak();
 
+  if (window.AscendokuReferral && window.AscendokuReferral.claimReferralReward) {
+    const reward = window.AscendokuReferral.claimReferralReward();
+    if (reward) {
+      log('[init] referral reward claimed', reward);
+      stats.totalXp = (stats.totalXp || 0) + reward.xp;
+      stats._freeHints = (stats._freeHints || 0) + reward.hints;
+      saveStats();
+      showToast('Referral bonus: +' + reward.xp + ' XP and a free hint!');
+    }
+  }
+
   setupSettings();
   setupInput();
   setupNavigation();

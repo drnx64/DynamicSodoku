@@ -4,6 +4,8 @@
   var NOTIFIED_KEY = 'sudoku_visited';
   var REFERRED_BY_KEY = 'sudoku_referred_by';
   var SOURCE_KEY = 'sudoku_source';
+  var REWARD_PENDING_KEY = 'sudoku_referral_reward_pending';
+  var REWARD_CLAIMED_KEY = 'sudoku_referral_reward_claimed';
 
   var NAMES = [
     'Mario','Angelica','Ael','Sam','Josh','Luna','Nova','Kai','Zara','Rex',
@@ -192,6 +194,19 @@
     sendToDiscord(refMsg);
     setReferredBy(referrerId);
     getFirstSource();
+    try {
+      if (!localStorage.getItem(REWARD_CLAIMED_KEY)) localStorage.setItem(REWARD_PENDING_KEY, '1');
+    } catch (e) {}
+  }
+
+  function claimReferralReward() {
+    try {
+      if (localStorage.getItem(REWARD_CLAIMED_KEY)) return null;
+      if (!localStorage.getItem(REWARD_PENDING_KEY)) return null;
+      localStorage.setItem(REWARD_CLAIMED_KEY, '1');
+      localStorage.removeItem(REWARD_PENDING_KEY);
+      return { xp: 50, hints: 1 };
+    } catch (e) { return null; }
   }
 
   replaceRefInURL(visitorId, visitorName);
@@ -199,6 +214,7 @@
   window.AscendokuReferral = {
     getShareUrl: buildShareUrl,
     getVisitorId: getVisitorId,
-    getDisplayName: getDisplayName
+    getDisplayName: getDisplayName,
+    claimReferralReward: claimReferralReward
   };
 })();

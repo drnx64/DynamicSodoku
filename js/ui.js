@@ -263,9 +263,9 @@ function updateUndoRedo() {
     if (!hintBadge) { hintBadge = document.createElement('span'); hintBadge.className = 'action-badge'; hint.appendChild(hintBadge); }
     hintBadge.textContent = '\u221E';
     hintBadge.style.display = '';
-  } else if (state.hintsRemaining > 0) {
+  } else if (state.hintsRemaining > 0 || (stats._freeHints || 0) > 0) {
     if (!hintBadge) { hintBadge = document.createElement('span'); hintBadge.className = 'action-badge'; hint.appendChild(hintBadge); }
-    hintBadge.textContent = state.hintsRemaining;
+    hintBadge.textContent = (state.hintsRemaining + (stats._freeHints || 0));
     hintBadge.style.display = '';
   } else if (hintBadge) { hintBadge.style.display = 'none'; }
 }

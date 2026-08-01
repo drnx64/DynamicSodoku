@@ -693,6 +693,7 @@ let stats = {
   totalNotesPlaced: 0,
   totalHintsUsedAll: 0,
   totalUndosUsed: 0,
+  _freeHints: 0,
   dailyArchive: [],
   highestLevel: 1,
   highestLevelByDifficulty: { easy: 0, medium: 0, hard: 0, impossible: 0 },
