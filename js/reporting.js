@@ -7,19 +7,44 @@ var WEBHOOK_URL = (function () {
 function reportError(context, err) {
   if (!WEBHOOK_URL) return;
   const breadcrumbs = getBreadcrumbs().slice(-20).map(c => c.type + ': ' + c.data).join('\n');
+  const lines = [];
+  lines.push('### Context');
+  lines.push(context || 'Unknown');
+  lines.push('');
+  lines.push('### Message');
+  lines.push(err?.message || String(err || 'Unknown'));
+  lines.push('');
+  lines.push('### Stack');
+  lines.push(err?.stack || 'N/A');
+  lines.push('');
+  lines.push('### Breadcrumbs');
+  lines.push(breadcrumbs || 'None');
+  lines.push('');
+  lines.push('### URL');
+  lines.push(location.href);
+  lines.push('');
+  lines.push('### User Agent');
+  lines.push(navigator.userAgent);
+  const body = lines.join('\n');
+
+  const MAX_FIELD = 1000;
+  const chunks = [];
+  for (let i = 0; i < body.length; i += MAX_FIELD) {
+    chunks.push('```\n' + body.slice(i, i + MAX_FIELD) + '\n```');
+  }
+
+  const fields = chunks.map((value, i) => ({
+    name: chunks.length > 1 ? 'Report (part ' + (i + 1) + '/' + chunks.length + ')' : 'Report',
+    value: value,
+    inline: false,
+  }));
+
   const payload = {
     content: null,
     embeds: [{
       title: 'Ascendoku Error Report',
       color: 0xef4444,
-      fields: [
-        { name: 'Context', value: (context || '').slice(0, 256), inline: true },
-        { name: 'Message', value: '```\n' + (err?.message || String(err || 'Unknown')).slice(0, 980) + '\n```', inline: false },
-        { name: 'Stack', value: '```js\n' + (err?.stack || 'N/A').slice(0, 980) + '\n```', inline: false },
-        { name: 'Breadcrumbs', value: '```\n' + (breadcrumbs.slice(0, 980) || 'None') + '\n```', inline: false },
-        { name: 'URL', value: location.href.slice(0, 256), inline: true },
-        { name: 'User Agent', value: navigator.userAgent.slice(0, 200), inline: true },
-      ],
+      fields: fields,
       timestamp: new Date().toISOString(),
     }],
   };

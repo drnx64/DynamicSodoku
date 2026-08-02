@@ -122,7 +122,7 @@ function render(opts) {
       const cls = ['cell'];
 
       if (opts.entering) {
-        if (!state.settings.reducedAnimations) {
+        if (!state.settings.reducedAnimations && !document.documentElement.classList.contains('low-power')) {
           cls.push('entering');
           cell.style.animationDelay = ((r * n + c) * 12) + 'ms';
         } else {

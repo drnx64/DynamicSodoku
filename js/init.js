@@ -1,6 +1,21 @@
 // ============================================================
 // 15. Initialization
 // ============================================================
+function detectLowPower() {
+  try {
+    const ua = navigator.userAgent;
+    const isMobile = /Android|iPhone|iPad|iPod|Mobile|Opera Mini|Silk/i.test(ua);
+    const cores = navigator.hardwareConcurrency || 4;
+    const mem = navigator.deviceMemory || 4;
+    const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reducedMotion || (isMobile && (cores <= 4 || mem <= 4))) {
+      document.documentElement.classList.add('low-power');
+      log('[init] low-power mode enabled', { isMobile, cores, mem, reducedMotion });
+    }
+  } catch (e) { log('[init] low-power detection failed', e); }
+}
+detectLowPower();
+
 function init() {
   log('[init] init() starting');
   loadSettings();

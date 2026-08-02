@@ -306,6 +306,34 @@ textarea:focus-visible,
   }
 }
 
+html.low-power .confetti-piece,
+html.low-power .cell.entering,
+html.low-power .cell.shake,
+html.low-power .cell.pop,
+html.low-power .confetti-container,
+html.low-power .float-star,
+html.low-power .deco-star4-1,
+html.low-power .deco-star4-2,
+html.low-power .deco-star4-3,
+html.low-power .deco-star4-4,
+html.low-power .deco-star4-5,
+html.low-power .deco-star4-6 {
+  animation: none !important;
+}
+html.low-power .rankup-card,
+html.low-power .bonus-card,
+html.low-power .achievement-popup,
+html.low-power .streak-popup,
+html.low-power .toast {
+  animation-duration: 0.01ms !important;
+}
+html.low-power .menu-card,
+html.low-power .diff-card,
+html.low-power .rank-card,
+html.low-power .daily-toast {
+  transition-duration: 0.01ms !important;
+}
+
 .dev-links { display:flex; flex-direction:column; gap:8px; padding:8px 0 4px; }
 .dev-link {
   display:flex; align-items:center; gap:8px; padding:8px 12px;
