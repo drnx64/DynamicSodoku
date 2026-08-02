@@ -13,6 +13,8 @@ function _buildCells(boardEl) {
       cell.className = 'cell';
       cell.dataset.row = r;
       cell.dataset.col = c;
+      cell.setAttribute('tabindex', '0');
+      cell.setAttribute('role', 'gridcell');
 
       const vs = document.createElement('span');
       vs.className = 'cell-value';
@@ -28,6 +30,19 @@ function _buildCells(boardEl) {
       cell.appendChild(ng);
 
       cell.addEventListener('click', () => selectCell(r, c));
+      cell.addEventListener('keydown', (e) => {
+        const n = state.size || 9;
+        let handled = true;
+        switch (e.key) {
+          case 'ArrowUp': selectCell(Math.max(0, r - 1), c); break;
+          case 'ArrowDown': selectCell(Math.min(n - 1, r + 1), c); break;
+          case 'ArrowLeft': selectCell(r, Math.max(0, c - 1)); break;
+          case 'ArrowRight': selectCell(r, Math.min(n - 1, c + 1)); break;
+          case 'Enter': case ' ': selectCell(r, c); break;
+          default: handled = false;
+        }
+        if (handled) e.preventDefault();
+      });
       frag.appendChild(cell);
       _cellRefs[r][c] = cell;
     }
@@ -234,6 +249,7 @@ function selectCell(row, col) {
   state._lastMistakeCell = null;
   requestRender();
   saveGame();
+  if (_cellRefs && _cellRefs[row] && _cellRefs[row][col]) _cellRefs[row][col].focus({ preventScroll: true });
 }
 
 function updateNumPad() {
@@ -283,12 +299,14 @@ function updateNotesBtn() {
 
 function updateUndoRedo() {
   const undo = document.getElementById('undoBtn');
+  const redo = document.getElementById('redoBtn');
   const hint = document.getElementById('hintBtn');
   const erase = document.getElementById('eraseBtn');
   if (!undo || !hint) return;
   const undoCount = state.historyIdx + 1;
 
   undo.disabled = state.historyIdx < 0;
+  if (redo) redo.disabled = state.historyIdx >= state.history.length - 1;
 
   if (erase) {
     const sc = state.selectedCell;
@@ -395,6 +413,8 @@ function setupInput() {
 
   const undoBtn = document.getElementById('undoBtn');
   if (undoBtn) undoBtn.addEventListener('click', () => { log('[ui] click: undoBtn'); undo(); });
+  const redoBtn = document.getElementById('redoBtn');
+  if (redoBtn) redoBtn.addEventListener('click', () => { log('[ui] click: redoBtn'); redo(); });
   const eraseBtn = document.getElementById('eraseBtn');
   if (eraseBtn) eraseBtn.addEventListener('click', () => {
     log('[ui] click: eraseBtn');

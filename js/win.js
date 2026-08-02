@@ -84,6 +84,7 @@ function showWinDialog() {
   stats.totalXp += totalEarned;
   stats.totalTime += state.timer;
   stats.gamesByDifficulty[baseDiff] = (stats.gamesByDifficulty[baseDiff] || 0) + 1;
+  stats.lastDifficulty = baseDiff;
   stats.totalMistakes = (stats.totalMistakes || 0) + state.mistakes;
   if (state.timer < stats.bestTimes[baseDiff]) stats.bestTimes[baseDiff] = state.timer;
   if (streak.count > stats.bestStreak) stats.bestStreak = streak.count;

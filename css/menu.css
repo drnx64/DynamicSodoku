@@ -464,7 +464,7 @@
   overflow: hidden;
 }
 .diff-thumb-cell {
-  background: var(--cell-bg);
+  background: var(--card-bg);
   aspect-ratio: 1;
 }
 .diff-thumb-cell.filled {

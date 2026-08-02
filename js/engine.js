@@ -2,9 +2,9 @@
  * SUDOKU ENGINE — CORE UTILITIES
  * ========================================================================== */
 
-const DEBUG = true;
+const DEBUG = false;
 function log(...args) {
-  console.log('[engine]', ...args);
+  if (DEBUG) console.log('[engine]', ...args);
 }
 
 const GRID = { size: 9, boxH: 3, boxW: 3 };

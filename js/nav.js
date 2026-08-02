@@ -223,6 +223,7 @@ function setupNavigation() {
     gameAnalyzeBtn.addEventListener('click', () => {
       log('[nav] click: gameAnalyzeBtn');
       if (!state.started || state.won || state.gameOver) { showToast('Start a game first!'); return; }
+      if ((state.size || 9) !== 9) { showToast('Analyzer is for 9\u00d79 boards'); return; }
       if (!state._analyzerUnlocked) {
         showAnalyzerUnlock();
       } else {

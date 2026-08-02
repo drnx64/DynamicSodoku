@@ -187,6 +187,51 @@ function escapeHtml(s) {
   return d.innerHTML;
 }
 
+function showDailyLeaderboard() {
+  log('[leaderboard] showDailyLeaderboard()');
+  const overlay = document.getElementById('dailyLeaderboardOverlay');
+  const content = document.getElementById('dailyLeaderboardContent');
+  if (!overlay || !content) { log('[leaderboard] WARN: daily leaderboard elements not found'); return; }
+
+  const today = todayStr();
+  const allEntries = getLeaderboard();
+  const userEntry = getUserEntry();
+  userEntry.date = today;
+
+  let entries = allEntries.filter(e => e.date === today);
+  if (entries.length === 0 && (stats.dailyArchive || []).includes(today)) {
+    entries.push(userEntry);
+  } else if ((stats.totalGames || 0) > 0 && !entries.some(e => e.isMe)) {
+    entries.push(userEntry);
+  }
+  entries.sort((a, b) => (b.score || 0) - (a.score || 0) || (b.xp || 0) - (a.xp || 0));
+  const top = entries.slice(0, 20);
+  const userRank = top.findIndex(e => e.isMe) + 1;
+
+  let html = '<div class="daily-lb-header">' + today + ' \u00b7 fastest solves ranked by score'
+    + (userRank > 0 ? ' \u00b7 you are #' + userRank : '') + '</div>';
+
+  if (top.length === 0) {
+    html += '<div class="daily-lb-empty">No daily solves yet. Finish today\u2019s Daily Challenge to appear here!</div>';
+  } else {
+    html += '<div class="daily-lb-list">';
+    top.forEach((e, i) => {
+      const medal = i === 0 ? '\ud83e\udd47' : i === 1 ? '\ud83e\udd48' : i === 2 ? '\ud83e\udd49' : (i + 1);
+      const name = (e.isMe ? '\u2605 ' : '') + escapeHtml(e.name || 'Anonymous');
+      const scoreLabel = (e.score || 0) + ' pts';
+      html += '<div class="daily-lb-entry' + (e.isMe ? ' is-me' : '') + '">'
+        + '<div class="daily-lb-rank">' + medal + '</div>'
+        + '<div class="daily-lb-name">' + name + '</div>'
+        + '<div class="daily-lb-time">' + scoreLabel + '</div>'
+        + '</div>';
+    });
+    html += '</div>';
+  }
+
+  content.innerHTML = html;
+  overlay.classList.add('open');
+}
+
 function shareLeaderboard() {
   log('[leaderboard] shareLeaderboard()');
   const board = getLeaderboard();

@@ -55,13 +55,6 @@ const RANKS = [
 const RANK_BASE = RANKS[RANKS.length - 1];
 const DYNAMIC_RATIO = 1.15;
 
-function toRoman(n) {
-  const vals = [[1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],[50,'L'],[40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']];
-  let s = '';
-  for (const [v, r] of vals) { while (n >= v) { s += r; n -= v; } }
-  return s;
-}
-
 function getDynamicRankByIndex(idx) {
   const xp = Math.round(RANK_BASE.xp * Math.pow(DYNAMIC_RATIO, idx));
   const numeral = toRoman(idx + 1);

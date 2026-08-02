@@ -88,6 +88,24 @@ function undo() {
   saveGame();
 }
 
+function redo() {
+  log('[game] redo() called', { historyIdx: state.historyIdx, historyLen: state.history.length, gameOver: state.gameOver, won: state.won });
+  if (state.historyIdx >= state.history.length - 1) { log('[game] redo: nothing to redo'); return; }
+  if (state.gameOver) { log('[game] redo: game over'); return; }
+  if (state.won) { log('[game] redo: already won'); return; }
+  state.historyIdx++;
+  const move = state.history[state.historyIdx];
+  const { row, col, newVal, newNotes, type } = move;
+  log('[game] redo: applying', { row, col, newVal, moveType: type });
+  state.board[row][col] = newVal;
+  state.notes[row][col] = new Set(newNotes);
+  if (type === 'mistake') state.mistakes++;
+  if (type === 'clear') state._lastMistakeCell = null;
+  updateUndoRedo();
+  requestRender();
+  saveGame();
+}
+
 function placeNumber(row, col, num) {
   log('[game] placeNumber()', { row, col, num, gameOver: state.gameOver, won: state.won, hasSelectedCell: !!state.selectedCell });
   if (state.gameOver) { log('[game] placeNumber: blocked - game over'); return; }

@@ -848,7 +848,7 @@ function showStatsCard() {
       '<div class="stat-card-row"><span class="stat-label">Puzzles Solved</span><span class="stat-value">' + (stats.totalGames || 0) + '</span></div>' +
       '<div class="stat-card-row"><span class="stat-label">Best Time</span><span class="stat-value">' + formatTime(getBestTime()) + '</span></div>' +
       '<div class="stat-card-row"><span class="stat-label">Total Mistakes</span><span class="stat-value">' + (stats.totalMistakes || 0) + '</span></div>' +
-      '<div class="stat-card-row"><span class="stat-label">Hints Used</span><span class="stat-value">' + (stats.totalHintsUsed || 0) + '</span></div>' +
+      '<div class="stat-card-row"><span class="stat-label">Hints Used</span><span class="stat-value">' + (stats.totalHintsUsedAll || 0) + '</span></div>' +
       '<div class="stat-card-row"><span class="stat-label">Streak</span><span class="stat-value">' + (streak.count || 0) + ' days</span></div>' +
     '</div>' +
     '<div class="stat-card-footer">Play at: ' + window.location.href.split('?')[0] + '</div>' +
