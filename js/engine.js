@@ -1526,8 +1526,15 @@ const SMALL_TIER_CLUE_RANGES = {
   4: [12, 16],
 };
 
+const CLUE_RANGES_9X9 = {
+  1: [33, 37],
+  2: [29, 33],
+  3: [25, 29],
+  4: [22, 26],
+};
+
 function generateGamePuzzle(targetDifficulty, options = {}) {
-  const maxAttempts = options.maxAttempts || 60;
+  const maxAttempts = options.maxAttempts || 150;
   const size = options.size || 9;
   const isSmall = size !== 9;
   if (isSmall) {
@@ -1553,14 +1560,17 @@ function generateGamePuzzle(targetDifficulty, options = {}) {
     minClues = options.minClues;
     maxClues = options.maxClues;
     if (minClues > maxClues) {
-      minClues = 22;
-      maxClues = 36;
+      const range = CLUE_RANGES_9X9[targetDifficulty] || [25, 32];
+      minClues = range[0];
+      maxClues = range[1];
     }
   } else {
-    minClues = 22;
-    maxClues = 36;
+    const range = CLUE_RANGES_9X9[targetDifficulty] || [25, 32];
+    minClues = range[0];
+    maxClues = range[1];
   }
 
+  let best = null;
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     log(`generateGamePuzzle: attempt ${attempt + 1}/${maxAttempts} (target tier ${targetDifficulty}, size ${size})`);
     const solved = generateSolvedBoard();
@@ -1581,9 +1591,40 @@ function generateGamePuzzle(targetDifficulty, options = {}) {
         difficultyName: grade.difficultyName,
         attempts: attempt + 1,
       };
+    } else if (grade.solved) {
+      if (
+        !best ||
+        Math.abs(grade.tier - targetDifficulty) <
+          Math.abs(best.grade.tier - targetDifficulty)
+      ) {
+        best = {
+          puzzle,
+          solution: solved,
+          clueCount,
+          size,
+          difficulty: grade.tier,
+          difficultyName: grade.difficultyName,
+          attempts: attempt + 1,
+          grade,
+        };
+      }
+      log(`generateGamePuzzle: attempt ${attempt + 1} failed (clues=${clueCount}, grade=${grade.tier})`);
     } else {
-      log(`generateGamePuzzle: attempt ${attempt + 1} failed (clues=${clueCount}, grade=${grade.solved ? grade.tier : 'unsolvable'})`);
+      log(`generateGamePuzzle: attempt ${attempt + 1} failed (clues=${clueCount}, grade='unsolvable')`);
     }
+  }
+
+  if (best) {
+    log(`generateGamePuzzle: no exact tier match; falling back to closest grade (tier ${best.grade.tier})`);
+    return {
+      puzzle: best.puzzle,
+      solution: best.solution,
+      clueCount: best.clueCount,
+      size: best.size,
+      difficulty: best.difficulty,
+      difficultyName: best.difficultyName,
+      attempts: best.attempts,
+    };
   }
 
   throw new Error(

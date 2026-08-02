@@ -54,6 +54,8 @@ function generateThumbnails() {
         }
       }
       container.appendChild(thumb);
+    }).catch(err => {
+      log('[nav] thumbnail generation failed', err);
     });
   });
 }
