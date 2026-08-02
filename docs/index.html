@@ -224,31 +224,110 @@ section { padding: 24px 0; }
   line-height: 1.5;
 }
 
-/* ---- Tier separator ---- */
-.tier-sep {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 20px 0 4px;
-}
-.tier-sep::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--border);
-}
-.tier-sep-label {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-dim);
-}
+/* ---- Tier intro ---- */
 .tier-intro {
   font-size: 12px;
   color: var(--text-muted);
   margin-bottom: 14px;
 }
+
+/* ---- TOC ---- */
+.toc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 0 4px;
+  margin-bottom: 12px;
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 5;
+}
+.toc a {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 5px 12px;
+  text-decoration: none;
+  transition: color 0.15s, border-color 0.15s;
+}
+.toc a:hover { color: var(--accent); border-color: var(--accent); }
+
+/* ---- Tier accordions ---- */
+.tier-acc {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow);
+  margin: 16px 0;
+  overflow: hidden;
+}
+.tier-acc summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 16px;
+  cursor: pointer;
+  user-select: none;
+}
+.tier-acc summary::-webkit-details-marker { display: none; }
+.tier-acc-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text);
+}
+.tier-acc-count {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-dim);
+  background: var(--btn-bg);
+  border-radius: 12px;
+  padding: 2px 8px;
+  flex-shrink: 0;
+}
+.tier-acc-chevron {
+  margin-left: auto;
+  font-size: 10px;
+  color: var(--text-muted);
+  transition: transform 0.2s;
+}
+.tier-acc[open] .tier-acc-chevron { transform: rotate(180deg); }
+.tier-acc > .tier-intro {
+  margin: 0;
+  padding: 0 16px 12px;
+}
+.tier-acc .tech-grid { padding: 0 16px 16px; }
+
+/* ---- Back to top ---- */
+.back-top {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s, transform 0.1s;
+  box-shadow: var(--card-shadow);
+  z-index: 20;
+}
+.back-top.show { opacity: 1; pointer-events: auto; }
+.back-top:active { transform: scale(0.9); }
+
+html { scroll-behavior: smooth; }
+section, .tier-acc { scroll-margin-top: 70px; }
 
 /* ---- Footer ---- */
 footer {
@@ -281,6 +360,16 @@ footer {
       <p>21 logical solving strategies &bull; 4 difficulty tiers</p>
     </div>
   </div>
+
+  <!-- ============ TOC ============ -->
+  <nav class="toc">
+    <a href="#overview">Overview</a>
+    <a href="#sample-board">Sample Board</a>
+    <a href="#tier1">Tier 1</a>
+    <a href="#tier2">Tier 2</a>
+    <a href="#tier3">Tier 3</a>
+    <a href="#tier4">Tier 4</a>
+  </nav>
 
   <!-- ===================== OVERVIEW ===================== -->
   <section id="overview">
@@ -413,9 +502,14 @@ footer {
   <section id="techniques">
 
     <!-- TIER 1 -->
-    <div class="tier-sep"><span class="tier-sep-label">Tier 1 &mdash; Easy</span></div>
-    <p class="tier-intro">Direct placements — no candidate elimination needed.</p>
-    <div class="tech-grid">
+    <details class="tier-acc" id="tier1" open>
+      <summary>
+        <span class="tier-acc-label">Tier 1 &mdash; Easy</span>
+        <span class="tier-acc-count">2 techniques</span>
+        <span class="tier-acc-chevron">&#9660;</span>
+      </summary>
+      <p class="tier-intro">Direct placements — no candidate elimination needed.</p>
+      <div class="tech-grid">
 
       <div class="tech-card">
         <div class="tech-visual">
@@ -454,11 +548,17 @@ footer {
       </div>
 
     </div>
+    </details>
 
     <!-- TIER 2 -->
-    <div class="tier-sep"><span class="tier-sep-label">Tier 2 &mdash; Medium</span></div>
-    <p class="tier-intro">Candidate elimination across two houses, plus subset patterns within a single house.</p>
-    <div class="tech-grid">
+    <details class="tier-acc" id="tier2" open>
+      <summary>
+        <span class="tier-acc-label">Tier 2 &mdash; Medium</span>
+        <span class="tier-acc-count">4 techniques</span>
+        <span class="tier-acc-chevron">&#9660;</span>
+      </summary>
+      <p class="tier-intro">Candidate elimination across two houses, plus subset patterns within a single house.</p>
+      <div class="tech-grid">
 
       <div class="tech-card">
         <div class="tech-visual">
@@ -536,11 +636,17 @@ footer {
       </div>
 
     </div>
+    </details>
 
     <!-- TIER 3 -->
-    <div class="tier-sep"><span class="tier-sep-label">Tier 3 &mdash; Hard</span></div>
-    <p class="tier-intro">Multi-house patterns: fish, wings, single-digit chains, and uniqueness.</p>
-    <div class="tech-grid">
+    <details class="tier-acc" id="tier3">
+      <summary>
+        <span class="tier-acc-label">Tier 3 &mdash; Hard</span>
+        <span class="tier-acc-count">6 techniques</span>
+        <span class="tier-acc-chevron">&#9660;</span>
+      </summary>
+      <p class="tier-intro">Multi-house patterns: fish, wings, single-digit chains, and uniqueness.</p>
+      <div class="tech-grid">
 
       <div class="tech-card">
         <div class="tech-visual">
@@ -663,11 +769,17 @@ footer {
       </div>
 
     </div>
+    </details>
 
     <!-- TIER 4 -->
-    <div class="tier-sep"><span class="tier-sep-label">Tier 4 &mdash; Impossible</span></div>
-    <p class="tier-intro">Branch-and-intersect chaining, Almost Locked Sets, and exotic patterns. Computationally heavy but fully sound.</p>
-    <div class="tech-grid">
+    <details class="tier-acc" id="tier4">
+      <summary>
+        <span class="tier-acc-label">Tier 4 &mdash; Impossible</span>
+        <span class="tier-acc-count">5 techniques</span>
+        <span class="tier-acc-chevron">&#9660;</span>
+      </summary>
+      <p class="tier-intro">Branch-and-intersect chaining, Almost Locked Sets, and exotic patterns. Computationally heavy but fully sound.</p>
+      <div class="tech-grid">
 
       <div class="tech-card">
         <div class="tech-visual">
@@ -774,6 +886,7 @@ footer {
       </div>
 
     </div>
+    </details>
 
   </section>
 
@@ -782,6 +895,21 @@ footer {
 <footer>
   Ascendoku Engine &mdash; Logical difficulty grading &bull; Bitwise candidates &bull; 21 techniques across 4 tiers
 </footer>
+
+<button id="backTop" class="back-top" title="Back to top">&#8593;</button>
+
+<script>
+  (function () {
+    var bt = document.getElementById('backTop');
+    if (!bt) return;
+    window.addEventListener('scroll', function () {
+      bt.classList.toggle('show', window.scrollY > 300);
+    }, { passive: true });
+    bt.addEventListener('click', function () {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  })();
+</script>
 
 </body>
 </html>

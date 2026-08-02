@@ -175,7 +175,14 @@ function renderLeaderboard(view) {
       + '</div>';
   }).join('');
 
-  list.innerHTML = profileHtml + rowsHtml;
+  const headerHtml = '<div class="leader-list-header">'
+    + '<div class="leader-rank hd">#</div>'
+    + '<div class="leader-badge-wrap hd"></div>'
+    + '<div class="leader-info hd"><span>Player</span></div>'
+    + '<div class="leader-score hd">' + (view === 'top' ? 'XP' : 'Score') + '</div>'
+    + '</div>';
+
+  list.innerHTML = profileHtml + headerHtml + rowsHtml;
 
   const tabs = document.querySelector('.leader-tabs');
   if (tabs) tabs.scrollLeft = 0;

@@ -253,14 +253,6 @@
             <p>Learn all solving strategies</p>
           </div>
         </div>
-
-        <div class="menu-card menu-card-compact" id="installCard" style="display:none">
-          <div class="icon" style="background:rgba(245,158,11,0.15)"><svg width="20" height="20" viewBox="0 0 24 24"><use href="#ico-download"/></svg></div>
-          <div class="card-text">
-            <h3>Install App</h3>
-            <p>Play offline anytime, right from your home screen</p>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -389,6 +381,9 @@
       <svg class="deco-star4-3" width="22" height="22" viewBox="0 0 24 24"><use href="#ico-star-4pt"/></svg>
       <svg class="deco-star4-4" width="36" height="36" viewBox="0 0 24 24"><use href="#ico-star-4pt"/></svg>
     </div>
+    <div class="game-link-bar">
+      <div class="game-link" id="gameLink"></div>
+    </div>
     <div class="page-header">
       <button class="back-btn" id="gameBack"><svg width="22" height="22" viewBox="0 0 24 24"><use href="#ico-chevron-left"/></svg></button>
       <div class="page-header-spacer"></div>
@@ -404,7 +399,6 @@
           <span class="combo-wrap" id="comboWrap" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24"><use href="#ico-fire"/></svg> <span class="combo-text" id="comboText">x2</span></span>
           <span class="game-level" id="gameLevelBadge" style="display:none"><svg width="12" height="12" viewBox="0 0 24 24"><use href="#ico-target"/></svg> Lv. <span id="gameLevelNum">1</span></span>
         </div>
-        <div class="game-link" id="gameLink"></div>
       </div>
       <div class="game-header-right">
         <button class="game-settings-btn" id="gamePauseBtn" title="Pause"><svg width="18" height="18" viewBox="0 0 24 24"><use href="#ico-pause"/></svg></button>
@@ -443,7 +437,6 @@
     </div>
 
     <div id="controls">
-      <div id="numPad"></div>
       <div id="actions">
         <button id="undoBtn" title="Undo"><svg width="16" height="16" viewBox="0 0 24 24"><use href="#ico-undo"/></svg> Undo</button>
         <button id="redoBtn" title="Redo"><svg width="16" height="16" viewBox="0 0 24 24"><use href="#ico-redo"/></svg> Redo</button>
@@ -451,6 +444,7 @@
         <button id="notesBtn" title="Toggle notes mode"><svg width="16" height="16" viewBox="0 0 24 24"><use href="#ico-pencil"/></svg> Notes</button>
         <button id="hintBtn" class="primary" title="Hint"><svg width="16" height="16" viewBox="0 0 24 24"><use href="#ico-lightbulb"/></svg> Hint</button>
       </div>
+      <div id="numPad"></div>
     </div>
   </div>
 
@@ -995,6 +989,15 @@
   <div class="mistake-ring2"></div>
   <svg class="mistake-x" width="160" height="160" viewBox="0 0 24 24"><use href="#ico-x"/></svg>
   <div class="mistake-label">WRONG!</div>
+</div>
+<div class="install-banner" id="installBanner" style="display:none">
+  <div class="install-banner-icon"><svg width="22" height="22" viewBox="0 0 24 24"><use href="#ico-download"/></svg></div>
+  <div class="install-banner-text">
+    <strong>Install Ascendoku</strong>
+    <span>Play offline from your home screen</span>
+  </div>
+  <button class="install-banner-btn" id="installBannerBtn">Install</button>
+  <button class="install-banner-close" id="installBannerClose" aria-label="Dismiss"><svg width="16" height="16" viewBox="0 0 24 24"><use href="#ico-x"/></svg></button>
 </div>
 </body>
 </html>

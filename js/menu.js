@@ -225,21 +225,48 @@ function showStats() {
   const totalMistakes = stats.totalMistakes || 0;
   const avgTime = total > 0 ? Math.round(totalTime / total) : 0;
   const highestLevel = stats.highestLevel || 1;
+  const rank = getRank(totalXp);
+  const joined = stats.firstGameDate || '--';
+  const bestTime = getBestTime();
+
+  const hero = document.createElement('div');
+  hero.className = 'stats-hero';
+  hero.innerHTML =
+    '<div class="stats-hero-rank">' + rankSvgImg(rank.name, 44) + '</div>'
+    + '<div class="stats-hero-info">'
+    +   '<div class="stats-hero-rank-name">' + rank.name + '</div>'
+    +   '<div class="stats-hero-xp">' + totalXp.toLocaleString() + ' XP</div>'
+    +   '<div class="stats-hero-joined">Joined ' + joined + '</div>'
+    + '</div>'
+    + '<div class="stats-hero-meta">'
+    +   '<div class="stats-hero-meta-item"><strong>' + total + '</strong><span>Solved</span></div>'
+    +   '<div class="stats-hero-meta-item"><strong>Lv ' + highestLevel + '</strong><span>Highest</span></div>'
+    + '</div>';
+  content.appendChild(hero);
 
   const grid = document.createElement('div');
   grid.className = 'stats-grid';
-  grid.innerHTML = `
-    <div class="stat-card"><div class="stat-value">${total}</div><div class="stat-label">Puzzles Solved</div></div>
-    <div class="stat-card"><div class="stat-value">${totalXp}</div><div class="stat-label">Total XP</div></div>
-    <div class="stat-card"><div class="stat-value">${formatTime(avgTime)}</div><div class="stat-label">Avg Time</div></div>
-    <div class="stat-card"><div class="stat-value">${bestStreak}</div><div class="stat-label">Best Streak</div></div>
-    <div class="stat-card"><div class="stat-value">${highestLevel}</div><div class="stat-label">Highest Level</div></div>
-  `;
+  const cards = [
+    { icon: 'ico-trophy', label: 'Puzzles Solved', value: String(total) },
+    { icon: 'ico-clock', label: 'Avg Time', value: formatTime(avgTime) },
+    { icon: 'ico-bolt', label: 'Best Time', value: bestTime > 0 ? formatTime(bestTime) : '--' },
+    { icon: 'ico-fire', label: 'Best Streak', value: String(bestStreak) },
+    { icon: 'ico-warning', label: 'Mistakes', value: String(totalMistakes) },
+    { icon: 'ico-target', label: 'Highest Level', value: String(highestLevel) },
+  ];
+  cards.forEach(c => {
+    const card = document.createElement('div');
+    card.className = 'stat-card';
+    card.innerHTML = '<div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24"><use href="#' + c.icon + '"/></svg></div>'
+      + '<div class="stat-value">' + c.value + '</div>'
+      + '<div class="stat-label">' + c.label + '</div>';
+    grid.appendChild(card);
+  });
   content.appendChild(grid);
 
   const diffTitle = document.createElement('div');
   diffTitle.className = 'stats-section-title';
-  diffTitle.textContent = 'By Difficulty';
+  diffTitle.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24"><use href="#ico-bar-chart"/></svg> By Difficulty';
   content.appendChild(diffTitle);
 
   const barChart = document.createElement('div');
@@ -256,20 +283,22 @@ function showStats() {
     const pct = (count / maxCount) * 100;
     const row = document.createElement('div');
     row.className = 'stats-bar-row';
-    row.innerHTML = '<div class="stats-bar-label">' + d.label + '</div><div class="stats-bar-track"><div class="stats-bar-fill" style="width:' + Math.max(8, pct) + '%;background:' + d.color + '">' + count + '</div></div>';
+    row.innerHTML = '<div class="stats-bar-label"><span class="dot" style="background:' + d.color + '"></span>' + d.label + '</div>'
+      + '<div class="stats-bar-track"><div class="stats-bar-fill" style="width:' + Math.max(8, pct) + '%;background:' + d.color + '"></div></div>'
+      + '<div class="stats-bar-count">' + count + '</div>';
     barChart.appendChild(row);
   });
   content.appendChild(barChart);
 
   const timeTitle = document.createElement('div');
   timeTitle.className = 'stats-section-title';
-  timeTitle.textContent = 'Best Times';
+  timeTitle.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24"><use href="#ico-clock"/></svg> Best Times';
   content.appendChild(timeTitle);
   const timeGrid = document.createElement('div');
   timeGrid.className = 'stats-grid';
   diffs.forEach(d => {
     const t = (stats.bestTimes || {})[d.key];
-    timeGrid.innerHTML += '<div class="stat-card"><div class="stat-value">' + (t < Infinity ? formatTime(t) : '--') + '</div><div class="stat-label">' + d.label + '</div></div>';
+    timeGrid.innerHTML += '<div class="stat-card"><div class="stat-icon"><span class="dot" style="background:' + d.color + '"></span></div><div class="stat-value">' + (t < Infinity ? formatTime(t) : '--') + '</div><div class="stat-label">' + d.label + '</div></div>';
   });
   content.appendChild(timeGrid);
 
@@ -605,6 +634,14 @@ function showAchievements() {
   const achieveCount = document.getElementById('achieveCount');
   if (achieveCount) achieveCount.textContent = earned.length + '/' + ACHIEVEMENTS.length;
 
+  const overview = document.createElement('div');
+  overview.className = 'achieve-overview';
+  const ovPct = ACHIEVEMENTS.length > 0 ? Math.round((earned.length / ACHIEVEMENTS.length) * 100) : 0;
+  overview.innerHTML = '<div class="achieve-overview-info"><strong>' + earned.length + ' / ' + ACHIEVEMENTS.length + '</strong><span>Unlocked</span></div>'
+    + '<div class="achieve-overview-track"><div class="achieve-overview-fill" style="width:' + ovPct + '%"></div></div>'
+    + '<div class="achieve-overview-pct">' + ovPct + '%</div>';
+  grid.appendChild(overview);
+
   let filtered = ACHIEVEMENTS;
   if (catFilter !== 'all') {
     filtered = filtered.filter(a => a.cat === catFilter);
@@ -659,6 +696,7 @@ function showAchievements() {
     const isNew = newAchievements.includes(a.id);
     const card = document.createElement('div');
     card.className = 'achieve-card' + (unlocked ? ' unlocked' : '') + (isNew ? ' achieve-new' : '');
+    card.dataset.cat = cat;
     const progress = getAchievementProgress(a.id);
     let progressHtml = '';
     if (progress && !unlocked) {
@@ -666,7 +704,12 @@ function showAchievements() {
       progressHtml = '<div class="achieve-progress"><div class="achieve-progress-fill" style="width:' + pct + '%"></div></div><div class="achieve-progress-label">' + progress.current + '/' + progress.max + '</div>';
     }
     const newBadge = isNew ? '<span class="achieve-new-badge">NEW</span>' : '';
-    card.innerHTML = '<div class="achieve-icon"><svg width="22" height="22" viewBox="0 0 24 24"><use href="#' + a.icon + '"/></svg></div><div class="achieve-info"><div class="achieve-name">' + a.name + newBadge + '</div><div class="achieve-desc">' + a.desc + '</div>' + progressHtml + '</div>';
+    const statusIcon = unlocked
+      ? '<svg width="16" height="16" viewBox="0 0 24 24"><use href="#ico-check"/></svg>'
+      : '<svg width="16" height="16" viewBox="0 0 24 24"><use href="#ico-circle"/></svg>';
+    card.innerHTML = '<div class="achieve-icon"><svg width="22" height="22" viewBox="0 0 24 24"><use href="#' + a.icon + '"/></svg></div>'
+      + '<div class="achieve-info"><div class="achieve-name">' + a.name + newBadge + '</div><div class="achieve-desc">' + a.desc + '</div>' + progressHtml + '</div>'
+      + '<div class="achieve-status">' + statusIcon + '</div>';
     grid.appendChild(card);
   }
 

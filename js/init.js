@@ -103,31 +103,41 @@ registerServiceWorker();
 
 let deferredInstallPrompt = null;
 function setupInstallPrompt() {
-  const installCard = document.getElementById('installCard');
-  if (!installCard) return;
+  const banner = document.getElementById('installBanner');
+  if (!banner) return;
+  const btn = document.getElementById('installBannerBtn');
+  const close = document.getElementById('installBannerClose');
+
+  const dismissInstall = () => {
+    banner.style.display = 'none';
+    try { sessionStorage.setItem('sd_install_dismissed', '1'); } catch (_) {}
+  };
 
   window.addEventListener('beforeinstallprompt', (event) => {
     event.preventDefault();
     deferredInstallPrompt = event;
-    installCard.style.display = '';
+    try {
+      if (sessionStorage.getItem('sd_install_dismissed')) return;
+    } catch (_) {}
+    banner.style.display = 'flex';
   });
 
-  installCard.addEventListener('click', () => {
-    if (!deferredInstallPrompt) return;
-    deferredInstallPrompt.prompt();
-    deferredInstallPrompt.userChoice.then((choice) => {
+  if (btn) {
+    btn.addEventListener('click', async () => {
+      if (!deferredInstallPrompt) return;
+      await deferredInstallPrompt.prompt();
+      const choice = await deferredInstallPrompt.userChoice;
       log('[pwa] install choice', { outcome: choice.outcome });
-      if (choice.outcome === 'accepted') {
-        installCard.style.display = 'none';
-        deferredInstallPrompt = null;
-      }
+      deferredInstallPrompt = null;
+      if (choice.outcome === 'accepted') dismissInstall();
     });
-  });
+  }
+
+  if (close) close.addEventListener('click', dismissInstall);
 
   window.addEventListener('appinstalled', () => {
     log('[pwa] app installed');
-    installCard.style.display = 'none';
-    deferredInstallPrompt = null;
+    dismissInstall();
   });
 }
 setupInstallPrompt();

@@ -257,12 +257,13 @@ html.low-power .deco-bg svg {
 #numPad {
   display: grid;
   grid-template-columns: repeat(var(--pad-cols, 9), 1fr);
-  gap: 4px;
+  gap: 5px;
+  padding: 0 0 env(safe-area-inset-bottom, 0);
 }
 #numPad button {
-  padding: 11px 0;
-  font-size: 17px;
-  font-weight: 500;
+  padding: 14px 0;
+  font-size: 19px;
+  font-weight: 600;
   border: none;
   background: var(--btn-bg);
   color: var(--btn-text);
@@ -271,6 +272,7 @@ html.low-power .deco-bg svg {
   transition: background 0.12s, transform 0.08s;
   font-variant-numeric: tabular-nums;
   position: relative;
+  touch-action: manipulation;
 }
 #numPad button:active { transform: scale(0.92); background: var(--btn-hover); }
 #numPad button:hover { background: var(--btn-hover); }
@@ -707,19 +709,28 @@ body.body-shake { animation:bodyShake 0.5s ease; }
 }
 
 /* ============ GAME LINK FOR LIVESTREAM ============ */
+.game-link-bar {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 2px 0 4px;
+}
 .game-link {
-  font-size: 10px;
-  color: var(--text-muted);
-  opacity: 0.7;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  padding: 4px 16px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 100%;
-  margin-top: 1px;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s, background 0.2s;
 }
-.game-link:hover { opacity: 1; }
+.game-link:hover { opacity: 1; background: rgba(0, 0, 0, 0.4); }
 
 /* ============ ANALYZER UNLOCK MODAL ============ */
 .analyzer-unlock-overlay {

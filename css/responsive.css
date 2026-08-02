@@ -54,7 +54,7 @@
   .diff-card.custom { min-height: 54px; padding: 10px 12px; gap: 10px; }
   .diff-card.custom .diff-icon svg { width: 24px; height: 24px; }
   #numPad { gap: 3px; }
-  #numPad button { padding: 12px 0; font-size: 15px; }
+  #numPad button { padding: 13px 0; font-size: 16px; }
   #actions { gap: 3px; }
   #actions button { font-size: 10px; padding: 10px 3px; min-width: 40px; }
   .modal { padding: 18px 14px; }
@@ -92,7 +92,7 @@
   .menu-subcards { grid-template-columns: 1fr; gap: 5px; }
   .diff-card { padding: 10px 8px; min-height: 112px; }
   .diff-card.custom { min-height: 48px; }
-  #numPad button { padding: 10px 0; font-size: 14px; }
+  #numPad button { padding: 11px 0; font-size: 15px; }
   #actions button { font-size: 9px; padding: 8px 2px; }
   .game-header { gap: 4px; }
   .game-info .game-meta { font-size: 11px; gap: 8px; }
@@ -122,22 +122,57 @@
   .cell { font-size: clamp(14px, 4vw, 28px); }
 }
 
+/* tablet: two-column game layout for mid-size screens */
+@media (min-width: 560px) and (max-width: 699px) {
+  #app { max-width: 680px; }
+  #page-game {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    align-items: start;
+  }
+  #controls {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  #numPad {
+    grid-template-columns: repeat(9, 1fr);
+    gap: 6px;
+  }
+  #numPad button { padding: 16px 0; font-size: 20px; border-radius: 10px; }
+  #actions {
+    flex: 1;
+    min-width: 320px;
+  }
+  #actions button {
+    padding: 12px 8px;
+    font-size: 13px;
+    border-radius: 10px;
+  }
+  .board-area { max-width: 520px; }
+  .deco-bg { display: none; }
+}
+
 /* widescreen: sidebar controls for game page */
 @media (min-width: 700px) {
   #app { max-width: 780px; }
   #page-game {
     display: grid;
     grid-template-columns: 1fr 200px;
-    grid-template-rows: auto auto 1fr;
+    grid-template-rows: auto auto auto 1fr;
     gap: 6px;
     align-items: start;
     overflow-y: auto;
     min-height: 0;
   }
-  #page-game > .page-header { grid-row: 1; grid-column: 1 / -1; }
-  #page-game > .game-header { grid-row: 2; grid-column: 1 / -1; }
+  #page-game > .game-link-bar { grid-row: 1; grid-column: 1 / -1; }
+  #page-game > .page-header { grid-row: 2; grid-column: 1 / -1; }
+  #page-game > .game-header { grid-row: 3; grid-column: 1 / -1; }
   .board-area {
-    grid-row: 3;
+    grid-row: 4;
     grid-column: 1;
     width: 100%;
     max-width: none;
@@ -146,7 +181,7 @@
     max-width: none;
   }
   #controls {
-    grid-row: 3;
+    grid-row: 4;
     grid-column: 2;
     display: flex;
     flex-direction: column;
