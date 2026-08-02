@@ -299,14 +299,12 @@ function updateNotesBtn() {
 
 function updateUndoRedo() {
   const undo = document.getElementById('undoBtn');
-  const redo = document.getElementById('redoBtn');
   const hint = document.getElementById('hintBtn');
   const erase = document.getElementById('eraseBtn');
   if (!undo || !hint) return;
   const undoCount = state.historyIdx + 1;
 
   undo.disabled = state.historyIdx < 0;
-  if (redo) redo.disabled = state.historyIdx >= state.history.length - 1;
 
   if (erase) {
     const sc = state.selectedCell;
@@ -407,14 +405,11 @@ function setupInput() {
         if (state.board[r][c] === 0) { selectCell(r, c); break; }
       }
     }
-    if ((e.key === 'z' || e.key === 'Z') && (e.ctrlKey || e.metaKey) && e.shiftKey) { e.preventDefault(); log('[ui] keyboard: redo'); redo(); }
     if ((e.key === 'z' || e.key === 'Z') && (e.ctrlKey || e.metaKey)) { e.preventDefault(); log('[ui] keyboard: undo'); undo(); }
   });
 
   const undoBtn = document.getElementById('undoBtn');
   if (undoBtn) undoBtn.addEventListener('click', () => { log('[ui] click: undoBtn'); undo(); });
-  const redoBtn = document.getElementById('redoBtn');
-  if (redoBtn) redoBtn.addEventListener('click', () => { log('[ui] click: redoBtn'); redo(); });
   const eraseBtn = document.getElementById('eraseBtn');
   if (eraseBtn) eraseBtn.addEventListener('click', () => {
     log('[ui] click: eraseBtn');

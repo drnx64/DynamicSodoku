@@ -70,7 +70,7 @@ function showWinDialog() {
     levelInfo.style.display = 'inline-block';
     levelNum.textContent = state.currentLevel;
     const diff = baseDiff;
-    if (state.currentLevel > stats.highestLevel) stats.highestLevel = state.currentLevel;
+    if (stats.highestLevel === undefined || state.currentLevel > stats.highestLevel) stats.highestLevel = state.currentLevel;
     if (state.currentLevel > (stats.highestLevelByDifficulty[diff] || 0)) stats.highestLevelByDifficulty[diff] = state.currentLevel;
     state.currentLevel++;
   } else {
@@ -86,7 +86,7 @@ function showWinDialog() {
   stats.gamesByDifficulty[baseDiff] = (stats.gamesByDifficulty[baseDiff] || 0) + 1;
   stats.lastDifficulty = baseDiff;
   stats.totalMistakes = (stats.totalMistakes || 0) + state.mistakes;
-  if (state.timer < stats.bestTimes[baseDiff]) stats.bestTimes[baseDiff] = state.timer;
+  if (stats.bestTimes[baseDiff] === undefined || state.timer < stats.bestTimes[baseDiff]) stats.bestTimes[baseDiff] = state.timer;
   if (streak.count > stats.bestStreak) stats.bestStreak = streak.count;
   if (state.mistakes === 0) stats.flawlessCount = (stats.flawlessCount || 0) + 1;
   if (state.mistakes === 0) earnSecondChance();
@@ -151,8 +151,8 @@ function showWinDialog() {
 
   if (window.AscendokuChallenge) window.AscendokuChallenge.setupWinUI();
 
-  clearGame();
   checkAchievements(baseDiff, state.mistakes, state.hintsUsed, state.notesUsed, totalEarned, state.settings.autoCandidates);
+  clearGame();
   addScoreToLeaderboard(state.settings.playerName || 'Player', Math.round(totalEarned), baseDiff);
   fireConfetti();
 

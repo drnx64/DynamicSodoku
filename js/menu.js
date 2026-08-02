@@ -613,7 +613,7 @@ function showRankJourney() {
     const count = stats.gamesByDifficulty[d] || 0;
     const el = document.getElementById('rank' + d.charAt(0).toUpperCase() + d.slice(1) + 'Games');
     if (el) el.textContent = count;
-    if (stats.bestTimes[d] < bestTime) bestTime = stats.bestTimes[d];
+    if (stats.bestTimes && stats.bestTimes[d] < bestTime) bestTime = stats.bestTimes[d];
   });
   const rankBestTime = document.getElementById('rankBestTime');
   if (rankBestTime) rankBestTime.textContent = bestTime < Infinity ? formatTime(bestTime) : '--';
