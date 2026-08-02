@@ -324,35 +324,36 @@
         <div class="diff-xp">~25 XP avg</div>
       </div>
       <div class="diff-card custom" data-diff="custom">
-        <div class="diff-icon"><svg width="40" height="40" viewBox="0 0 24 24"><use href="#ico-gear"/></svg></div>
-        <div class="diff-thumb"><div class="diff-thumb-custom"><svg width="28" height="28" viewBox="0 0 24 24"><use href="#ico-sliders"/></svg></div></div>
-        <div class="diff-stars"><svg width="14" height="14" viewBox="0 0 24 24"><use href="#ico-star"/></svg><svg width="14" height="14" viewBox="0 0 24 24"><use href="#ico-star"/></svg><svg width="14" height="14" viewBox="0 0 24 24"><use href="#ico-star"/></svg><svg width="14" height="14" viewBox="0 0 24 24"><use href="#ico-star"/></svg><svg width="14" height="14" viewBox="0 0 24 24"><use href="#ico-star"/></svg></div>
-        <h3>Custom</h3>
-        <p>Your rules, your tier</p>
-        <div class="diff-clues">Pick clue range</div>
-        <div class="diff-best">Best: --</div>
+        <div class="diff-icon"><svg width="28" height="28" viewBox="0 0 24 24"><use href="#ico-gear"/></svg></div>
+        <div class="diff-card-text">
+          <h3>Custom</h3>
+          <p>Your rules, your tier</p>
+          <div class="diff-clues">Pick clue range</div>
+        </div>
         <div class="diff-xp">XP varies</div>
       </div>
   </div>
-      <div class="countdown-section">
-        <div class="countdown-label">Board Size</div>
-        <div class="countdown-options" id="boardSizeOptions">
-          <label class="countdown-option active" data-size="9"><input type="radio" name="boardsize" value="9" checked> <span>9&times;9</span></label>
-          <label class="countdown-option" data-size="6"><input type="radio" name="boardsize" value="6"> <span>6&times;6</span></label>
+      <div class="pre-game-options">
+        <div class="countdown-section">
+          <div class="countdown-label">Board Size</div>
+          <div class="countdown-options" id="boardSizeOptions">
+            <label class="countdown-option active" data-size="9"><input type="radio" name="boardsize" value="9" checked> <span>9&times;9</span></label>
+            <label class="countdown-option" data-size="6"><input type="radio" name="boardsize" value="6"> <span>6&times;6</span></label>
+          </div>
         </div>
-      </div>
-      <div class="countdown-section">
-        <div class="countdown-label">Timer Mode</div>
-        <div class="countdown-options" id="countdownOptions">
-          <label class="countdown-option active" data-time="0"><input type="radio" name="countdown" value="0" checked> <span>Off</span></label>
-          <label class="countdown-option" data-time="600"><input type="radio" name="countdown" value="600"> <span>10 min</span></label>
-          <label class="countdown-option" data-time="900"><input type="radio" name="countdown" value="900"> <span>15 min</span></label>
-          <label class="countdown-option" data-time="1200"><input type="radio" name="countdown" value="1200"> <span>20 min</span></label>
-          <label class="countdown-option" data-time="custom"><input type="radio" name="countdown" value="custom"> <span>Custom</span></label>
-        </div>
-        <div class="countdown-custom" id="countdownCustom" style="display:none">
-          <input type="number" class="countdown-custom-input" id="countdownCustomInput" min="1" max="180" value="5" placeholder="Minutes">
-          <span class="countdown-custom-label">minutes</span>
+        <div class="countdown-section">
+          <div class="countdown-label">Timer Mode</div>
+          <div class="countdown-options" id="countdownOptions">
+            <label class="countdown-option active" data-time="0"><input type="radio" name="countdown" value="0" checked> <span>Off</span></label>
+            <label class="countdown-option" data-time="600"><input type="radio" name="countdown" value="600"> <span>10 min</span></label>
+            <label class="countdown-option" data-time="900"><input type="radio" name="countdown" value="900"> <span>15 min</span></label>
+            <label class="countdown-option" data-time="1200"><input type="radio" name="countdown" value="1200"> <span>20 min</span></label>
+            <label class="countdown-option" data-time="custom"><input type="radio" name="countdown" value="custom"> <span>Custom</span></label>
+          </div>
+          <div class="countdown-custom" id="countdownCustom" style="display:none">
+            <input type="number" class="countdown-custom-input" id="countdownCustomInput" min="1" max="180" value="5" placeholder="Minutes">
+            <span class="countdown-custom-label">minutes</span>
+          </div>
         </div>
       </div>
 </div>

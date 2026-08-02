@@ -48,9 +48,11 @@
   .menu-card-compact .card-text h3 { font-size: 11px !important; }
   .menu-card-compact .card-text p { font-size: 9px !important; }
   .diff-cards { gap: 6px; }
-  .diff-card { padding: 12px 10px; }
+  .diff-card { padding: 12px 10px; min-height: 128px; }
   .diff-card .diff-icon svg { width: 28px; height: 28px; }
   .diff-card h3 { font-size: 13px; }
+  .diff-card.custom { min-height: 54px; padding: 10px 12px; gap: 10px; }
+  .diff-card.custom .diff-icon svg { width: 24px; height: 24px; }
   #numPad { gap: 3px; }
   #numPad button { padding: 12px 0; font-size: 15px; }
   #actions { gap: 3px; }
@@ -88,7 +90,8 @@
   .menu-card-hero .card-text h3 { font-size: 14px !important; }
   .menu-card-hero .card-text p { font-size: 12px !important; }
   .menu-subcards { grid-template-columns: 1fr; gap: 5px; }
-  .diff-card { padding: 10px 8px; }
+  .diff-card { padding: 10px 8px; min-height: 112px; }
+  .diff-card.custom { min-height: 48px; }
   #numPad button { padding: 10px 0; font-size: 14px; }
   #actions button { font-size: 9px; padding: 8px 2px; }
   .game-header { gap: 4px; }

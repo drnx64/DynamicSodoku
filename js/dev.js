@@ -94,12 +94,17 @@ window.stream = function () {
   saveStats();
   saveStreak();
 
-  if (typeof updateMenuUI === 'function') updateMenuUI();
-  if (typeof updateDiffBestTimes === 'function') updateDiffBestTimes();
+  try {
+    if (typeof updateMenuUI === 'function') updateMenuUI();
+  } catch (e) { console.warn('[stream] updateMenuUI failed', e); }
+  try {
+    if (typeof updateDiffBestTimes === 'function') updateDiffBestTimes();
+  } catch (e) { console.warn('[stream] updateDiffBestTimes failed', e); }
 
   console.log('%c🎥 STREAM MODE — random profile generated', 'font-size:16px;font-weight:bold;color:#fbbf24');
   console.log('%c' + rank.name + ' · ' + totalXp.toLocaleString() + ' XP', 'font-size:14px;font-weight:bold;color:#f472b6');
   console.log('%cHighest level: ' + highestLevel + ' · Streak: ' + streakCount + 'd', 'color:#a5b4fc');
   console.table(gamesByDifficulty);
+  if (typeof showToast === 'function') showToast('🎥 Stream profile generated (' + rank.name + ')');
   return { rank: rank.name, totalXp, highestLevel, gamesByDifficulty, bestTimes, bestStreak, achievements: stats.achievements.length };
 };

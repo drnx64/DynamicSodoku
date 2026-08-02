@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ascendoku-v1';
+const CACHE_NAME = 'ascendoku-v2';
 const PRECACHE_URLS = [
   './',
   './index.html',

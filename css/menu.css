@@ -337,17 +337,23 @@
   grid-template-columns: 1fr 1fr;
   gap: 10px;
   width: 100%;
+  max-width: 520px;
 }
 
 .diff-card {
   background: var(--card-bg);
   border-radius: var(--radius);
-  padding: 20px 16px;
+  padding: 18px 14px;
   box-shadow: var(--card-shadow);
   cursor: pointer;
   transition: transform 0.15s, box-shadow 0.15s;
   border: 2px solid transparent;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 148px;
 }
 .diff-card:hover {
   transform: translateY(-3px);
@@ -381,6 +387,34 @@
   margin-bottom: 4px;
 }
 
+.diff-card.custom {
+  grid-column: 1 / -1;
+  min-height: 64px;
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 14px;
+  padding: 14px 18px;
+  text-align: left;
+}
+.diff-card.custom .diff-icon {
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+.diff-card.custom .diff-icon svg { width: 30px; height: 30px; }
+.diff-card.custom .diff-card-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.diff-card.custom .diff-card-text h3 { margin-bottom: 0; }
+.diff-card.custom .diff-card-text p { margin-bottom: 0; }
+.diff-card.custom .diff-xp {
+  flex-shrink: 0;
+  align-self: center;
+  font-size: 12px;
+}
+
 .diff-card.easy { border-color: rgba(22,163,74,0.3); }
 .diff-card.medium { border-color: rgba(245,158,11,0.3); }
 .diff-card.hard { border-color: rgba(220,38,38,0.3); }
@@ -392,16 +426,6 @@
 .diff-card.impossible:hover { border-color: #8b5cf6; }
 .diff-card.custom:hover { border-color: #0ea5e9; }
 .diff-card.custom .diff-icon svg { color: #0ea5e9; }
-
-.diff-thumb-custom {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  color: #0ea5e9;
-  opacity: 0.85;
-}
 
 .diff-card .diff-best {
   font-size: 10px;

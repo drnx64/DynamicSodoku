@@ -14,9 +14,9 @@ function reportError(context, err) {
       color: 0xef4444,
       fields: [
         { name: 'Context', value: (context || '').slice(0, 256), inline: true },
-        { name: 'Message', value: (err?.message || String(err || 'Unknown')).slice(0, 512), inline: false },
-        { name: 'Stack', value: (err?.stack || 'N/A').slice(0, 1000), inline: false },
-        { name: 'Breadcrumbs', value: breadcrumbs.slice(0, 1000) || 'None', inline: false },
+        { name: 'Message', value: '```\n' + (err?.message || String(err || 'Unknown')).slice(0, 980) + '\n```', inline: false },
+        { name: 'Stack', value: '```js\n' + (err?.stack || 'N/A').slice(0, 980) + '\n```', inline: false },
+        { name: 'Breadcrumbs', value: '```\n' + (breadcrumbs.slice(0, 980) || 'None') + '\n```', inline: false },
         { name: 'URL', value: location.href.slice(0, 256), inline: true },
         { name: 'User Agent', value: navigator.userAgent.slice(0, 200), inline: true },
       ],
