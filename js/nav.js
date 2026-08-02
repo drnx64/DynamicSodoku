@@ -455,6 +455,4 @@ function showGameExitConfirm() {
     log('[nav] cancel clicked');
     cleanup();
   };
-
-  setupReplayUI();
 }

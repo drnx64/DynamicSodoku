@@ -74,6 +74,62 @@ setInterval(() => {
   loadWithVault(LEVEL_PROGRESS_KEY, 'levelProgress', {});
 }, 30000);
 
+function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) return;
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').then((reg) => {
+      log('[pwa] service worker registered', { scope: reg.scope });
+    }).catch((err) => {
+      log('[pwa] service worker registration failed', err);
+    });
+  });
+}
+registerServiceWorker();
+
+let deferredInstallPrompt = null;
+function setupInstallPrompt() {
+  const installCard = document.getElementById('installCard');
+  if (!installCard) return;
+
+  window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault();
+    deferredInstallPrompt = event;
+    installCard.style.display = '';
+  });
+
+  installCard.addEventListener('click', () => {
+    if (!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt.userChoice.then((choice) => {
+      log('[pwa] install choice', { outcome: choice.outcome });
+      if (choice.outcome === 'accepted') {
+        installCard.style.display = 'none';
+        deferredInstallPrompt = null;
+      }
+    });
+  });
+
+  window.addEventListener('appinstalled', () => {
+    log('[pwa] app installed');
+    installCard.style.display = 'none';
+    deferredInstallPrompt = null;
+  });
+}
+setupInstallPrompt();
+
+function setupConnectivityHints() {
+  const toast = document.getElementById('toast');
+  if (!toast) return;
+  const offlineToast = (on) => {
+    toast.textContent = on ? 'Back online!' : 'Offline — saved progress will sync when you reconnect';
+    toast.classList.add('open');
+    setTimeout(() => toast.classList.remove('open'), 3000);
+  };
+  window.addEventListener('offline', () => offlineToast(false));
+  window.addEventListener('online', () => offlineToast(true));
+}
+setupConnectivityHints();
+
 document.addEventListener('DOMContentLoaded', () => {
   log('[init] DOMContentLoaded fired');
   init();

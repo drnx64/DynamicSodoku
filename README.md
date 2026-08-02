@@ -44,10 +44,17 @@ A fully dynamic Sudoku web app with multi-page menu flow, difficulty selection, 
 - **Responsive Layout** — Adapts to mobile and desktop viewports
 - **Autosave** — Game state saved to localStorage on every action; resumes on reload
 
+### Progressive Web App
+- **Installable** — Add to home screen (custom install prompt on the menu)
+- **Offline Play** — Service worker precaches the full app shell; plays without a connection
+- **Cloud Save** — Export/import your full progress as a file or clipboard backup
+
 ## Project Structure
 
 ```
 ├── index.html            # Main HTML with SVG sprite, pages, and modals
+├── manifest.json         # PWA manifest (install metadata, icons)
+├── sw.js                 # Service worker (app-shell caching, offline support)
 ├── css/
 │   ├── base.css          # CSS variables, theme definitions, resets
 │   ├── layout.css        # App shell, page system, animations
@@ -70,7 +77,8 @@ A fully dynamic Sudoku web app with multi-page menu flow, difficulty selection, 
 │   ├── nav.js            # Page transitions and navigation
 │   ├── win.js            # Win dialog, XP award, streak update, milestone rewards
 │   ├── menu.js           # Main menu UI, XP bar, daily status, rank/streak journey
-│   └── init.js           # Bootstrap and initialization
+│   ├── init.js           # Bootstrap, initialization, service worker + install prompt
+│   └── ...
 ├── assets/               # Static assets (rank SVGs, favicon, etc.)
 └── README.md
 ```
