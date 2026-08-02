@@ -4,10 +4,11 @@
 let _cellRefs = null;
 
 function _buildCells(boardEl) {
-  _cellRefs = Array.from({ length: 9 }, () => Array(9));
+  const n = state.size || 9;
+  _cellRefs = Array.from({ length: n }, () => Array(n));
   const frag = document.createDocumentFragment();
-  for (let r = 0; r < 9; r++) {
-    for (let c = 0; c < 9; c++) {
+  for (let r = 0; r < n; r++) {
+    for (let c = 0; c < n; c++) {
       const cell = document.createElement('div');
       cell.className = 'cell';
       cell.dataset.row = r;
@@ -19,7 +20,11 @@ function _buildCells(boardEl) {
 
       const ng = document.createElement('div');
       ng.className = 'notes-grid';
-      for (let i = 0; i < 9; i++) ng.appendChild(document.createElement('span'));
+      const noteCols = Math.ceil(Math.sqrt(n));
+      const noteRows = Math.ceil(n / noteCols);
+      ng.style.gridTemplateColumns = 'repeat(' + noteCols + ', 1fr)';
+      ng.style.gridTemplateRows = 'repeat(' + noteRows + ', 1fr)';
+      for (let i = 0; i < n; i++) ng.appendChild(document.createElement('span'));
       cell.appendChild(ng);
 
       cell.addEventListener('click', () => selectCell(r, c));
@@ -30,12 +35,52 @@ function _buildCells(boardEl) {
   boardEl.appendChild(frag);
 }
 
+function rebuildBoardForSize() {
+  const n = state.size || 9;
+  const boardEl = document.getElementById('board');
+  if (boardEl) {
+    boardEl.innerHTML = '';
+    boardEl.style.gridTemplateColumns = 'repeat(' + n + ', 1fr)';
+    boardEl.style.gridTemplateRows = 'repeat(' + n + ', 1fr)';
+  }
+  const rowArea = document.getElementById('coordsRowArea');
+  const colArea = document.getElementById('coordsColArea');
+  if (rowArea) rowArea.style.gridTemplateColumns = 'repeat(' + n + ', 1fr)';
+  if (colArea) colArea.style.gridTemplateRows = 'repeat(' + n + ', 1fr)';
+  if (rowArea) {
+    rowArea.innerHTML = '';
+    for (let c = 0; c < n; c++) {
+      const el = document.createElement('div');
+      el.className = 'coords-col';
+      el.dataset.coord = c;
+      el.textContent = String.fromCharCode(65 + c);
+      rowArea.appendChild(el);
+    }
+  }
+  if (colArea) {
+    colArea.innerHTML = '';
+    for (let r = 0; r < n; r++) {
+      const el = document.createElement('div');
+      el.className = 'coords-row';
+      el.dataset.coord = r;
+      el.textContent = r + 1;
+      colArea.appendChild(el);
+    }
+  }
+  const boardWrap = document.getElementById('boardWrap');
+  if (boardWrap) boardWrap.classList.toggle('board-size-6', n === 6);
+  _cellRefs = null;
+  buildNumPad();
+}
+
 const _completedColor = 'rgba(34, 197, 94, 0.12)';
 
 function render(opts) {
   opts = opts || {};
   const boardEl = document.getElementById('board');
   if (!boardEl) { log('[ui] render: WARN #board not found'); return; }
+  if (typeof syncGridConfig === 'function') syncGridConfig();
+  const n = state.size || 9;
 
   if (!_cellRefs) _buildCells(boardEl);
 
@@ -45,13 +90,13 @@ function render(opts) {
 
   const candidatesCache = state.settings.autoCandidates ? {} : null;
   function getCachedCandidates(r, c) {
-    const key = r * 9 + c;
+    const key = r * n + c;
     if (!candidatesCache[key]) candidatesCache[key] = getCandidates(state.board, r, c);
     return candidatesCache[key];
   }
 
-  for (let r = 0; r < 9; r++) {
-    for (let c = 0; c < 9; c++) {
+  for (let r = 0; r < n; r++) {
+    for (let c = 0; c < n; c++) {
       const cell = _cellRefs[r][c];
       const valSpan = cell.firstChild;
       const notesGrid = valSpan.nextSibling;
@@ -64,7 +109,7 @@ function render(opts) {
       if (opts.entering) {
         if (!state.settings.reducedAnimations) {
           cls.push('entering');
-          cell.style.animationDelay = ((r * 9 + c) * 12) + 'ms';
+          cell.style.animationDelay = ((r * n + c) * 12) + 'ms';
         } else {
           cell.style.animation = 'none';
         }
@@ -76,7 +121,7 @@ function render(opts) {
 
       if (state.settings.highlightPeers && state.selectedCell) {
         const [sr, sc] = state.selectedCell;
-        if ((r === sr || c === sc || (Math.floor(r / 3) === Math.floor(sr / 3) && Math.floor(c / 3) === Math.floor(sc / 3))) && !(r === sr && c === sc))
+        if ((r === sr || c === sc || boxIndexOf(r, c) === boxIndexOf(sr, sc)) && !(r === sr && c === sc))
           cls.push('peer');
       }
       if (state.settings.highlightSame && selectedVal && val === selectedVal && !isSelected)
@@ -91,7 +136,7 @@ function render(opts) {
         cls.push(state.settings.reducedAnimations ? '' : 'hint-cell');
         if (state.settings.reducedAnimations) cell.style.boxShadow = 'inset 0 0 0 3px var(--accent)';
       }
-      if (opts.hintHighlight && (r === opts.hintHighlight.row || c === opts.hintHighlight.col || (Math.floor(r / 3) === Math.floor(opts.hintHighlight.row / 3) && Math.floor(c / 3) === Math.floor(opts.hintHighlight.col / 3)))) {
+      if (opts.hintHighlight && (r === opts.hintHighlight.row || c === opts.hintHighlight.col || boxIndexOf(r, c) === boxIndexOf(opts.hintHighlight.row, opts.hintHighlight.col))) {
         if (!(r === opts.hintHighlight.row && c === opts.hintHighlight.col)) cls.push('hint-peer');
       }
 
@@ -110,9 +155,9 @@ function render(opts) {
         const spans = notesGrid.children;
         if (useAuto) {
           const cands = getCachedCandidates(r, c);
-          for (let n = 0; n < 9; n++) spans[n].textContent = cands.has(n + 1) ? String(n + 1) : '';
+          for (let d = 0; d < n; d++) spans[d].textContent = cands.has(d + 1) ? String(d + 1) : '';
         } else {
-          for (let n = 0; n < 9; n++) spans[n].textContent = state.notes[r][c].has(n + 1) ? String(n + 1) : '';
+          for (let d = 0; d < n; d++) spans[d].textContent = state.notes[r][c].has(d + 1) ? String(d + 1) : '';
         }
       } else {
         notesGrid.style.display = 'none';
@@ -120,8 +165,8 @@ function render(opts) {
     }
   }
 
-  for (let r = 0; r < 9; r++) {
-    for (let c = 0; c < 9; c++) {
+  for (let r = 0; r < n; r++) {
+    for (let c = 0; c < n; c++) {
       const bi = boxIndexOf(r, c);
       const rowAnim = state.completedAnimated.rows.has(r) && !state.settings.reducedAnimations;
       const colAnim = state.completedAnimated.cols.has(c) && !state.settings.reducedAnimations;
@@ -132,9 +177,9 @@ function render(opts) {
         if (rowAnim) delay = c * 60;
         else if (colAnim) delay = r * 60;
         else {
-          const sr = Math.floor(bi / 3) * 3;
-          const sc = (bi % 3) * 3;
-          delay = ((r - sr) * 3 + (c - sc)) * 60;
+          const sr = boxStartRow(bi);
+          const sc = boxStartCol(bi);
+          delay = ((r - sr) * GRID.boxW + (c - sc)) * 60;
         }
         ((cr) => setTimeout(() => {
           cr.animate([
@@ -192,21 +237,22 @@ function selectCell(row, col) {
 }
 
 function updateNumPad() {
-  const counts = Array(10).fill(9);
-  for (let r = 0; r < 9; r++)
-    for (let c = 0; c < 9; c++)
+  const n = state.size || 9;
+  const counts = Array(n + 1).fill(n);
+  for (let r = 0; r < n; r++)
+    for (let c = 0; c < n; c++)
       if (state.board[r][c]) counts[state.board[r][c]]--;
   const numPad = document.getElementById('numPad');
   if (!numPad) return;
 
   numPad.querySelectorAll('button').forEach((btn, i) => {
-    const n = i + 1;
+    const d = i + 1;
     const rem = btn.querySelector('.remaining');
     if (rem) {
-      rem.textContent = counts[n];
-      rem.classList.toggle('zero', counts[n] <= 0);
+      rem.textContent = counts[d];
+      rem.classList.toggle('zero', counts[d] <= 0);
     }
-    btn.classList.toggle('placed', counts[n] <= 0);
+    btn.classList.toggle('placed', counts[d] <= 0);
     if (rem) rem.style.display = state.settings.showRemaining ? '' : 'none';
   });
 }
@@ -291,46 +337,55 @@ function updateGameLink() {
 // ============================================================
 // 8. Input Handling
 // ============================================================
-function setupInput() {
-  log('[ui] setupInput()');
+function buildNumPad() {
   const numPad = document.getElementById('numPad');
-  if (!numPad) { log('[ui] WARN: #numPad not found'); return; }
-  for (let n = 1; n <= 9; n++) {
+  if (!numPad) return;
+  numPad.innerHTML = '';
+  numPad.style.setProperty('--pad-cols', state.size || 9);
+  const n = state.size || 9;
+  for (let d = 1; d <= n; d++) {
     const btn = document.createElement('button');
-    btn.textContent = n;
+    btn.textContent = d;
     const rem = document.createElement('span');
     rem.className = 'remaining';
     btn.appendChild(rem);
     btn.addEventListener('click', () => {
-      log('[ui] numPad click', { n, selectedCell: state.selectedCell });
-      if (state.selectedCell) placeNumber(state.selectedCell[0], state.selectedCell[1], n);
+      log('[ui] numPad click', { d, selectedCell: state.selectedCell });
+      if (state.selectedCell) placeNumber(state.selectedCell[0], state.selectedCell[1], d);
       else log('[ui] numPad: no cell selected, ignoring');
     });
     numPad.appendChild(btn);
   }
+}
+
+function setupInput() {
+  log('[ui] setupInput()');
+  buildNumPad();
 
   document.addEventListener('keydown', (e) => {
     if (!state.settings.keyboardShortcuts) return;
-    if (e.key >= '1' && e.key <= '9' && state.selectedCell)
+    const n = state.size || 9;
+    if (e.key >= '1' && e.key <= String(n) && state.selectedCell)
       placeNumber(state.selectedCell[0], state.selectedCell[1], parseInt(e.key));
     if ((e.key === 'Backspace' || e.key === 'Delete') && state.selectedCell)
       placeNumber(state.selectedCell[0], state.selectedCell[1], 0);
     if ((e.key === 'n' || e.key === 'N') && !e.ctrlKey && !e.metaKey)
       { state.notesMode = !state.notesMode; log('[ui] keyboard: toggle notes mode', { notesMode: state.notesMode }); updateNotesBtn(); }
     if (e.key === 'ArrowUp' && state.selectedCell) { e.preventDefault(); selectCell(Math.max(0, state.selectedCell[0] - 1), state.selectedCell[1]); }
-    if (e.key === 'ArrowDown' && state.selectedCell) { e.preventDefault(); selectCell(Math.min(8, state.selectedCell[0] + 1), state.selectedCell[1]); }
+    if (e.key === 'ArrowDown' && state.selectedCell) { e.preventDefault(); selectCell(Math.min(n - 1, state.selectedCell[0] + 1), state.selectedCell[1]); }
     if (e.key === 'ArrowLeft' && state.selectedCell) { e.preventDefault(); selectCell(state.selectedCell[0], Math.max(0, state.selectedCell[1] - 1)); }
-    if (e.key === 'ArrowRight' && state.selectedCell) { e.preventDefault(); selectCell(state.selectedCell[0], Math.min(8, state.selectedCell[1] + 1)); }
+    if (e.key === 'ArrowRight' && state.selectedCell) { e.preventDefault(); selectCell(state.selectedCell[0], Math.min(n - 1, state.selectedCell[1] + 1)); }
     if (e.key === 'Home') { e.preventDefault(); selectCell(0, 0); }
-    if (e.key === 'End') { e.preventDefault(); selectCell(8, 8); }
+    if (e.key === 'End') { e.preventDefault(); selectCell(n - 1, n - 1); }
     if (e.key === 'Tab') {
       e.preventDefault();
       if (!state.selectedCell) { selectCell(0, 0); return; }
       const sr = state.selectedCell[0], sc = state.selectedCell[1];
       const dir = e.shiftKey ? -1 : 1;
-      for (let i = 1; i <= 81; i++) {
-        const idx = ((sr * 9 + sc + i * dir) % 81 + 81) % 81;
-        const r = Math.floor(idx / 9), c = idx % 9;
+      const total = n * n;
+      for (let i = 1; i <= total; i++) {
+        const idx = ((sr * n + sc + i * dir) % total + total) % total;
+        const r = Math.floor(idx / n), c = idx % n;
         if (state.board[r][c] === 0) { selectCell(r, c); break; }
       }
     }

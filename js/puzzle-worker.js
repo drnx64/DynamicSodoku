@@ -16,7 +16,8 @@ self.addEventListener('message', (e) => {
       solution: result.solution,
       givens: result.givens,
       board: result.board,
-      tier: result.tier
+      tier: result.tier,
+      size: result.size || 9
     });
   } catch (err) {
     self.postMessage({ type: 'error', id, error: err.message });

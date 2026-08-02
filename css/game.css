@@ -221,6 +221,14 @@
 .cell[data-row="0"] { border-top-width: 2px; border-top-color: var(--grid-bold); }
 .cell[data-row="8"] { border-bottom-width: 2px; border-bottom-color: var(--grid-bold); }
 
+/* 6x6 variant — boxes are 3 wide x 2 tall */
+.board-size-6 .cell[data-col="2"] { border-right-width: 2px; border-right-color: var(--grid-bold); }
+.board-size-6 .cell[data-col="5"] { border-right-width: 2px; border-right-color: var(--grid-bold); }
+.board-size-6 .cell[data-col="0"] { border-left-width: 2px; border-left-color: var(--grid-bold); }
+.board-size-6 .cell[data-row="1"], .board-size-6 .cell[data-row="3"] { border-bottom-width: 2px; border-bottom-color: var(--grid-bold); }
+.board-size-6 .cell[data-row="0"] { border-top-width: 2px; border-top-color: var(--grid-bold); }
+.board-size-6 .cell[data-row="5"] { border-bottom-width: 2px; border-bottom-color: var(--grid-bold); }
+
 #controls {
   width: 100%;
   display: flex;
@@ -230,7 +238,7 @@
 
 #numPad {
   display: grid;
-  grid-template-columns: repeat(9, 1fr);
+  grid-template-columns: repeat(var(--pad-cols, 9), 1fr);
   gap: 4px;
 }
 #numPad button {

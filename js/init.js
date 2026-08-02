@@ -30,7 +30,7 @@ function init() {
   requestNotificationPermission();
 
   const loaded = loadGame();
-  if (loaded && state.solution && state.solution.length === 9) {
+  if (loaded && state.solution && state.solution.length === (state.size || 9)) {
     if (state.won || state.gameOver || state.mistakes >= 3) {
       log('[init] clearing finished/unplayable game', { won: state.won, gameOver: state.gameOver, mistakes: state.mistakes });
       clearGame();

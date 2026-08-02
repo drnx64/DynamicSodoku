@@ -7,7 +7,21 @@ function log(...args) {
   console.log('[engine]', ...args);
 }
 
-const ALL_MASK = 0b111111111;
+const GRID = { size: 9, boxH: 3, boxW: 3 };
+
+function setGridConfig(size, boxH, boxW) {
+  GRID.size = size;
+  GRID.boxH = boxH;
+  GRID.boxW = boxW;
+}
+
+function allMask() {
+  return (1 << GRID.size) - 1;
+}
+
+function boxCount() {
+  return (GRID.size / GRID.boxH) * (GRID.size / GRID.boxW);
+}
 
 function digitToMask(d) {
   return 1 << (d - 1);
@@ -15,7 +29,7 @@ function digitToMask(d) {
 
 function maskToDigits(mask) {
   const digits = [];
-  for (let d = 1; d <= 9; d++) {
+  for (let d = 1; d <= GRID.size; d++) {
     if (mask & digitToMask(d)) digits.push(d);
   }
   return digits;
@@ -40,7 +54,18 @@ function shuffleArray(arr) {
 }
 
 function boxIndexOf(r, c) {
-  return Math.floor(r / 3) * 3 + Math.floor(c / 3);
+  const boxesPerRow = GRID.size / GRID.boxW;
+  return Math.floor(r / GRID.boxH) * boxesPerRow + Math.floor(c / GRID.boxW);
+}
+
+function boxStartRow(box) {
+  const boxesPerRow = GRID.size / GRID.boxW;
+  return Math.floor(box / boxesPerRow) * GRID.boxH;
+}
+
+function boxStartCol(box) {
+  const boxesPerRow = GRID.size / GRID.boxW;
+  return (box % boxesPerRow) * GRID.boxW;
 }
 
 function seesEachOther(c1, c2) {
@@ -56,14 +81,15 @@ function seesEachOther(c1, c2) {
 function getHouseCells(type, index) {
   const cells = [];
   if (type === "row") {
-    for (let c = 0; c < 9; c++) cells.push([index, c]);
+    for (let c = 0; c < GRID.size; c++) cells.push([index, c]);
   } else if (type === "col") {
-    for (let r = 0; r < 9; r++) cells.push([r, index]);
+    for (let r = 0; r < GRID.size; r++) cells.push([r, index]);
   } else if (type === "box") {
-    const startR = Math.floor(index / 3) * 3;
-    const startC = (index % 3) * 3;
-    for (let dr = 0; dr < 3; dr++) {
-      for (let dc = 0; dc < 3; dc++) {
+    const boxesPerRow = GRID.size / GRID.boxW;
+    const startR = Math.floor(index / boxesPerRow) * GRID.boxH;
+    const startC = (index % boxesPerRow) * GRID.boxW;
+    for (let dr = 0; dr < GRID.boxH; dr++) {
+      for (let dc = 0; dc < GRID.boxW; dc++) {
         cells.push([startR + dr, startC + dc]);
       }
     }
@@ -79,7 +105,7 @@ function getPeers(r, c) {
   const addAll = (cells) => {
     for (const [pr, pc] of cells) {
       if (pr === r && pc === c) continue;
-      const key = pr * 9 + pc;
+      const key = pr * GRID.size + pc;
       if (!seen.has(key)) {
         seen.add(key);
         peers.push([pr, pc]);
@@ -118,19 +144,19 @@ class SudokuGrid {
   constructor(values) {
     this.values = values
       ? values.map((row) => row.slice())
-      : Array.from({ length: 9 }, () => Array(9).fill(0));
-    this.candidates = Array.from({ length: 9 }, () => Array(9).fill(0));
+      : Array.from({ length: GRID.size }, () => Array(GRID.size).fill(0));
+    this.candidates = Array.from({ length: GRID.size }, () => Array(GRID.size).fill(0));
     this.initCandidates();
   }
 
   initCandidates() {
-    for (let r = 0; r < 9; r++) {
-      for (let c = 0; c < 9; c++) {
-        this.candidates[r][c] = this.values[r][c] === 0 ? ALL_MASK : 0;
+    for (let r = 0; r < GRID.size; r++) {
+      for (let c = 0; c < GRID.size; c++) {
+        this.candidates[r][c] = this.values[r][c] === 0 ? allMask() : 0;
       }
     }
-    for (let r = 0; r < 9; r++) {
-      for (let c = 0; c < 9; c++) {
+    for (let r = 0; r < GRID.size; r++) {
+      for (let c = 0; c < GRID.size; c++) {
         if (this.values[r][c] !== 0) {
           this.propagateValueRemoval(r, c, this.values[r][c]);
         }
@@ -171,8 +197,8 @@ class SudokuGrid {
   }
 
   isSolved() {
-    for (let r = 0; r < 9; r++) {
-      for (let c = 0; c < 9; c++) {
+    for (let r = 0; r < GRID.size; r++) {
+      for (let c = 0; c < GRID.size; c++) {
         if (this.values[r][c] === 0) return false;
       }
     }
@@ -180,8 +206,8 @@ class SudokuGrid {
   }
 
   hasContradiction() {
-    for (let r = 0; r < 9; r++) {
-      for (let c = 0; c < 9; c++) {
+    for (let r = 0; r < GRID.size; r++) {
+      for (let c = 0; c < GRID.size; c++) {
         if (this.values[r][c] === 0 && this.candidates[r][c] === 0) return true;
       }
     }
@@ -194,10 +220,10 @@ class SudokuGrid {
 
   static fromFlatString(str) {
     const values = [];
-    for (let r = 0; r < 9; r++) {
+    for (let r = 0; r < GRID.size; r++) {
       const row = [];
-      for (let c = 0; c < 9; c++) {
-        const ch = str[r * 9 + c];
+      for (let c = 0; c < GRID.size; c++) {
+        const ch = str[r * GRID.size + c];
         row.push(ch === "." || ch === "0" ? 0 : parseInt(ch, 10));
       }
       values.push(row);
@@ -212,16 +238,19 @@ class SudokuGrid {
 
 function countSolutions(values, limit = 2) {
   const grid = values.map((row) => row.slice());
+  const n = GRID.size;
+  const bh = GRID.boxH;
+  const bw = GRID.boxW;
 
   function isPlacementLegal(r, c, d) {
-    for (let i = 0; i < 9; i++) {
+    for (let i = 0; i < n; i++) {
       if (grid[r][i] === d) return false;
       if (grid[i][c] === d) return false;
     }
-    const boxR = Math.floor(r / 3) * 3;
-    const boxC = Math.floor(c / 3) * 3;
-    for (let dr = 0; dr < 3; dr++) {
-      for (let dc = 0; dc < 3; dc++) {
+    const boxR = Math.floor(r / bh) * bh;
+    const boxC = Math.floor(c / bw) * bw;
+    for (let dr = 0; dr < bh; dr++) {
+      for (let dc = 0; dc < bw; dc++) {
         if (grid[boxR + dr][boxC + dc] === d) return false;
       }
     }
@@ -231,12 +260,12 @@ function countSolutions(values, limit = 2) {
   function findMostConstrainedCell() {
     let best = null;
     let bestCandidates = null;
-    let bestCount = 10;
-    for (let r = 0; r < 9; r++) {
-      for (let c = 0; c < 9; c++) {
+    let bestCount = n + 1;
+    for (let r = 0; r < n; r++) {
+      for (let c = 0; c < n; c++) {
         if (grid[r][c] !== 0) continue;
         const candidates = [];
-        for (let d = 1; d <= 9; d++) {
+        for (let d = 1; d <= n; d++) {
           if (isPlacementLegal(r, c, d)) candidates.push(d);
         }
         if (candidates.length < bestCount) {
@@ -1369,6 +1398,7 @@ function runSolverWithRandomizedTechniques(grid, maxTier) {
  * ========================================================================== */
 
 function gradePuzzle(values) {
+  if (GRID.size !== 9) return gradePuzzleSmall(values);
   log('gradePuzzle: starting...');
   const grid = new SudokuGrid(values);
   const result = runSolverWithRandomizedTechniques(grid, 4);
@@ -1385,19 +1415,45 @@ function gradePuzzle(values) {
   return { solved: true, tier, difficultyName: TIER_NAMES[tier] };
 }
 
+function gradePuzzleSmall(values) {
+  const n = GRID.size;
+  const total = n * n;
+  let clueCount = 0;
+  for (let r = 0; r < n; r++) {
+    for (let c = 0; c < n; c++) {
+      if (values[r][c] !== 0) clueCount++;
+    }
+  }
+  if (countSolutions(values, 2) !== 1) {
+    return {
+      solved: false,
+      tier: null,
+      difficultyName: "Unsolvable (requires guessing)",
+    };
+  }
+  let tier;
+  const ratio = clueCount / total;
+  if (ratio >= 0.72) tier = 1;
+  else if (ratio >= 0.58) tier = 2;
+  else if (ratio >= 0.45) tier = 3;
+  else tier = 4;
+  log(`gradePuzzleSmall: size=${n} clues=${clueCount} ratio=${ratio.toFixed(3)} tier=${tier}`);
+  return { solved: true, tier, difficultyName: TIER_NAMES[tier] };
+}
+
 /* =============================================================================
  * FULL SOLVED BOARD GENERATOR
  * ========================================================================== */
 
 function isPlacementLegal(values, r, c, d) {
-  for (let i = 0; i < 9; i++) {
+  for (let i = 0; i < GRID.size; i++) {
     if (values[r][i] === d) return false;
     if (values[i][c] === d) return false;
   }
-  const boxR = Math.floor(r / 3) * 3;
-  const boxC = Math.floor(c / 3) * 3;
-  for (let dr = 0; dr < 3; dr++) {
-    for (let dc = 0; dc < 3; dc++) {
+  const boxR = Math.floor(r / GRID.boxH) * GRID.boxH;
+  const boxC = Math.floor(c / GRID.boxW) * GRID.boxW;
+  for (let dr = 0; dr < GRID.boxH; dr++) {
+    for (let dc = 0; dc < GRID.boxW; dc++) {
       if (values[boxR + dr][boxC + dc] === d) return false;
     }
   }
@@ -1405,14 +1461,16 @@ function isPlacementLegal(values, r, c, d) {
 }
 
 function generateSolvedBoard() {
-  const values = Array.from({ length: 9 }, () => Array(9).fill(0));
+  const values = Array.from({ length: GRID.size }, () => Array(GRID.size).fill(0));
+  const total = GRID.size * GRID.size;
+  const digits = Array.from({ length: GRID.size }, (_, i) => i + 1);
 
   function fill(pos) {
-    if (pos === 81) return true;
-    const r = Math.floor(pos / 9);
-    const c = pos % 9;
-    const digits = shuffleArray([1, 2, 3, 4, 5, 6, 7, 8, 9]);
-    for (const d of digits) {
+    if (pos === total) return true;
+    const r = Math.floor(pos / GRID.size);
+    const c = pos % GRID.size;
+    const shuffled = shuffleArray(digits.slice());
+    for (const d of shuffled) {
       if (isPlacementLegal(values, r, c, d)) {
         values[r][c] = d;
         if (fill(pos + 1)) return true;
@@ -1433,11 +1491,12 @@ function generateSolvedBoard() {
 
 function removeClues(solvedValues, targetClueCount) {
   const puzzle = solvedValues.map((row) => row.slice());
+  const total = GRID.size * GRID.size;
   const cellOrder = shuffleArray(
-    Array.from({ length: 81 }, (_, i) => [Math.floor(i / 9), i % 9]),
+    Array.from({ length: total }, (_, i) => [Math.floor(i / GRID.size), i % GRID.size]),
   );
 
-  let clueCount = 81;
+  let clueCount = total;
   for (const [r, c] of cellOrder) {
     if (clueCount <= targetClueCount) break;
     if (puzzle[r][c] === 0) continue;
@@ -1460,13 +1519,50 @@ function removeClues(solvedValues, targetClueCount) {
  * PUZZLE GENERATOR
  * ========================================================================== */
 
+const SMALL_TIER_CLUE_RANGES = {
+  1: [26, 30],
+  2: [21, 25],
+  3: [17, 20],
+  4: [12, 16],
+};
+
 function generateGamePuzzle(targetDifficulty, options = {}) {
   const maxAttempts = options.maxAttempts || 60;
-  const minClues = options.minClues || 22;
-  const maxClues = options.maxClues || 36;
+  const size = options.size || 9;
+  const isSmall = size !== 9;
+  if (isSmall) {
+    setGridConfig(size, 2, 3);
+  } else {
+    setGridConfig(9, 3, 3);
+  }
+  let minClues;
+  let maxClues;
+  if (isSmall) {
+    const range = SMALL_TIER_CLUE_RANGES[targetDifficulty] || SMALL_TIER_CLUE_RANGES[2];
+    minClues = range[0];
+    maxClues = range[1];
+    if (options.minClues != null && options.maxClues != null) {
+      minClues = Math.max(options.minClues, minClues);
+      maxClues = Math.min(options.maxClues, maxClues);
+      if (minClues > maxClues) {
+        minClues = range[0];
+        maxClues = range[1];
+      }
+    }
+  } else if (options.minClues != null && options.maxClues != null) {
+    minClues = options.minClues;
+    maxClues = options.maxClues;
+    if (minClues > maxClues) {
+      minClues = 22;
+      maxClues = 36;
+    }
+  } else {
+    minClues = 22;
+    maxClues = 36;
+  }
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    log(`generateGamePuzzle: attempt ${attempt + 1}/${maxAttempts} (target tier ${targetDifficulty})`);
+    log(`generateGamePuzzle: attempt ${attempt + 1}/${maxAttempts} (target tier ${targetDifficulty}, size ${size})`);
     const solved = generateSolvedBoard();
     const targetClueCount =
       minClues + Math.floor(Math.random() * (maxClues - minClues + 1));
@@ -1480,6 +1576,7 @@ function generateGamePuzzle(targetDifficulty, options = {}) {
         puzzle,
         solution: solved,
         clueCount,
+        size,
         difficulty: grade.tier,
         difficultyName: grade.difficultyName,
         attempts: attempt + 1,
@@ -1532,30 +1629,30 @@ function rankSvgImg(rankName, size) {
 
 function isValidPlacement(board, row, col, val) {
   if (!val) return true;
-  for (let i = 0; i < 9; i++) {
+  for (let i = 0; i < GRID.size; i++) {
     if (board[row][i] === val && i !== col) return false;
     if (board[i][col] === val && i !== row) return false;
   }
-  const br = Math.floor(row / 3) * 3, bc = Math.floor(col / 3) * 3;
-  for (let r = br; r < br + 3; r++)
-    for (let c = bc; c < bc + 3; c++)
+  const br = Math.floor(row / GRID.boxH) * GRID.boxH, bc = Math.floor(col / GRID.boxW) * GRID.boxW;
+  for (let r = br; r < br + GRID.boxH; r++)
+    for (let c = bc; c < bc + GRID.boxW; c++)
       if (board[r][c] === val && (r !== row || c !== col)) return false;
   return true;
 }
 
 function findConflicts(board) {
   const conflicts = new Set();
-  for (let row = 0; row < 9; row++)
-    for (let col = 0; col < 9; col++) {
+  for (let row = 0; row < GRID.size; row++)
+    for (let col = 0; col < GRID.size; col++) {
       const v = board[row][col];
       if (!v) continue;
-      for (let i = 0; i < 9; i++) {
+      for (let i = 0; i < GRID.size; i++) {
         if (i !== col && board[row][i] === v) { conflicts.add(row+','+col); conflicts.add(row+','+i); }
         if (i !== row && board[i][col] === v) { conflicts.add(row+','+col); conflicts.add(i+','+col); }
       }
-      const br = Math.floor(row / 3) * 3, bc = Math.floor(col / 3) * 3;
-      for (let r = br; r < br + 3; r++)
-        for (let c = bc; c < bc + 3; c++)
+      const br = Math.floor(row / GRID.boxH) * GRID.boxH, bc = Math.floor(col / GRID.boxW) * GRID.boxW;
+      for (let r = br; r < br + GRID.boxH; r++)
+        for (let c = bc; c < bc + GRID.boxW; c++)
           if ((r !== row || c !== col) && board[r][c] === v) { conflicts.add(row+','+col); conflicts.add(r+','+c); }
     }
   return conflicts;
@@ -1563,8 +1660,8 @@ function findConflicts(board) {
 
 function getWrongCells(board, solution) {
   const wrong = new Set();
-  for (let r = 0; r < 9; r++) {
-    for (let c = 0; c < 9; c++) {
+  for (let r = 0; r < GRID.size; r++) {
+    for (let c = 0; c < GRID.size; c++) {
       if (board[r][c] !== 0 && board[r][c] !== solution[r][c]) {
         wrong.add(r + ',' + c);
       }
@@ -1575,14 +1672,14 @@ function getWrongCells(board, solution) {
 
 function getCandidates(board, row, col) {
   if (board[row][col]) return new Set();
-  const cands = new Set([1,2,3,4,5,6,7,8,9]);
-  for (let i = 0; i < 9; i++) {
+  const cands = new Set(Array.from({ length: GRID.size }, (_, i) => i + 1));
+  for (let i = 0; i < GRID.size; i++) {
     cands.delete(board[row][i]);
     cands.delete(board[i][col]);
   }
-  const br = Math.floor(row / 3) * 3, bc = Math.floor(col / 3) * 3;
-  for (let r = br; r < br + 3; r++)
-    for (let c = bc; c < bc + 3; c++)
+  const br = Math.floor(row / GRID.boxH) * GRID.boxH, bc = Math.floor(col / GRID.boxW) * GRID.boxW;
+  for (let r = br; r < br + GRID.boxH; r++)
+    for (let c = bc; c < bc + GRID.boxW; c++)
       cands.delete(board[r][c]);
   return cands;
 }

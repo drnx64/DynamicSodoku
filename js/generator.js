@@ -17,7 +17,7 @@ function generatePuzzle(difficulty, rand, options) {
     const solution = result.solution;
     const givens = solution.map((r, ri) => r.map((v, ci) => result.puzzle[ri][ci] !== 0));
     const board = result.puzzle.map(r => [...r]);
-    return { solution, givens, board, tier: result.difficulty };
+    return { solution, givens, board, tier: result.difficulty, size: result.size || 9 };
   } finally {
     if (oldRandom) Math.random = oldRandom;
   }

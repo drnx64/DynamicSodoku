@@ -302,7 +302,7 @@ function setupNavigation() {
     winReplay.addEventListener('click', () => {
       log('[nav] click: winReplay');
       document.getElementById('winOverlay').classList.remove('open');
-      if (state.solution && state.solution.length === 9) {
+      if (state.solution && state.solution.length === (state.size || 9)) {
         retryLevel();
       } else {
         initNewGame(state.difficulty || 'easy', false, state.currentLevel || 1);
@@ -399,6 +399,28 @@ function setupNavigation() {
       if (customWrap) customWrap.style.display = opt.dataset.time === 'custom' ? 'flex' : 'none';
     });
   });
+
+  const bsOptions = document.querySelectorAll('#boardSizeOptions .countdown-option');
+  if (bsOptions.length > 0) {
+    const sync = () => {
+      const sel = parseInt(state.settings.gridSize, 10) || 9;
+      bsOptions.forEach(o => {
+        const active = parseInt(o.dataset.size, 10) === sel;
+        o.classList.toggle('active', active);
+        const input = o.querySelector('input');
+        if (input) input.checked = active;
+      });
+    };
+    bsOptions.forEach(opt => {
+      opt.addEventListener('click', () => {
+        state.settings.gridSize = parseInt(opt.dataset.size, 10) || 9;
+        saveSettings();
+        sync();
+        log('[nav] board size selected', { size: state.settings.gridSize });
+      });
+    });
+    sync();
+  }
 
   document.getElementById('countdownCustomInput')?.addEventListener('input', function () {
     const v = parseInt(this.value, 10);

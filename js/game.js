@@ -1,11 +1,18 @@
 // ============================================================
 // 6. Game State
 // ============================================================
-function emptyGrid() {
-  return Array.from({length: 9}, () => Array(9).fill(0));
+function emptyGrid(size) {
+  const n = size || 9;
+  return Array.from({length: n}, () => Array(n).fill(0));
 }
-function emptyNotes() {
-  return Array.from({length: 9}, () => Array.from({length: 9}, () => new Set()));
+function emptyNotes(size) {
+  const n = size || 9;
+  return Array.from({length: n}, () => Array.from({length: n}, () => new Set()));
+}
+function syncGridConfig() {
+  const s = state.size || 9;
+  if (s === 6) setGridConfig(6, 2, 3);
+  else setGridConfig(9, 3, 3);
 }
 function toRoman(n) {
   const vals = [1000,900,500,400,100,90,50,40,10,9,5,4,1];
@@ -16,6 +23,7 @@ function toRoman(n) {
 }
 
 const state = {
+  size: 9,
   solution: emptyGrid(), givens: emptyGrid(), board: emptyGrid(), notes: emptyNotes(),
   history: [], historyIdx: -1,
   selectedCell: null, notesMode: false,
@@ -171,43 +179,41 @@ function toggleNote(row, col, num) {
 }
 
 function autoClearNotes(row, col, num) {
-  for (let i = 0; i < 9; i++) { state.notes[row][i].delete(num); state.notes[i][col].delete(num); }
-  const br = Math.floor(row / 3) * 3, bc = Math.floor(col / 3) * 3;
-  for (let r = br; r < br + 3; r++)
-    for (let c = bc; c < bc + 3; c++)
-      state.notes[r][c].delete(num);
+  const n = state.size || 9;
+  for (let i = 0; i < n; i++) { state.notes[row][i].delete(num); state.notes[i][col].delete(num); }
+  const bi = boxIndexOf(row, col);
+  for (const [r, c] of getHouseCells('box', bi)) state.notes[r][c].delete(num);
 }
 
 function findHint() {
-  const cands = Array.from({length: 9}, () => Array.from({length: 9}, () => new Set()));
-  for (let r = 0; r < 9; r++)
-    for (let c = 0; c < 9; c++)
+  const n = state.size || 9;
+  const cands = Array.from({length: n}, () => Array.from({length: n}, () => new Set()));
+  for (let r = 0; r < n; r++)
+    for (let c = 0; c < n; c++)
       if (state.board[r][c] === 0) cands[r][c] = getCandidates(state.board, r, c);
 
-  for (let r = 0; r < 9; r++)
-    for (let c = 0; c < 9; c++)
+  for (let r = 0; r < n; r++)
+    for (let c = 0; c < n; c++)
       if (state.board[r][c] === 0 && cands[r][c].size === 1)
         return { row: r, col: c, technique: 'Naked Single', desc: `Only ${[...cands[r][c]][0]} fits in row ${r+1}, column ${c+1}` };
 
-  for (let n = 1; n <= 9; n++) {
-    for (let row = 0; row < 9; row++) {
+  for (let d = 1; d <= n; d++) {
+    for (let row = 0; row < n; row++) {
       const cells = [];
-      for (let c = 0; c < 9; c++) if (state.board[row][c] === 0 && cands[row][c].has(n)) cells.push(c);
-      if (cells.length === 1) return { row, col: cells[0], technique: 'Hidden Single', desc: `${n} can only go in row ${row+1}` };
+      for (let c = 0; c < n; c++) if (state.board[row][c] === 0 && cands[row][c].has(d)) cells.push(c);
+      if (cells.length === 1) return { row, col: cells[0], technique: 'Hidden Single', desc: `${d} can only go in row ${row+1}` };
     }
-    for (let col = 0; col < 9; col++) {
+    for (let col = 0; col < n; col++) {
       const cells = [];
-      for (let r = 0; r < 9; r++) if (state.board[r][col] === 0 && cands[r][col].has(n)) cells.push(r);
-      if (cells.length === 1) return { row: cells[0], col, technique: 'Hidden Single', desc: `${n} can only go in column ${col+1}` };
+      for (let r = 0; r < n; r++) if (state.board[r][col] === 0 && cands[r][col].has(d)) cells.push(r);
+      if (cells.length === 1) return { row: cells[0], col, technique: 'Hidden Single', desc: `${d} can only go in column ${col+1}` };
     }
-    for (let br = 0; br < 9; br += 3)
-      for (let bc = 0; bc < 9; bc += 3) {
-        const cells = [];
-        for (let r = br; r < br+3; r++)
-          for (let c = bc; c < bc+3; c++)
-            if (state.board[r][c] === 0 && cands[r][c].has(n)) cells.push([r, c]);
-        if (cells.length === 1) return { row: cells[0][0], col: cells[0][1], technique: 'Hidden Single', desc: `${n} can only go in box ${br/3*3+bc/3+1}` };
-      }
+    for (let b = 0; b < boxCount(); b++) {
+      const cells = [];
+      for (const [r, c] of getHouseCells('box', b))
+        if (state.board[r][c] === 0 && cands[r][c].has(d)) cells.push([r, c]);
+      if (cells.length === 1) return { row: cells[0][0], col: cells[0][1], technique: 'Hidden Single', desc: `${d} can only go in box ${b+1}` };
+    }
   }
 
   return null;
@@ -357,8 +363,9 @@ function checkEasterEgg() {
 }
 
 function checkWin() {
-  for (let r = 0; r < 9; r++)
-    for (let c = 0; c < 9; c++)
+  const n = state.size || 9;
+  for (let r = 0; r < n; r++)
+    for (let c = 0; c < n; c++)
       if (state.board[r][c] !== state.solution[r][c]) return;
   log('[game] checkWin: puzzle solved!');
   checkEasterEgg();
@@ -503,7 +510,7 @@ function showRetryOverlay() {
 function retryLevel() {
   log('[game] retryLevel()');
   state.board = state.solution.map((r, ri) => r.map((c, ci) => state.givens[ri][ci] ? state.solution[ri][ci] : 0));
-  state.notes = Array.from({length: 9}, () => Array.from({length: 9}, () => new Set()));
+  state.notes = emptyNotes(state.size || 9);
   state.history = []; state.historyIdx = -1;
   state.selectedCell = null; state.notesMode = false;
   if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
@@ -621,9 +628,14 @@ function initNewGame(difficulty, isDaily, startLevel, seedDate, challengeData) {
   if (seed) state._archivedSeed = seedDate || null;
   state._seed = seed;
 
+  const genOptions = {};
+  if (state.difficulty === 'custom' && state._customOptions) Object.assign(genOptions, state._customOptions);
+  const gridSize = (isDaily || challengeData) ? 9 : (parseInt(state.settings.gridSize, 10) || 9);
+  genOptions.size = gridSize;
+
   const genPromise = isDaily
-    ? generatePuzzleAsync('medium', seed)
-    : generatePuzzleAsync(state.difficulty, seed, (state.difficulty === 'custom' && state._customOptions) ? state._customOptions : undefined);
+    ? generatePuzzleAsync('medium', seed, { size: 9 })
+    : generatePuzzleAsync(state.difficulty, seed, genOptions);
 
   genPromise.then(puzzle => {
     if (!puzzle || !puzzle.solution) {
@@ -633,7 +645,11 @@ function initNewGame(difficulty, isDaily, startLevel, seedDate, challengeData) {
       return;
     }
 
-    log('[game] puzzle generated', { clues: puzzle.givens.flat().filter(Boolean).length });
+    log('[game] puzzle generated', { clues: puzzle.givens.flat().filter(Boolean).length, size: puzzle.size });
+
+    state.size = puzzle.size || 9;
+    syncGridConfig();
+    rebuildBoardForSize();
 
     state.solution = puzzle.solution.map(r => [...r]);
     state.board = puzzle.board.map(r => [...r]);
@@ -642,7 +658,7 @@ function initNewGame(difficulty, isDaily, startLevel, seedDate, challengeData) {
       state._customTier = puzzle.tier || state._customOptions?.tier || null;
       log('[game] custom puzzle tier', { tier: state._customTier });
     }
-    state.notes = Array.from({length: 9}, () => Array.from({length: 9}, () => new Set()));
+    state.notes = emptyNotes(state.size);
     state.history = []; state.historyIdx = -1;
   state.selectedCell = null; state.notesMode = false;
   state.timer = state.countdownMode ? state.countdownTime : 0; state.timerRunning = false;

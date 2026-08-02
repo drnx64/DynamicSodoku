@@ -78,6 +78,7 @@ function saveGame() {
       hintsRemaining: state.hintsRemaining,
       difficulty: state.difficulty, gameOver: state.gameOver, won: state.won,
       started: state.started, selectedCell: state.selectedCell, isDaily: state.isDaily,
+      size: state.size || 9,
       isChallenge: state.isChallenge || false,
       challengeSeed: state.challengeSeed || null,
       challengeTarget: state.challengeTarget || null,
@@ -104,6 +105,9 @@ function loadGame() {
     state.solution = decodeField(data.solution);
     state.givens = decodeField(data.givens);
     state.board = decodeField(data.board);
+    state.size = data.size || 9;
+    if (typeof syncGridConfig === 'function') syncGridConfig();
+    if (typeof rebuildBoardForSize === 'function') rebuildBoardForSize();
     state.notes = decodeField(data.notes).map(r => r.map(s => new Set(s)));
     state.history = decodeField(data.history);
     state.historyIdx = data.historyIdx;
@@ -128,13 +132,14 @@ function loadGame() {
     
     state.completed = { rows: new Set(), cols: new Set(), boxes: new Set() };
     state.completedAnimated = { rows: new Set(), cols: new Set(), boxes: new Set() };
-    for (let r = 0; r < 9; r++) {
+    const sz = state.size || 9;
+    for (let r = 0; r < sz; r++) {
       if (isHouseCompleted('row', r)) state.completed.rows.add(r);
     }
-    for (let c = 0; c < 9; c++) {
+    for (let c = 0; c < sz; c++) {
       if (isHouseCompleted('col', c)) state.completed.cols.add(c);
     }
-    for (let b = 0; b < 9; b++) {
+    for (let b = 0; b < boxCount(); b++) {
       if (isHouseCompleted('box', b)) state.completed.boxes.add(b);
     }
     
@@ -159,6 +164,7 @@ function saveDailyGame() {
       difficulty: state.difficulty, gameOver: state.gameOver, won: state.won,
       started: state.started, selectedCell: state.selectedCell,
       notesUsed: state.notesUsed, currentLevel: state.currentLevel,
+      size: state.size || 9,
     };
     saveWithVault(LS.dailyState, data, 'dailyState');
   } catch(e) { log('[storage] saveDailyGame error', e); }
@@ -172,6 +178,9 @@ function loadDailyGame() {
     state.solution = decodeField(data.solution);
     state.givens = decodeField(data.givens);
     state.board = decodeField(data.board);
+    state.size = data.size || 9;
+    if (typeof syncGridConfig === 'function') syncGridConfig();
+    if (typeof rebuildBoardForSize === 'function') rebuildBoardForSize();
     state.notes = decodeField(data.notes).map(r => r.map(s => new Set(s)));
     state.history = decodeField(data.history);
     state.historyIdx = data.historyIdx;
@@ -187,13 +196,14 @@ function loadDailyGame() {
     
     state.completed = { rows: new Set(), cols: new Set(), boxes: new Set() };
     state.completedAnimated = { rows: new Set(), cols: new Set(), boxes: new Set() };
-    for (let r = 0; r < 9; r++) {
+    const sz = state.size || 9;
+    for (let r = 0; r < sz; r++) {
       if (isHouseCompleted('row', r)) state.completed.rows.add(r);
     }
-    for (let c = 0; c < 9; c++) {
+    for (let c = 0; c < sz; c++) {
       if (isHouseCompleted('col', c)) state.completed.cols.add(c);
     }
-    for (let b = 0; b < 9; b++) {
+    for (let b = 0; b < boxCount(); b++) {
       if (isHouseCompleted('box', b)) state.completed.boxes.add(b);
     }
     

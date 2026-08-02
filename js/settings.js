@@ -13,6 +13,7 @@ const DEFAULT_SETTINGS = {
   showCoordinates: true, showCompleted: true,
   reducedAnimations: false,
   dailyReminder: false, dailyReminderTime: '20:00',
+  gridSize: 9,
 };
 
 const SETTINGS_CATEGORIES = [
@@ -382,7 +383,7 @@ function applySettings() {
   }
   const bc = document.getElementById('boardArea');
   if (bc) bc.classList.toggle('hidden-coords', !state.settings.showCoordinates);
-  if (state.board && state.board.length === 9) requestRender();
+  if (state.board && state.board.length === (state.size || 9)) requestRender();
   scheduleDailyReminder();
 }
 
