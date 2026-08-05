@@ -89,16 +89,16 @@
 
 .coords-row-area {
   position: absolute;
-  top: 0; left: 26px; right: 0;
-  height: 24px;
+  top: 0; left: 34px; right: 0;
+  height: 30px;
   display: grid;
   grid-template-columns: repeat(9, 1fr);
   gap: 0;
 }
 .coords-row-area .coords-col {
   display: flex; align-items: flex-end; justify-content: center;
-  padding-bottom: 3px;
-  font-size: clamp(11px, 2.8vw, 16px); font-weight: 700;
+  padding-bottom: 4px;
+  font-size: clamp(13px, 3.4vw, 22px); font-weight: 700;
   letter-spacing: 0.3px;
   color: var(--coord-col);
 }
@@ -107,22 +107,22 @@ body:not(.dark) .coords-col-area .coords-row { font-weight: 800; }
 
 .coords-col-area {
   position: absolute;
-  left: 0; top: 24px; bottom: 0;
-  width: 26px;
+  left: 0; top: 30px; bottom: 0;
+  width: 34px;
   display: grid;
   grid-template-rows: repeat(9, 1fr);
   gap: 0;
 }
 .coords-col-area .coords-row {
   display: flex; align-items: center; justify-content: center;
-  padding-right: 3px;
-  font-size: clamp(11px, 2.8vw, 16px); font-weight: 700;
+  padding-right: 4px;
+  font-size: clamp(13px, 3.4vw, 22px); font-weight: 700;
   color: var(--coord-row);
 }
 
 #boardWrap {
   position: absolute;
-  inset: 24px 0 0 26px;
+  inset: 30px 0 0 34px;
   background: var(--glass);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);

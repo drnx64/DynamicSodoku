@@ -206,6 +206,11 @@
   }
   .deco-bg { display: none; }
   .game-info .game-meta { flex-wrap: wrap; gap: 10px; }
+  .coords-row-area { left: 38px; height: 34px; }
+  .coords-col-area { top: 34px; width: 38px; }
+  #boardWrap { inset: 34px 0 0 38px; }
+  .coords-row-area .coords-col,
+  .coords-col-area .coords-row { font-size: clamp(16px, 2.2vw, 26px); }
 }
 
 @media (min-width: 900px) {
