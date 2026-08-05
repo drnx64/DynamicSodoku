@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ascendoku-v2';
+const CACHE_NAME = 'ascendoku-v5';
 const PRECACHE_URLS = [
   './',
   './index.html',
@@ -93,14 +93,14 @@ self.addEventListener('fetch', (event) => {
 
   event.respondWith(
     caches.match(request).then((cached) => {
-      if (cached) return cached;
-      return fetch(request).then((response) => {
+      const network = fetch(request).then((response) => {
         if (response && response.status === 200) {
           const copy = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
         }
         return response;
-      });
+      }).catch(() => cached);
+      return cached || network;
     })
   );
 });

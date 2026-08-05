@@ -65,6 +65,7 @@ function init() {
       updateUndoRedo();
       requestRender({ entering: true });
       if (state.timer > 0 && !state.won && !state.gameOver) startTimer();
+      if (window.AscendokuChallenge && window.AscendokuChallenge.setupBanner) window.AscendokuChallenge.setupBanner();
       showPage('page-game');
     }
     log('[init] init() complete (challenge)');

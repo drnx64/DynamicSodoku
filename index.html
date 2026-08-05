@@ -252,6 +252,14 @@
             <p>Learn all solving strategies</p>
           </div>
         </div>
+
+        <div class="menu-card menu-card-compact" id="archiveCard">
+          <div class="icon" style="background:rgba(251,191,36,0.15)"><svg width="20" height="20" viewBox="0 0 24 24"><use href="#ico-calendar"/></svg></div>
+          <div class="card-text">
+            <h3>Daily Archive</h3>
+            <p>Replay past daily puzzles</p>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -382,6 +390,10 @@
     </div>
     <div class="game-link-bar">
       <div class="game-link" id="gameLink"></div>
+    </div>
+    <div class="challenge-banner" id="challengeBanner" style="display:none">
+      <div class="challenge-banner-title" id="challengeBannerTitle"></div>
+      <div class="challenge-banner-targets" id="challengeBannerTargets"></div>
     </div>
     <div class="page-header">
       <button class="back-btn" id="gameBack"><svg width="22" height="22" viewBox="0 0 24 24"><use href="#ico-chevron-left"/></svg></button>
@@ -525,7 +537,8 @@
     <div class="win-challenge" id="winChallenge" style="display:none">
       <div class="win-challenge-times" id="winChallengeTimes"></div>
       <div class="win-challenge-result" id="winChallengeResult"></div>
-      <button class="win-challenge-back" id="winChallengeBack"><svg width="14" height="14" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:6px"><use href="#ico-send"/></svg> Send Challenge Back</button>
+      <button class="win-challenge-back" id="winChallengeRematch"><svg width="14" height="14" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:6px"><use href="#ico-refresh"/></svg> Rematch</button>
+      <button class="win-challenge-back win-challenge-send" id="winChallengeBack"><svg width="14" height="14" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:6px"><use href="#ico-send"/></svg> Send Challenge Back</button>
     </div>
     <div class="win-stats">
       <div class="win-stat"><div class="val" id="winTime">00:00</div><div class="lbl">Time</div></div>
@@ -533,6 +546,7 @@
       <div class="win-stat"><div class="val" id="winHints">0</div><div class="lbl">Hints</div></div>
     </div>
     <div class="win-xp">+<span id="winXp">0</span> XP <span class="win-combo" id="winComboBonus"></span></div>
+    <div class="win-xp-breakdown" id="winXpBreakdown" style="display:none"></div>
     <div class="win-rank-progress" id="winRankProgress">
       <div class="win-rank-bar-wrap">
         <div class="win-rank-bar-fill" id="winRankBarFill"></div>
@@ -556,7 +570,6 @@
       <button class="win-primary" id="winNext">Next Puzzle</button>
       <div class="win-actions-row">
         <button class="win-secondary" id="winMenu">Main Menu</button>
-        <button class="win-tertiary" id="winReplay">Replay</button>
         <button class="win-secondary" id="winChallengeFriend" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:6px"><use href="#ico-send"/></svg> Challenge</button>
       </div>
     </div>

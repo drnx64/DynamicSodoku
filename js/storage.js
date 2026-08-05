@@ -61,6 +61,7 @@ function clearGame() {
   if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
   state.timerRunning = false;
   state.timer = 0;
+  state._timerAccum = 0; state._timerStartTs = 0;
   try { localStorage.removeItem(LS.game); localStorage.removeItem(LS.dailyState); } catch(e) { log('[storage] clearGame error', e); }
 }
 
@@ -78,6 +79,7 @@ function saveGame() {
       hintsRemaining: state.hintsRemaining,
       difficulty: state.difficulty, gameOver: state.gameOver, won: state.won,
       started: state.started, selectedCell: state.selectedCell, isDaily: state.isDaily,
+      isArchive: state.isArchive || false,
       size: state.size || 9,
       isChallenge: state.isChallenge || false,
       challengeSeed: state.challengeSeed || null,
@@ -93,7 +95,7 @@ function saveGame() {
       _customTier: state._customTier || null,
     };
     saveWithVault(LS.game, data, 'game');
-    if (state.isDaily) saveDailyGame();
+    if (state.isDaily && !state.isArchive) saveDailyGame();
   } catch(e) { log('[storage] saveGame error', e); }
 }
 
@@ -116,6 +118,7 @@ function loadGame() {
     state.gameOver = data.gameOver || false; state.won = data.won || false;
     state.started = data.started || false; state.selectedCell = data.selectedCell || null;
     state.isDaily = data.isDaily || false; state.notesUsed = data.notesUsed || false;
+    state.isArchive = data.isArchive || false;
     state.isChallenge = data.isChallenge || false;
     state.challengeSeed = data.challengeSeed || null;
     state.challengeTarget = data.challengeTarget || null;
@@ -799,32 +802,40 @@ function saveDailyTasks() {
 }
 
 function checkDailyTasks(difficulty, timer, mistakes, hintsUsed, maxCombo) {
-  if (dailyTasks.date !== todayStr()) return;
-  const beforeCount = dailyTasks.completed.length;
-  for (let i = 0; i < dailyTasks.tasks.length; i++) {
-    const t = dailyTasks.tasks[i];
-    if (dailyTasks.completed.includes(i)) continue;
-    if (t.check(difficulty, timer, mistakes, hintsUsed, maxCombo)) {
-      dailyTasks.completed.push(i);
-      t.done = true;
-      if (!dailyTasks._pendingNotifications) dailyTasks._pendingNotifications = [];
-      dailyTasks._pendingNotifications.push(i);
-      if (t.reward.hints) state.hintsRemaining += t.reward.hints;
-      if (t.reward.xp) stats.totalXp = (stats.totalXp || 0) + t.reward.xp;
-      if (t.reward.autoUse) state._freeAuto = (state._freeAuto || 0) + t.reward.autoUse;
-      saveDailyTasks();
-      saveStats();
-      saveGame();
+  try {
+    if (!dailyTasks || !Array.isArray(dailyTasks.tasks)) return;
+    if (dailyTasks.date !== todayStr()) return;
+    const beforeCount = dailyTasks.completed.length;
+    for (let i = 0; i < dailyTasks.tasks.length; i++) {
+      const t = dailyTasks.tasks[i];
+      if (!t || !t.id) continue;
+      if (dailyTasks.completed.includes(i)) continue;
+      const def = TASK_TYPES.find(x => x.id === t.id);
+      if (!def || typeof def.check !== 'function') continue;
+      if (def.check(difficulty, timer, mistakes, hintsUsed, maxCombo)) {
+        dailyTasks.completed.push(i);
+        t.done = true;
+        if (!dailyTasks._pendingNotifications) dailyTasks._pendingNotifications = [];
+        dailyTasks._pendingNotifications.push(i);
+        if (t.reward && t.reward.hints) state.hintsRemaining += t.reward.hints;
+        if (t.reward && t.reward.xp) stats.totalXp = (stats.totalXp || 0) + t.reward.xp;
+        if (t.reward && t.reward.autoUse) state._freeAuto = (state._freeAuto || 0) + t.reward.autoUse;
+        saveDailyTasks();
+        saveStats();
+        saveGame();
+      }
     }
-  }
-  const afterCount = dailyTasks.completed.length;
-  if (afterCount > beforeCount) {
-    const totalTasksDone = dailyTasks.completed.filter((v, i, a) => a.indexOf(v) === i).length;
-    if (totalTasksDone >= 1) triggerAchievementCheck('task_fighter');
-    if (totalTasksDone >= 30) triggerAchievementCheck('task_grinder');
-    if (dailyTasks.tasks.every((_, i) => dailyTasks.completed.includes(i))) {
-      triggerAchievementCheck('task_master');
+    const afterCount = dailyTasks.completed.length;
+    if (afterCount > beforeCount) {
+      const totalTasksDone = dailyTasks.completed.filter((v, i, a) => a.indexOf(v) === i).length;
+      if (totalTasksDone >= 1) triggerAchievementCheck('task_fighter');
+      if (totalTasksDone >= 30) triggerAchievementCheck('task_grinder');
+      if (dailyTasks.tasks.every((_, i) => dailyTasks.completed.includes(i))) {
+        triggerAchievementCheck('task_master');
+      }
     }
+  } catch (e) {
+    log('[storage] checkDailyTasks error', e);
   }
 }
 

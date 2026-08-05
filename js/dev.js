@@ -20,6 +20,21 @@ window.devPay = function () {
   }
 };
 
+window.autocomplete = function () {
+  if (!state || !state.solution || !state.solution[0]) {
+    console.warn('%c[dev] No active puzzle to autocomplete', 'color:#ef4444');
+    return;
+  }
+  state.board = state.solution.map(r => [...r]);
+  state.notes = state.notes.map(r => r.map(() => new Set()));
+  state.history = []; state.historyIdx = -1;
+  state.hintsUsed = 0;
+  requestRender();
+  saveGame();
+  checkWin();
+  console.log('%c[dev] Puzzle autocompleted!', 'color:#22c55e');
+};
+
 const _rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
 window.stream = function () {

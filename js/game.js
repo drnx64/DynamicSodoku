@@ -31,6 +31,7 @@ const state = {
   mistakes: 0, hintsUsed: 0, hintsRemaining: 3, started: false,
   difficulty: 'easy', gameOver: false, won: false,
   isDaily: false, gameMode: 'normal',
+  isArchive: false,
   isChallenge: false, challengeSeed: null, challengeTarget: null,
   currentLevel: 1,
   notesUsed: false,
@@ -368,11 +369,11 @@ function checkWin() {
     for (let c = 0; c < n; c++)
       if (state.board[r][c] !== state.solution[r][c]) return;
   log('[game] checkWin: puzzle solved!');
-  checkEasterEgg();
-  checkDailyTasks(resolveCustomDifficulty(), state.timer, state.mistakes, state.hintsUsed, state.maxCombo);
   state.won = true;
   state.timerRunning = false;
   if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
+  try { checkEasterEgg(); } catch (e) { log('[game] checkEasterEgg error', e); }
+  try { checkDailyTasks(resolveCustomDifficulty(), state.timer, state.mistakes, state.hintsUsed, state.maxCombo); } catch (e) { log('[game] checkDailyTasks error', e); }
   requestRender(); playSound('win');
   triggerWinExplosion(() => showWinDialog());
 }
@@ -428,9 +429,14 @@ function startTimer() {
   if (state.timerRunning) { log('[game] startTimer: already running'); return; }
   log('[game] startTimer()');
   state.timerRunning = true;
+  state._timerStartTs = Date.now();
+  state._timerAccum = state.countdownMode
+    ? Math.max(0, state.countdownTime - state.timer)
+    : state.timer;
   state.timerInterval = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - state._timerStartTs) / 1000);
     if (state.countdownMode) {
-      state.timer--;
+      state.timer = Math.max(0, state.countdownTime - state._timerAccum - elapsed);
       if (state.timer <= 0) {
         state.timer = 0;
         document.getElementById('timer').textContent = formatTime(0);
@@ -441,12 +447,12 @@ function startTimer() {
         return;
       }
     } else {
-      state.timer++;
+      state.timer = state._timerAccum + elapsed;
     }
     document.getElementById('timer').textContent = formatTime(state.timer);
     const tw = document.getElementById('timerWrap');
     if (tw) tw.classList.toggle('timer-warn', state.countdownMode ? state.timer <= 300 : state.timer >= 300);
-  }, 1000);
+  }, 250);
 }
 
 function pauseTimer() {
@@ -457,7 +463,25 @@ function pauseTimer() {
     clearInterval(state.timerInterval);
     state.timerInterval = null;
   }
+  if (state._timerStartTs) {
+    const elapsed = Math.floor((Date.now() - state._timerStartTs) / 1000);
+    if (state.countdownMode) {
+      state.timer = Math.max(0, state.countdownTime - state._timerAccum - elapsed);
+    } else {
+      state.timer = state._timerAccum + elapsed;
+    }
+    state._timerStartTs = 0;
+  }
 }
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    if (state.timerRunning && !state.won && !state.gameOver) pauseTimer();
+  } else {
+    const userPaused = document.getElementById('pauseOverlay')?.classList.contains('open');
+    if (state.started && !userPaused && !state.won && !state.gameOver && !state.timerRunning) startTimer();
+  }
+});
 
 function showRetryOverlay() {
   log('[game] showRetryOverlay()');
@@ -557,17 +581,18 @@ function formatTime(secs) {
   return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
 }
 
-function initNewGame(difficulty, isDaily, startLevel, seedDate, challengeData) {
-  log('[game] initNewGame()', { difficulty, isDaily, startLevel, seedDate, challengeData });
+function initNewGame(difficulty, isDaily, startLevel, seedDate, challengeData, isArchive) {
+  log('[game] initNewGame()', { difficulty, isDaily, startLevel, seedDate, challengeData, isArchive });
   document.getElementById('page-game')?.classList.remove('paused');
   document.getElementById('pauseOverlay')?.classList.remove('open');
   document.getElementById('timerWrap')?.classList.remove('paused');
   if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
   state.difficulty = difficulty || 'easy';
   state.isDaily = !!isDaily;
+  state.isArchive = !!isArchive;
   state.isChallenge = !!challengeData;
   state.challengeSeed = challengeData ? challengeData.seed : null;
-  state.challengeTarget = challengeData ? { name: challengeData.name, time: challengeData.time } : null;
+  state.challengeTarget = challengeData ? { name: challengeData.name, time: challengeData.time, mistakes: challengeData.mistakes || 0, hints: challengeData.hints || 0, combo: challengeData.combo || 0 } : null;
   state.gameMode = isDaily ? 'daily' : (challengeData ? 'challenge' : 'normal');
   state.currentLevel = startLevel || loadLevelProgress(difficulty) || 1;
 
@@ -575,7 +600,7 @@ function initNewGame(difficulty, isDaily, startLevel, seedDate, challengeData) {
   const levelOverlay = document.getElementById('levelOverlay');
   const levelNum = document.getElementById('levelNumber');
 
-  if (isDaily && loadDailyGame()) {
+  if (isDaily && !isArchive && loadDailyGame()) {
     log('[game] restoring daily game from cache');
     state.difficulty = 'medium';
     state.isDaily = true;
@@ -662,6 +687,7 @@ function initNewGame(difficulty, isDaily, startLevel, seedDate, challengeData) {
     state.history = []; state.historyIdx = -1;
   state.selectedCell = null; state.notesMode = false;
   state.timer = state.countdownMode ? state.countdownTime : 0; state.timerRunning = false;
+  state._timerAccum = 0; state._timerStartTs = 0;
   state.mistakes = 0; state.hintsUsed = 0; state.hintsRemaining = 3; state.started = false;
   state.gameOver = false; state.won = false; state.notesUsed = false;
     state.combo = 0; state.maxCombo = 0;
@@ -690,7 +716,7 @@ state.completed = { rows: new Set(), cols: new Set(), boxes: new Set() };
     saveGame();
     playSound('place');
 
-    if (isDaily) {
+    if (isDaily && !isArchive) {
       const dailyOverlay = document.getElementById('dailyEntryOverlay');
       const dayEl = document.getElementById('dailyEntryDay');
       if (dayEl) {

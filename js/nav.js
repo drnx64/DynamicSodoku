@@ -300,19 +300,6 @@ function setupNavigation() {
     });
   }
 
-  const winReplay = document.getElementById('winReplay');
-  if (winReplay) {
-    winReplay.addEventListener('click', () => {
-      log('[nav] click: winReplay');
-      document.getElementById('winOverlay').classList.remove('open');
-      if (state.solution && state.solution.length === (state.size || 9)) {
-        retryLevel();
-      } else {
-        initNewGame(state.difficulty || 'easy', false, state.currentLevel || 1);
-      }
-    });
-  }
-
   const leaderboardCard = document.getElementById('leaderboardCard');
   if (leaderboardCard) {
     leaderboardCard.addEventListener('click', () => { log('[nav] click: leaderboardCard'); renderLeaderboard('top'); showPage('page-leaderboard'); });

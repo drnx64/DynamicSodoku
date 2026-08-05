@@ -181,6 +181,8 @@
   color: var(--btn-active-text);
 }
 .win-challenge-back:hover { opacity: 0.9; }
+.win-challenge-send { margin-top: 8px; background: var(--btn-bg); color: var(--text); }
+.win-challenge-send:hover { background: var(--btn-active); color: var(--btn-active-text); opacity: 1; }
 .win-stat {
   background: var(--btn-bg);
   border-radius: var(--radius-sm);
@@ -202,6 +204,14 @@
   font-variant-numeric: tabular-nums;
 }
 .win-xp span { font-size: 22px; }
+.win-xp-breakdown {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: -10px 0 16px;
+  padding: 6px 10px;
+  font-variant-numeric: tabular-nums;
+}
+.win-xp-breakdown b { color: var(--xp-gold); font-weight: 700; }
 
 .win-rank-progress {
   margin: 10px 0 14px;

@@ -1,7 +1,6 @@
 (function () {
   var REFERRAL_KEY = 'sudoku_visitor_id';
   var NAME_KEY = 'sudoku_visitor_name';
-  var NOTIFIED_KEY = 'sudoku_visited';
   var REFERRED_BY_KEY = 'sudoku_referred_by';
   var SOURCE_KEY = 'sudoku_source';
   var REWARD_PENDING_KEY = 'sudoku_referral_reward_pending';
@@ -86,7 +85,9 @@
 
   function isLikelyBot() {
     try {
-      return navigator.webdriver || /bot|crawl|spider|scrape|Headless/i.test(navigator.userAgent);
+      if (navigator.webdriver) return true;
+      var ua = navigator.userAgent;
+      return /bot|crawl|spider|scrape|slurp|headless|preview|curl|wget|httrack|facebookexternalhit|python-requests|perl|ruby|phantomjs|googleother|adsbot|mediapartners|yandex|baidu|sogou|exabot|petalbot|ahrefs|semrush|dotbot|mj12|uptimerobot|monitoring/i.test(ua);
     } catch (e) { return false; }
   }
 
@@ -172,18 +173,14 @@
   var visitorId = getVisitorId();
   var visitorName = getDisplayName();
   var arrivalSource = getArrivalSource();
-  var visited = localStorage.getItem(NOTIFIED_KEY);
 
-  if (!visited) {
-    var devInfo = getDeviceInfo();
-    var msg = '🆕 **' + sanitize(visitorName) + '** visited the site! (' + devInfo + ')';
-    if (arrivalSource && arrivalSource !== 'Direct') {
-      msg += ' via **' + sanitize(arrivalSource) + '**';
-    }
-    sendToDiscord(msg);
-    try { localStorage.setItem(NOTIFIED_KEY, '1'); } catch (e) {}
-    getFirstSource();
+  var devInfo = getDeviceInfo();
+  var msg = '🆕 **' + sanitize(visitorName) + '** visited the site! (' + devInfo + ')';
+  if (arrivalSource && arrivalSource !== 'Direct') {
+    msg += ' via **' + sanitize(arrivalSource) + '**';
   }
+  sendToDiscord(msg);
+  getFirstSource();
 
   if (referrerId && referrerId !== visitorId && !getReferredBy()) {
     var shownName = referrerName || referrerId;

@@ -15,6 +15,10 @@ function _buildCells(boardEl) {
       cell.dataset.col = c;
       cell.setAttribute('tabindex', '0');
       cell.setAttribute('role', 'gridcell');
+      cell.setAttribute('aria-rowindex', String(r + 1));
+      cell.setAttribute('aria-colindex', String(c + 1));
+      cell.setAttribute('aria-label', 'Row ' + (r + 1) + ', Column ' + (c + 1));
+      cell.setAttribute('aria-selected', 'false');
 
       const vs = document.createElement('span');
       vs.className = 'cell-value';
@@ -57,6 +61,10 @@ function rebuildBoardForSize() {
     boardEl.innerHTML = '';
     boardEl.style.gridTemplateColumns = 'repeat(' + n + ', 1fr)';
     boardEl.style.gridTemplateRows = 'repeat(' + n + ', 1fr)';
+    boardEl.setAttribute('role', 'grid');
+    boardEl.setAttribute('aria-label', 'Sudoku board');
+    boardEl.setAttribute('aria-rowcount', String(n));
+    boardEl.setAttribute('aria-colcount', String(n));
   }
   const rowArea = document.getElementById('coordsRowArea');
   const colArea = document.getElementById('coordsColArea');
@@ -156,6 +164,15 @@ function render(opts) {
       }
 
       cell.className = cls.join(' ');
+      cell.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+      cell.setAttribute('aria-readonly', isGiven ? 'true' : 'false');
+      if (val && isGiven) {
+        cell.setAttribute('aria-label', 'Row ' + (r + 1) + ', Column ' + (c + 1) + ', given ' + val);
+      } else if (val) {
+        cell.setAttribute('aria-label', 'Row ' + (r + 1) + ', Column ' + (c + 1) + ', value ' + val);
+      } else {
+        cell.setAttribute('aria-label', 'Row ' + (r + 1) + ', Column ' + (c + 1) + ', empty');
+      }
 
       valSpan.textContent = val || '';
 

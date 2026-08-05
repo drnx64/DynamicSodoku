@@ -39,8 +39,9 @@ function showWinDialog() {
   const diffNames = { easy: 'Easy', medium: 'Medium', hard: 'Hard', impossible: 'Impossible' };
   const customLabel = state.difficulty === 'custom' ? 'Custom' : null;
 
-  if (state.isDaily) {
-    totalEarned += calcDailyBonus();
+  const dailyBonus = state.isDaily ? calcDailyBonus() : 0;
+  if (state.isDaily && !state.isArchive) {
+    totalEarned += dailyBonus;
     markDailyDone();
     stats.dailyChallengesDone = (stats.dailyChallengesDone || 0) + 1;
     const archive = stats.dailyArchive || [];
@@ -51,6 +52,8 @@ function showWinDialog() {
     }
     document.getElementById('winSubtitle').textContent = 'Daily Challenge completed!';
     updateStreak();
+  } else if (state.isDaily && state.isArchive) {
+    document.getElementById('winSubtitle').textContent = 'Archive replay solved!';
   } else if (state.isChallenge && state.challengeTarget) {
     const targetName = state.challengeTarget.name || 'Friend';
     if (!state.challengeTarget.time) {
@@ -134,6 +137,16 @@ function showWinDialog() {
     comboEl.style.display = state.maxCombo >= 2 ? 'inline' : 'none';
     if (state.maxCombo >= 2) comboEl.textContent = ' (incl. x' + (state.maxCombo > 9 ? 9 : state.maxCombo) + ' combo +' + comboBonus + ')';
   }
+  const bdEl = document.getElementById('winXpBreakdown');
+  if (bdEl) {
+    const cappedCombo = state.maxCombo > 9 ? 9 : state.maxCombo;
+    const parts = ['<b>' + score + '</b> base'];
+    if (comboBonus > 0) parts.push('+ <b>' + comboBonus + '</b> combo x' + cappedCombo);
+    if (state.isDaily && !state.isArchive && dailyBonus > 0) parts.push('+ <b>' + dailyBonus + '</b> daily bonus');
+    parts.push('= <b>' + totalEarned + '</b> XP');
+    bdEl.innerHTML = parts.join(' ');
+    bdEl.style.display = 'block';
+  }
   const levelUpEl = document.getElementById('winLevelUp');
   if (leveledUp) {
     levelUpEl.style.display = 'none';
@@ -149,7 +162,10 @@ function showWinDialog() {
     nextBtn.textContent = 'Back to Menu';
   }
 
-  if (window.AscendokuChallenge) window.AscendokuChallenge.setupWinUI();
+  if (window.AscendokuChallenge) {
+    try { window.AscendokuChallenge.setupWinUI(); }
+    catch (e) { log('[win] challenge win UI error', e); }
+  }
 
   checkAchievements(baseDiff, state.mistakes, state.hintsUsed, state.notesUsed, totalEarned, state.settings.autoCandidates);
   clearGame();

@@ -374,7 +374,7 @@ function showDailyArchive() {
             if (!confirm('You have a game in progress. Start this archived puzzle instead?')) return;
           }
           clearGame();
-          initNewGame('medium', true, 1, dateStr);
+          initNewGame('medium', true, 1, dateStr, null, true);
         });
       } else {
         el.style.opacity = '0.25';
@@ -427,6 +427,8 @@ function setupDialogs() {
   if (achieveCard) achieveCard.addEventListener('click', () => { log('[menu] click: achieveCard'); showAchievements(); });
   const statsCard = document.getElementById('statsCard');
   if (statsCard) statsCard.addEventListener('click', () => { log('[menu] click: statsCard'); showStats(); });
+  const archiveCard = document.getElementById('archiveCard');
+  if (archiveCard) archiveCard.addEventListener('click', () => { log('[menu] click: archiveCard'); showDailyArchive(); });
   const dailyTasksClose = document.getElementById('dailyTasksClose');
   if (dailyTasksClose) dailyTasksClose.addEventListener('click', () => { document.getElementById('dailyTasksOverlay').classList.remove('open'); });
   document.getElementById('dailyTasksOverlay')?.addEventListener('click', (e) => {
