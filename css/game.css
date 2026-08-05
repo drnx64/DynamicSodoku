@@ -100,8 +100,10 @@
   padding-bottom: 3px;
   font-size: clamp(11px, 2.8vw, 16px); font-weight: 700;
   letter-spacing: 0.3px;
-  color: #7c5cfc;
+  color: var(--coord-col);
 }
+body:not(.dark) .coords-row-area .coords-col,
+body:not(.dark) .coords-col-area .coords-row { font-weight: 800; }
 
 .coords-col-area {
   position: absolute;
@@ -115,7 +117,7 @@
   display: flex; align-items: center; justify-content: center;
   padding-right: 3px;
   font-size: clamp(11px, 2.8vw, 16px); font-weight: 700;
-  color: #f59e0b;
+  color: var(--coord-row);
 }
 
 #boardWrap {
